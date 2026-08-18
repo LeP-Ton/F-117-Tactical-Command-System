@@ -8,11 +8,12 @@
 
 * { box-sizing: border-box; }
 
-body { margin: 0; min-width: 1080px; min-height: 100vh; background: radial-gradient(circle at 50% 20%, #10201b 0%, #050a09 55%); }
+html, body, #root { width: 100%; height: 100%; overflow: hidden; }
+body { margin: 0; min-width: 1080px; background: radial-gradient(circle at 50% 20%, #10201b 0%, #050a09 55%); }
 button { font: inherit; }
 
-.app-shell { min-height: 100vh; display: flex; flex-direction: column; }
-.topbar { height: 76px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #24463c; background: rgba(5, 12, 10, 0.92); }
+.app-shell { width: 100%; height: 100vh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.topbar { flex: 0 0 76px; height: 76px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #24463c; background: rgba(5, 12, 10, 0.92); }
 .brand-block { display: flex; align-items: center; gap: 14px; }
 .brand-mark { width: 40px; height: 40px; display: grid; place-items: center; color: #07100e; background: #d3a744; font-weight: 900; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
 .brand-block h1 { margin: 0; color: #f0c15d; font-size: 21px; letter-spacing: 0.2em; }
@@ -24,8 +25,8 @@ button { font: inherit; }
 .seed-control input:focus { border-color: #c1943f; }
 .seed-control button { padding: 7px 9px; font-size: 10px; }
 
-.workspace { flex: 1; min-height: calc(100vh - 76px); display: grid; grid-template-columns: 290px minmax(500px, 1fr) 270px; }
-.control-panel, .telemetry-panel { background: rgba(7, 16, 14, 0.86); }
+.workspace { flex: 1 1 auto; width: 100%; height: auto; min-height: 0; display: grid; grid-template-columns: 290px minmax(500px, 1fr) 270px; overflow: hidden; }
+.control-panel, .telemetry-panel { height: 100%; min-height: 0; max-height: 100%; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; background: rgba(7, 16, 14, 0.86); }
 .control-panel { border-right: 1px solid #1e3d34; }
 .telemetry-panel { border-left: 1px solid #1e3d34; }
 .panel-section { padding: 20px; border-bottom: 1px solid #173329; }
@@ -64,7 +65,7 @@ button:disabled { opacity: 0.32; cursor: not-allowed; }
 .deception-button { width: 100%; margin-top: 10px; color: #bb9be0; border-color: #654b83; }
 .hint { color: #4d7367; font-size: 10px; line-height: 1.6; }
 
-.map-stage { position: relative; min-height: 620px; overflow: hidden; background: #07100e; }
+.map-stage { position: relative; height: 100%; min-height: 0; overflow: hidden; background: #07100e; }
 .tactical-map { display: block; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
 .map-label, .map-legend { position: absolute; z-index: 2; display: flex; gap: 18px; color: #568173; font-size: 9px; letter-spacing: 0.08em; pointer-events: none; }
 .map-label { top: 14px; left: 18px; right: 18px; justify-content: space-between; }
@@ -108,7 +109,7 @@ button:disabled { opacity: 0.32; cursor: not-allowed; }
 .architecture-note strong { display: block; margin: 7px 0; color: #d1aa55; font-size: 13px; }
 .architecture-note p { margin: 0; color: #64877c; font-size: 9px; line-height: 1.5; }
 .fatal-state { padding: 40px; color: #e08c72; }
-.campaign-screen { min-height: calc(100vh - 76px); padding: 24px; background: radial-gradient(circle at 45% 45%, #10231d, #050b09 70%); }
+.campaign-screen { flex: 1 1 auto; height: auto; min-height: 0; padding: 24px; overflow: auto; overscroll-behavior: contain; background: radial-gradient(circle at 45% 45%, #10231d, #050b09 70%); }
 .campaign-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
 .campaign-header h2 { margin: 6px 0 0; color: #e5eee9; font-size: 20px; font-weight: 500; }
 .campaign-resources { display: flex; gap: 22px; color: #64887d; font-size: 10px; }
@@ -136,8 +137,7 @@ button:disabled { opacity: 0.32; cursor: not-allowed; }
 .campaign-build div { margin-top: 7px; color: #9dbbb2; font-size: 9px; }
 
 @media (max-height: 760px) {
-  .topbar { height: 62px; }
-  .workspace { min-height: calc(100vh - 62px); }
+  .topbar { flex-basis: 62px; height: 62px; }
   .panel-section { padding: 14px 18px; }
   .waypoint-list { max-height: 260px; }
 }
