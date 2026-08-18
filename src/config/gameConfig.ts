@@ -25,6 +25,7 @@ export const gameConfig = {
     operatorDecisionIntervalSeconds: 0.5,
     focusedContactMemoryMs: 4500,
     sectorContactMemoryMs: 9000,
+    sharedContactMemoryMs: 4500,
     shutdownDurationMs: 3000,
     shutdownCooldownMs: 20000,
   },
@@ -59,6 +60,7 @@ export const gameConfig = {
   },
   commander: {
     decisionIntervalSeconds: 1,
+    maximumBearingErrorDegrees: 32,
   },
   engagement: {
     suspectedThreshold: 16,

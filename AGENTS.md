@@ -12,8 +12,8 @@
 - 雷达架构遵循 Reality → Radar Sensor → Imperfect Contact；只有 Sensor 层可读取飞机真实状态，后续 AI 只能消费带误差 Contact。
 - 每台 Radar Operator 独立保存模式、Contact 记忆和全部 Utility 评分；目前支持 Wide Search、Sector Search、Focused Track、Shutdown。
 - Belief Map 使用 24×24 概率网格，仅融合 Radar Contact；支持误差高斯注入、运动估计、扩散与衰减，完整内部状态只在调试热力图中展示。
-- Air Defense Commander 只读取 Awareness、Belief Map 与雷达状态，通过可解释 Utility 评分和 Operator 偏置协调雷达，不读取飞机真实位置。
-- 防空交战采用 Contact → 跟踪质量 → 火控锁定 → 导弹来袭链路；失去新证据可脱锁，命中造成持久机体损伤，机体归零会令 Run DEFEAT。
+- Air Defense Commander 只读取 Awareness、Belief Map 与雷达状态，通过可解释 Utility 评分、跨雷达 Contact 共享和 Operator 偏置协调雷达，不读取飞机真实位置；指挥链受损会延迟决策、缩短共享窗口并扩大搜索方位误差。
+- 防空交战采用 Contact → 跟踪质量 → 火控锁定 → 导弹来袭链路；最强 Contact 保留本地火控能力，额外雷达证据通过指挥链形成联合跟踪，失去新证据可脱锁，命中造成持久机体损伤，机体归零会令 Run DEFEAT。
 - 飞机基础速度为 `7.2 u/s`；运行中进入攻击半径后自动投弹，目标摧毁会显著提升 Awareness，随后必须进入撤离区；航线结束但条件未满足判定失败。
 - 普通玩家视图通过 THREAT WARNING 显示可行动的模糊威胁阶段和导弹倒计时；真实 Contact、Belief 与 AI 评分仍只在 AI DEBUG 中显示。
 - Mission Generator 根据 Seed 生成 Terrain、Weather、Radar Network、Target、Intel Accuracy 与 Commander Doctrine；相同 Seed 必须完整复现。

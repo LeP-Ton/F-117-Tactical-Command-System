@@ -35,12 +35,17 @@ function newestContact(radarId: string, contacts: RadarContact[]): RadarContact 
     .sort((first, second) => second.timestamp - first.timestamp)[0];
 }
 
+function newestNetworkContact(contacts: RadarContact[]): RadarContact | undefined {
+  return [...contacts].sort((first, second) => second.timestamp - first.timestamp)[0];
+}
+
 /** Operator 只消费不完美 Contact，不接收 AircraftState。 */
 export function advanceRadarOperators(
   radars: RadarState[],
   contacts: RadarContact[],
   timestamp: number,
   deltaSeconds: number,
+  coordinationModifier = 1,
 ): RadarOperatorResult {
   const changes: RadarModeChange[] = [];
   const nextRadars = radars.map((radar) => {
@@ -53,7 +58,12 @@ export function advanceRadarOperators(
     }
     accumulator %= gameConfig.radar.operatorDecisionIntervalSeconds;
 
-    const contact = newestContact(radar.id, contacts);
+    const localContact = newestContact(radar.id, contacts);
+    const sharedContact = newestNetworkContact(contacts);
+    const sharedContactAge = sharedContact ? timestamp - sharedContact.timestamp : Number.POSITIVE_INFINITY;
+    const sharedMemoryMs = gameConfig.radar.sharedContactMemoryMs * coordinationModifier;
+    // 本地 Contact 始终可用；跨雷达 Contact 的共享窗口随指挥链受损而缩短。
+    const contact = localContact ?? (sharedContactAge <= sharedMemoryMs ? sharedContact : undefined);
     const contactAge = contact ? timestamp - contact.timestamp : Number.POSITIVE_INFINITY;
     const focusedEvidence = contactAge <= gameConfig.radar.focusedContactMemoryMs;
     const sectorEvidence = contactAge <= gameConfig.radar.sectorContactMemoryMs;

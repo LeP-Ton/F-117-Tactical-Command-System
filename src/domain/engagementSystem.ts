@@ -29,11 +29,14 @@ export function advanceEngagement(
   deltaSeconds: number,
   coordinationModifier: number,
 ): EngagementResult {
-  const evidence = newContacts.reduce(
-    (sum, contact) => sum + (contact.confidence * 0.72 + contact.signalStrength * 0.28),
-    0,
-  );
-  const gained = evidence * gameConfig.engagement.contactGain * coordinationModifier;
+  const contactEvidence = newContacts
+    .map((contact) => contact.confidence * 0.72 + contact.signalStrength * 0.28)
+    .sort((first, second) => second - first);
+  // 最强 Contact 代表雷达本地火控能力；其余 Contact 需要通过指挥链完成联合跟踪。
+  const localEvidence = contactEvidence[0] ?? 0;
+  const sharedEvidence = contactEvidence.slice(1).reduce((sum, evidence) => sum + evidence, 0);
+  const evidence = localEvidence + sharedEvidence * coordinationModifier;
+  const gained = evidence * gameConfig.engagement.contactGain;
   const decayed = newContacts.length === 0 ? gameConfig.engagement.decayPerSecond * deltaSeconds : 0;
   let trackProgress = Math.max(0, Math.min(100, current.trackProgress + gained - decayed));
 

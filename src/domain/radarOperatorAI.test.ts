@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { advanceRadarOperators, createRadarOperatorState } from "./radarOperatorAI";
 import type { RadarContact, RadarState } from "./types";
 
-function createRadar(): RadarState {
+function createRadar(id = "R1"): RadarState {
   return {
-    id: "R1",
+    id,
     position: { x: 100, y: 100 },
     range: 300,
     sweepAngleDegrees: 0,
@@ -15,10 +15,10 @@ function createRadar(): RadarState {
   };
 }
 
-function createContact(timestamp: number, confidence: number): RadarContact {
+function createContact(timestamp: number, confidence: number, radarId = "R1"): RadarContact {
   return {
     id: "C1",
-    radarId: "R1",
+    radarId,
     timestamp,
     estimatedPosition: { x: 220, y: 100 },
     confidence,
@@ -54,5 +54,13 @@ describe("Radar Operator Utility AI", () => {
     const restored = advanceRadarOperators(holding, [], 25001, 0.5).radars;
     expect(restored[0]?.operator.mode).toBe("WIDE_SEARCH");
     expect(restored[0]?.active).toBe(true);
+  });
+
+  it("高效指挥链允许其他雷达使用共享 Contact，受损后共享窗口缩短", () => {
+    const networkContact = createContact(1000, 0.9, "R1");
+    const coordinated = advanceRadarOperators([createRadar("R2")], [networkContact], 4000, 0.5, 1);
+    const disrupted = advanceRadarOperators([createRadar("R2")], [networkContact], 4000, 0.5, 0.45);
+    expect(coordinated.radars[0]?.operator.mode).toBe("FOCUSED_TRACK");
+    expect(disrupted.radars[0]?.operator.mode).not.toBe("FOCUSED_TRACK");
   });
 });

@@ -83,11 +83,20 @@ describe("Air Defense Commander", () => {
 
   it("受损指挥链会按比例降低雷达协调偏置", () => {
     const belief = advanceBeliefMap(createBeliefMap(), [contact], 1000, 0);
-    const full = advanceCommander(createCommanderState(), { value: 85, stage: "HUNTING" }, belief, [radar], 1000, 1, 1);
-    const damaged = advanceCommander(createCommanderState(), { value: 85, stage: "HUNTING" }, belief, [radar], 1000, 1, 0.5);
+    const full = advanceCommander(createCommanderState(), { value: 85, stage: "HUNTING" }, belief, [radar], 2000, 2, 1);
+    const damaged = advanceCommander(createCommanderState(), { value: 85, stage: "HUNTING" }, belief, [radar], 2000, 2, 0.5);
     expect(damaged.radars[0]!.operator.commanderBias.FOCUSED_TRACK).toBeCloseTo(
       full.radars[0]!.operator.commanderBias.FOCUSED_TRACK * 0.5,
     );
+  });
+
+  it("受损指挥链延长 Commander 决策间隔", () => {
+    const belief = advanceBeliefMap(createBeliefMap(), [contact], 1000, 0);
+    const full = advanceCommander(createCommanderState(), { value: 85, stage: "HUNTING" }, belief, [radar], 1000, 1, 1);
+    const damaged = advanceCommander(createCommanderState(), { value: 85, stage: "HUNTING" }, belief, [radar], 1000, 1, 0.5);
+    expect(full.commander.intent).toBe("CONCENTRATE_SEARCH");
+    expect(damaged.commander.intent).toBe("MONITOR");
+    expect(damaged.commander.targetPosition).toBeUndefined();
   });
 
   it("Belief 失联后清除 CMD 目标位置", () => {

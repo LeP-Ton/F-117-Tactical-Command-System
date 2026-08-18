@@ -48,14 +48,16 @@ export function advanceCommander(
   coordinationModifier = 1,
 ): CommanderResult {
   let accumulator = state.decisionAccumulatorSeconds + deltaSeconds;
-  if (accumulator < gameConfig.commander.decisionIntervalSeconds) {
+  const decisionIntervalSeconds = gameConfig.commander.decisionIntervalSeconds
+    / Math.max(0.25, coordinationModifier);
+  if (accumulator < decisionIntervalSeconds) {
     return {
       commander: { ...state, decisionAccumulatorSeconds: accumulator },
       radars,
       orderChanged: false,
     };
   }
-  accumulator %= gameConfig.commander.decisionIntervalSeconds;
+  accumulator %= decisionIntervalSeconds;
   const peak = getBeliefPeak(beliefMap, timestamp);
   const confidence = peak.isValid ? Math.min(1, peak.probability * 12) : 0;
   const scores: CommanderUtilityScores = {
@@ -90,12 +92,20 @@ export function advanceCommander(
       ? bearingDegrees(radar.position.x, radar.position.y, peak.position!.x, peak.position!.y)
       : radar.operator.focusBearingDegrees;
     const sectorOffset = intent === "COORDINATED_SEARCH" ? (index - (radars.length - 1) / 2) * 24 : 0;
+    const coordinationError = hasBelief
+      ? (1 - coordinationModifier)
+        * gameConfig.commander.maximumBearingErrorDegrees
+        * (index % 2 === 0 ? -1 : 1)
+        * (0.6 + (index % 3) * 0.2)
+      : 0;
     return {
       ...radar,
       operator: {
         ...radar.operator,
         commanderBias: bias,
-        focusBearingDegrees: baseBearing === undefined ? undefined : (baseBearing + sectorOffset + 360) % 360,
+        focusBearingDegrees: baseBearing === undefined
+          ? undefined
+          : (baseBearing + sectorOffset + coordinationError + 360) % 360,
       },
     };
   });

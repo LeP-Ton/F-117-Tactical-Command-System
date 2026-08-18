@@ -369,6 +369,7 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         radarContacts,
         nextTimestamp,
         action.deltaSeconds,
+        mission.commanderCoordinationModifier,
       );
       const modeEvents = operatorResult.changes.map((change) => ({
         ...createGameEvent(

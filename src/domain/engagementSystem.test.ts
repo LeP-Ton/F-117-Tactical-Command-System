@@ -12,6 +12,13 @@ const strongContact: RadarContact = {
   errorRadius: 20,
 };
 
+const supportingContact: RadarContact = {
+  ...strongContact,
+  id: "CONTACT-2",
+  radarId: "RADAR-02",
+  confidence: 0.8,
+};
+
 describe("防空交战系统", () => {
   it("连续高质量 Contact 会逐级建立跟踪并发射导弹", () => {
     let state = createEngagementState();
@@ -38,6 +45,16 @@ describe("防空交战系统", () => {
 
     expect(result.state.trackProgress).toBe(27);
     expect(result.state.stage).toBe("SUSPECTED");
+  });
+
+  it("指挥链只削弱多雷达联合证据，不削弱最强本地 Contact", () => {
+    const singleFull = advanceEngagement(createEngagementState(), [strongContact], 0.25, 1);
+    const singleDamaged = advanceEngagement(createEngagementState(), [strongContact], 0.25, 0.45);
+    const networkFull = advanceEngagement(createEngagementState(), [strongContact, supportingContact], 0.25, 1);
+    const networkDamaged = advanceEngagement(createEngagementState(), [strongContact, supportingContact], 0.25, 0.45);
+    expect(singleDamaged.state.trackProgress).toBeCloseTo(singleFull.state.trackProgress);
+    expect(networkDamaged.state.trackProgress).toBeGreaterThan(singleDamaged.state.trackProgress);
+    expect(networkDamaged.state.trackProgress).toBeLessThan(networkFull.state.trackProgress);
   });
 
   it("导弹飞行中脱离制导阈值会使导弹失效", () => {
