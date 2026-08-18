@@ -89,4 +89,27 @@ describe("Air Defense Commander", () => {
       full.radars[0]!.operator.commanderBias.FOCUSED_TRACK * 0.5,
     );
   });
+
+  it("Belief 失联后清除 CMD 目标位置", () => {
+    const belief = advanceBeliefMap(createBeliefMap(), [contact], 1000, 0);
+    const acquired = advanceCommander(
+      createCommanderState(),
+      { value: 60, stage: "SEARCHING" },
+      belief,
+      [radar],
+      1000,
+      1,
+    );
+    const expiredBelief = advanceBeliefMap(belief, [], 14000, 13);
+    const lost = advanceCommander(
+      acquired.commander,
+      { value: 40, stage: "SUSPICIOUS" },
+      expiredBelief,
+      acquired.radars,
+      14000,
+      1,
+    );
+    expect(acquired.commander.targetPosition).toBeDefined();
+    expect(lost.commander.targetPosition).toBeUndefined();
+  });
 });

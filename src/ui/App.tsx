@@ -67,7 +67,7 @@ export function App() {
 
   const activeWaypoint = mission.route.waypoints[mission.route.activeWaypointIndex];
   const recentEvents = mission.events.slice(-5).reverse();
-  const beliefPeak = getBeliefPeak(mission.beliefMap);
+  const beliefPeak = getBeliefPeak(mission.beliefMap, mission.elapsedMs);
   const visibleRadarIntel = mission.radarIntel.filter((report) => report.level !== "UNKNOWN");
 
   return (
@@ -147,8 +147,8 @@ export function App() {
               <div><dt>敌方适应</dt><dd>LV.{state.enemyState.adaptationLevel}</dd></div>
               {showBelief && <div><dt>活动雷达</dt><dd>{mission.radars.filter((radar) => radar.active).length}</dd></div>}
               {showBelief && <div><dt>有效 Contact</dt><dd>{mission.radarContacts.length}</dd></div>}
-              {showBelief && <div><dt>Belief 峰值</dt><dd>{(beliefPeak.probability * 100).toFixed(1)}%</dd></div>}
-              {showBelief && <div><dt>推测位置</dt><dd>{beliefPeak.probability > 0 ? `${beliefPeak.position.x.toFixed(0)}, ${beliefPeak.position.y.toFixed(0)}` : "未知"}</dd></div>}
+              {showBelief && <div><dt>Belief 峰值</dt><dd>{(beliefPeak.probability * 100).toFixed(1)}% / {beliefPeak.isValid ? "有效" : "失联"}</dd></div>}
+              {showBelief && <div><dt>推测位置</dt><dd>{beliefPeak.position ? `${beliefPeak.position.x.toFixed(0)}, ${beliefPeak.position.y.toFixed(0)}` : "未知"}</dd></div>}
               {showBelief && <div><dt>敌方警戒</dt><dd>{mission.awareness.value.toFixed(1)} / {awarenessLabels[mission.awareness.stage]}</dd></div>}
               <div><dt>目标状态</dt><dd>{mission.target.destroyed ? "已摧毁" : "有效"}</dd></div>
               <div><dt>任务结果</dt><dd>{mission.status === "SUCCESS" ? "成功" : mission.status === "FAILED" ? "失败" : "进行中"}</dd></div>

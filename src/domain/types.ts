@@ -168,6 +168,9 @@ export interface RadarIntelReport {
 export interface BeliefObservation {
   position: Vector2;
   timestamp: number;
+  radarId: string;
+  confidence: number;
+  errorRadius: number;
 }
 
 export interface BeliefMapState {
@@ -176,6 +179,8 @@ export interface BeliefMapState {
   propagationAccumulatorSeconds: number;
   estimatedVelocity: Vector2;
   lastObservation?: BeliefObservation;
+  recentObservations: BeliefObservation[];
+  lastEvidenceAt?: number;
   lastUpdatedAt: number;
 }
 

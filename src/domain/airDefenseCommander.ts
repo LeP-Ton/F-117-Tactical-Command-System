@@ -56,8 +56,8 @@ export function advanceCommander(
     };
   }
   accumulator %= gameConfig.commander.decisionIntervalSeconds;
-  const peak = getBeliefPeak(beliefMap);
-  const confidence = Math.min(1, peak.probability * 12);
+  const peak = getBeliefPeak(beliefMap, timestamp);
+  const confidence = peak.isValid ? Math.min(1, peak.probability * 12) : 0;
   const scores: CommanderUtilityScores = {
     MONITOR: 72 - awareness.value * 0.72,
     COORDINATED_SEARCH: 22 + awareness.value * 0.62 + confidence * 18,
@@ -77,7 +77,7 @@ export function advanceCommander(
   }
   const intent = (Object.entries(scores) as [CommanderIntent, number][])
     .reduce((best, candidate) => candidate[1] > best[1] ? candidate : best)[0];
-  const hasBelief = peak.probability > 0;
+  const hasBelief = peak.position !== undefined;
   const baseBias = biasForIntent(intent);
   const bias: RadarUtilityScores = {
     WIDE_SEARCH: baseBias.WIDE_SEARCH * coordinationModifier,
@@ -87,7 +87,7 @@ export function advanceCommander(
   };
   const coordinatedRadars = radars.map((radar, index) => {
     const baseBearing = hasBelief
-      ? bearingDegrees(radar.position.x, radar.position.y, peak.position.x, peak.position.y)
+      ? bearingDegrees(radar.position.x, radar.position.y, peak.position!.x, peak.position!.y)
       : radar.operator.focusBearingDegrees;
     const sectorOffset = intent === "COORDINATED_SEARCH" ? (index - (radars.length - 1) / 2) * 24 : 0;
     return {
@@ -106,7 +106,14 @@ export function advanceCommander(
       utilityScores: scores,
       decisionAccumulatorSeconds: accumulator,
       lastDecisionAt: timestamp,
-      targetPosition: hasBelief ? peak.position : state.targetPosition,
+      targetPosition: hasBelief
+        ? state.targetPosition
+          ? {
+              x: state.targetPosition.x * 0.65 + peak.position!.x * 0.35,
+              y: state.targetPosition.y * 0.65 + peak.position!.y * 0.35,
+            }
+          : peak.position
+        : undefined,
     },
     radars: coordinatedRadars,
     orderChanged: intent !== state.intent,
