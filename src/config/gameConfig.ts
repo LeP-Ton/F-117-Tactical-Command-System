@@ -43,6 +43,11 @@ export const gameConfig = {
     maximumBeliefAgeMs: 12000,
     minimumPeakProbability: 0.003,
     minimumTotalProbability: 0.03,
+    heatmapReferencePeakProbability: 0.05,
+    heatmapReferenceTotalProbability: 0.3,
+    heatmapValidOpacityFloor: 0.45,
+    heatmapInvalidOpacityMultiplier: 0.18,
+    heatmapMinimumOpacity: 0.02,
   },
   awareness: {
     contactGain: 16,

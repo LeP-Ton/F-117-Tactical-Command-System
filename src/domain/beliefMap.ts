@@ -173,6 +173,18 @@ export interface BeliefEstimate {
   isValid: boolean;
 }
 
+/** 将绝对概率强度映射为热力图透明度，避免极弱残余概率仍被相对归一化显示为高亮。 */
+export function getBeliefHeatmapOpacityScale(estimate: BeliefEstimate): number {
+  const peakStrength = Math.min(1, estimate.probability / gameConfig.belief.heatmapReferencePeakProbability);
+  const massStrength = Math.min(1, estimate.totalProbability / gameConfig.belief.heatmapReferenceTotalProbability);
+  const absoluteStrength = peakStrength * massStrength;
+  const opacity = estimate.isValid
+    ? gameConfig.belief.heatmapValidOpacityFloor
+      + (1 - gameConfig.belief.heatmapValidOpacityFloor) * absoluteStrength
+    : gameConfig.belief.heatmapInvalidOpacityMultiplier * absoluteStrength;
+  return opacity < gameConfig.belief.heatmapMinimumOpacity ? 0 : opacity;
+}
+
 export function getBeliefPeak(state: BeliefMapState, timestamp = state.lastUpdatedAt): BeliefEstimate {
   const maximum = Math.max(...state.probabilities);
   const index = state.probabilities.indexOf(maximum);

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { gameConfig } from "../config/gameConfig";
+import { getBeliefHeatmapOpacityScale, getBeliefPeak } from "../domain/beliefMap";
 import { canEditWaypoint } from "../domain/route";
 import type { MissionSession, Vector2 } from "../domain/types";
 import type { GameAction } from "../game/gameReducer";
@@ -110,12 +111,15 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
         const cellWidth = gameConfig.world.width / mission.beliefMap.gridSize;
         const cellHeight = gameConfig.world.height / mission.beliefMap.gridSize;
         const peak = Math.max(...mission.beliefMap.probabilities, 0.0001);
+        const estimate = getBeliefPeak(mission.beliefMap, mission.elapsedMs);
+        const opacityScale = getBeliefHeatmapOpacityScale(estimate);
         mission.beliefMap.probabilities.forEach((probability, index) => {
           const intensity = Math.min(1, probability / peak);
-          if (intensity < 0.015) return;
+          if (intensity < 0.015 || opacityScale === 0) return;
           const x = (index % mission.beliefMap.gridSize) * cellWidth;
           const y = Math.floor(index / mission.beliefMap.gridSize) * cellHeight;
-          context.fillStyle = `rgba(255, ${Math.round(185 - intensity * 105)}, 45, ${0.08 + intensity * 0.48})`;
+          const alpha = (0.08 + intensity * 0.48) * opacityScale;
+          context.fillStyle = `rgba(255, ${Math.round(185 - intensity * 105)}, 45, ${alpha})`;
           context.fillRect(x, y, cellWidth, cellHeight);
         });
       }

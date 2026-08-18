@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { advanceBeliefMap, createBeliefMap, getBeliefPeak } from "./beliefMap";
+import { advanceBeliefMap, createBeliefMap, getBeliefHeatmapOpacityScale, getBeliefPeak } from "./beliefMap";
 import type { RadarContact } from "./types";
 
 function contact(x: number, y: number, timestamp = 1000, confidence = 0.9): RadarContact {
@@ -51,6 +51,11 @@ describe("Belief Map", () => {
     const expired = advanceBeliefMap(observed, [], 14000, 13);
     expect(getBeliefPeak(expired, 14000).isValid).toBe(false);
     expect(getBeliefPeak(expired, 14000).position).toBeUndefined();
+    expect(getBeliefHeatmapOpacityScale(getBeliefPeak(expired, 14000))).toBeLessThan(0.2);
+  });
+
+  it("无概率质量时完全隐藏热力图", () => {
+    expect(getBeliefHeatmapOpacityScale(getBeliefPeak(createBeliefMap()))).toBe(0);
   });
 
   it("向地图外传播时概率流失而不是堆积在边缘", () => {
