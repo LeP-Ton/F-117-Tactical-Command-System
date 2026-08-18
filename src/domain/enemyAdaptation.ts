@@ -7,7 +7,6 @@ export function createPlayerTacticalProfile(): PlayerTacticalProfile {
     terrainMaskingPreference: 0,
     southernRouteBias: 0.5,
     aggressiveRouting: 0,
-    contactTolerance: 0,
   };
 }
 
@@ -40,8 +39,6 @@ export function analyzeCompletedMission(
   );
   const directDistance = distance(flownPoints[0]!, flownPoints.at(-1)!);
   const aggressiveRouting = flownDistance === 0 ? 0 : Math.min(1, directDistance / flownDistance);
-  const contactCount = mission.events.filter((event) => event.type === "RADAR_CONTACT").length;
-  const contactTolerance = Math.min(1, contactCount / 8);
   const samples = profile.missionSamples;
 
   return {
@@ -49,7 +46,6 @@ export function analyzeCompletedMission(
     terrainMaskingPreference: blend(profile.terrainMaskingPreference, terrainPreference, samples),
     southernRouteBias: blend(profile.southernRouteBias, southernBias, samples),
     aggressiveRouting: blend(profile.aggressiveRouting, aggressiveRouting, samples),
-    contactTolerance: blend(profile.contactTolerance, contactTolerance, samples),
   };
 }
 

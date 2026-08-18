@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import type { RunState } from "../domain/types";
 import type { GameAction } from "../game/gameReducer";
-import { getModule } from "../build/moduleRegistry";
 
 interface CampaignMapProps {
   state: RunState;
@@ -32,10 +31,9 @@ export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
       <div className="campaign-header">
         <div><span className="section-kicker">PROCEDURAL CAMPAIGN</span><h2>防空战役网络</h2></div>
         <div className="campaign-resources">
-          <span>INTEL <strong>{state.resources.intel}</strong></span>
           <span>ENEMY ALERT <strong>{state.resources.enemyAlert}</strong></span>
           <span>AIRFRAME <strong>{state.resources.airframeCondition}%</strong></span>
-          <span>INTEL ACC <strong>+{(state.resources.intelAccuracyBonus * 100).toFixed(0)}%</strong></span>
+          <span>INTEL QUALITY <strong>+{(state.resources.intelAccuracyBonus * 100).toFixed(0)}%</strong></span>
           <span>RADAR NET <strong>{(state.enemyState.radarCoverageModifier * 100).toFixed(0)}%</strong></span>
           <span>CMD LINK <strong>{(state.enemyState.commanderCoordinationModifier * 100).toFixed(0)}%</strong></span>
           <span>ADAPT <strong>LV.{state.enemyState.adaptationLevel}</strong></span>
@@ -81,7 +79,6 @@ export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
               <div>地形利用 {(state.enemyState.tacticalProfile.terrainMaskingPreference * 100).toFixed(0)}%</div>
               <div>{state.enemyState.tacticalProfile.southernRouteBias > 0.5 ? "南部" : "北部"}航路偏好 {(Math.abs(state.enemyState.tacticalProfile.southernRouteBias - 0.5) * 200).toFixed(0)}%</div>
               <div>直达倾向 {(state.enemyState.tacticalProfile.aggressiveRouting * 100).toFixed(0)}%</div>
-              <div>接触容忍 {(state.enemyState.tacticalProfile.contactTolerance * 100).toFixed(0)}%</div>
             </div>}
             <button
               className="primary-button"
@@ -93,12 +90,6 @@ export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
             >
               {state.status === "VICTORY" ? "RUN 已完成" : state.status === "DEFEAT" ? "飞机损失 // RUN 结束" : "执行任务"}
             </button>
-            {state.playerBuild.moduleIds.length > 0 && <div className="campaign-build">
-              <span className="section-kicker">PLAYER BUILD</span>
-              {state.playerBuild.moduleIds.map((moduleId) => (
-                <div key={moduleId}>{getModule(moduleId)?.name ?? moduleId}</div>
-              ))}
-            </div>}
           </>}
         </aside>
       </div>

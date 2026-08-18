@@ -25,8 +25,6 @@ const eventLabels: Record<string, string> = {
   EXTRACTION: "进入撤离区",
   MISSION_SUCCESS: "任务成功",
   MISSION_FAILED: "任务失败",
-  BUILD_CHOICE: "选择战术模块",
-  FALSE_CONTACT: "制造虚假 Contact",
   THREAT_STAGE_CHANGED: "威胁阶段变化",
   MISSILE_LAUNCHED: "导弹发射",
   MISSILE_DEFEATED: "导弹脱锁",
@@ -102,8 +100,6 @@ export function App() {
           dispatch={dispatch}
           onOpenCampaign={() => setCampaignView(true)}
           onReturnCampaign={() => setCampaignView(true)}
-          pendingRewardIds={state.pendingRewardIds}
-          moduleIds={state.playerBuild.moduleIds}
         />
         <section className="map-stage">
           <div className="map-label">

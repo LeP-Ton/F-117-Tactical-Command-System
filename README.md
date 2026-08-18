@@ -1,6 +1,6 @@
 # ZERO RETURN
 
-以 F-117 隐身攻击机为主题的 2D 动态战术航线规划原型。当前核心变化来自程序生成地图、雷达网络、天气、敌方认知与 Campaign 防空体系，而不是玩家奖励 Build。
+以 F-117 隐身攻击机为主题的 2D 动态战术航线规划游戏。当前核心变化来自程序生成地图、雷达网络、天气、敌方认知与 Campaign 防空体系。
 
 完整规则、雷达动作、敌方认知链与 Campaign 持久效果参见[游戏机制手册](docs/game-mechanics.md)。
 
@@ -33,7 +33,7 @@ npm run build
 
 每个 Run 会生成 6–7 个分层 Campaign 节点。选择节点前可以预览雷达密度、天气、情报可信度、Doctrine 和战略效果；完成任务后返回战役地图解锁下一层。
 
-当前 Tactical Reward Pool 为空，成功完成任务后可直接返回 Campaign Map。奖励注册和 Build 接口仍作为未来扩展点保留，但不参与当前玩法。
+成功完成任务后直接返回 Campaign Map。已移除不参与当前玩法的 Tactical Reward 与 Player Build 空框架。
 
 Campaign 选择会持续重构后续防空体系：Recon/ELINT 提高情报精度，SEAD 缩小雷达覆盖，Command Strike 降低雷达协调，Enemy Alert 则扩大后续雷达覆盖。
 
@@ -47,7 +47,7 @@ Contact 会提升任务内 Enemy Awareness。Air Defense Commander 根据警戒�
 
 连续高质量 Contact 会依次形成疑似搜索、持续跟踪、火控锁定和导弹来袭。导弹飞行期间切断雷达新证据可使其脱锁；未能脱锁会造成 50 点机体伤害，第二次命中会摧毁飞机并结束本次 Run。
 
-任务结束后，敌方会分析已经实际飞过的航点与 Contact 历史，形成地形利用、南北航路、直达倾向和接触容忍画像；后续任务可能针对山地出口、偏好航路或直达轴线调整雷达部署。
+任务结束后，敌方会分析已经实际飞过的航点，形成地形利用、南北航路和直达倾向画像；后续任务可能针对山地出口、偏好航路或直达轴线调整雷达部署。
 
 Final Strike 会根据 Campaign 历史动态组装最终防空：SEAD 决定后备雷达、Enemy Alert 决定警戒增援、Enemy Adaptation 决定历史航路截击部署，Command Strike 与情报任务则继续影响指挥链和有限情报。
 
@@ -62,4 +62,4 @@ Final Strike 会根据 Campaign 历史动态组装最终防空：SEAD 决定后�
 - `src/ui`：React 控制界面与 Canvas 战术地图。
 - `src/config`：地图、飞机和交互参数。
 
-`RunState` 与 `MissionSession` 始终分离，后续 Campaign、Build 和 Enemy Adaptation 不依赖 UI 重构即可接入。
+`RunState` 与 `MissionSession` 始终分离，Campaign 和 Enemy Adaptation 不依赖 UI 重构即可演进。

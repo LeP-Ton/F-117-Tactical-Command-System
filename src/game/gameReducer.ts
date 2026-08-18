@@ -7,8 +7,6 @@ import { createGameEvent, createMission, createRun } from "../domain/factories";
 import { advanceRadarOperators } from "../domain/radarOperatorAI";
 import { advanceRadarSensors } from "../domain/radarSensor";
 import { canAttackTarget, isInsideExtraction } from "../domain/missionRules";
-import { applyBuildToMission } from "../build/moduleRegistry";
-import { generateRewardChoices } from "../build/rewardGenerator";
 import { generateRadarIntel } from "../domain/intelSystem";
 import { analyzeCompletedMission, applyEnemyCounterDeployment } from "../domain/enemyAdaptation";
 import { applyFinalStrikeDefense } from "../domain/finalStrike";
@@ -25,8 +23,6 @@ export type GameAction =
   | { type: "NEW_RUN"; seed: string }
   | { type: "SELECT_CAMPAIGN_NODE"; nodeId: string }
   | { type: "RETURN_CAMPAIGN" }
-  | { type: "CHOOSE_REWARD"; moduleId: string }
-  | { type: "DEPLOY_FALSE_CONTACT" }
   | { type: "ADD_WAYPOINT"; position: Vector2 }
   | { type: "MOVE_WAYPOINT"; index: number; position: Vector2 }
   | { type: "REMOVE_WAYPOINT"; index: number }
@@ -52,7 +48,7 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
     case "SELECT_CAMPAIGN_NODE": {
       const node = state.campaign.nodes.find((candidate) => candidate.id === action.nodeId);
       if (!node || node.status !== "AVAILABLE") return state;
-      const selectedMission = applyBuildToMission(createMission(node.missionSeed), state.playerBuild.moduleIds);
+      const selectedMission = createMission(node.missionSeed);
       const carriesDamage = state.resources.airframeCondition <= 50;
       const alertCoverageMultiplier = 1 + state.resources.enemyAlert / 250;
       const adjustedRadars = selectedMission.radars.map((radar) => ({
@@ -95,7 +91,6 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
     }
     case "RETURN_CAMPAIGN": {
       if (mission.status !== "SUCCESS" && mission.status !== "FAILED") return state;
-      if (state.pendingRewardIds.length > 0) return state;
       const currentNode = state.campaign.nodes.find((node) => node.id === state.campaign.currentNodeId);
       if (!currentNode) return state;
       const succeeded = mission.status === "SUCCESS";
@@ -110,9 +105,6 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         if (outgoingIds.has(node.id) && node.status === "LOCKED") return { ...node, status: "AVAILABLE" as const };
         return node;
       });
-      const intelGain = succeeded
-        ? currentNode.type === "ELINT" ? 3 : currentNode.type === "RECON" ? 2 : currentNode.type === "STRIKE" ? 1 : 0
-        : 0;
       const alertDelta = succeeded && currentNode.type === "SEAD" ? -8 : succeeded ? 2 : 10;
       const tacticalProfile = analyzeCompletedMission(state.enemyState.tacticalProfile, mission);
       const learnedFromMission = tacticalProfile.missionSamples > state.enemyState.tacticalProfile.missionSamples;
@@ -122,7 +114,6 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         campaign: { ...state.campaign, nodes, completedNodeIds, currentNodeId: undefined },
         resources: {
           ...state.resources,
-          intel: state.resources.intel + intelGain,
           enemyAlert: Math.max(0, Math.min(100, state.resources.enemyAlert + alertDelta)),
           intelAccuracyBonus: Math.min(
             0.24,
@@ -143,54 +134,6 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
           commanderCoordinationModifier: succeeded && currentNode.type === "COMMAND_STRIKE"
             ? Math.max(0.45, state.enemyState.commanderCoordinationModifier * 0.75)
             : state.enemyState.commanderCoordinationModifier,
-        },
-      };
-    }
-    case "CHOOSE_REWARD": {
-      if (!state.pendingRewardIds.includes(action.moduleId)) return state;
-      return {
-        ...state,
-        playerBuild: {
-          moduleIds: [...new Set([...state.playerBuild.moduleIds, action.moduleId])],
-        },
-        pendingRewardIds: [],
-        currentMission: {
-          ...mission,
-          events: [
-            ...mission.events,
-            createGameEvent(mission, "BUILD_CHOICE", { moduleId: action.moduleId }),
-          ],
-        },
-      };
-    }
-    case "DEPLOY_FALSE_CONTACT": {
-      if (mission.falseContactCharges <= 0 || mission.status !== "RUNNING") return state;
-      const radarId = mission.radars[0]?.id;
-      if (!radarId) return state;
-      const fakeContact = {
-        id: `FALSE-${mission.elapsedMs}`,
-        radarId,
-        timestamp: mission.elapsedMs,
-        estimatedPosition: {
-          x: gameConfig.world.width - mission.aircraft.position.x,
-          y: Math.max(0, Math.min(gameConfig.world.height, mission.aircraft.position.y - 180)),
-        },
-        confidence: 0.48,
-        signalStrength: 0.32,
-        errorRadius: 78,
-      };
-      return {
-        ...state,
-        currentMission: {
-          ...mission,
-          falseContactCharges: mission.falseContactCharges - 1,
-          radarContacts: [...mission.radarContacts, fakeContact],
-          beliefMap: advanceBeliefMap(mission.beliefMap, [fakeContact], mission.elapsedMs, 0),
-          awareness: advanceAwareness(mission.awareness, [fakeContact], 0),
-          events: [
-            ...mission.events,
-            createGameEvent(mission, "FALSE_CONTACT", { estimatedPosition: fakeContact.estimatedPosition }),
-          ],
         },
       };
     }
@@ -304,7 +247,6 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
       const nextTimestamp = mission.elapsedMs + action.deltaSeconds * 1000;
       const autoAttack = canAttackTarget({ ...mission, aircraft: result.aircraft });
       const target = autoAttack ? { ...mission.target, destroyed: true } : mission.target;
-      const weaponsRemaining = autoAttack ? mission.weaponsRemaining - 1 : mission.weaponsRemaining;
       const radarResult = advanceRadarSensors(
         mission.seed,
         mission.radars,
@@ -334,7 +276,7 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
       );
       const radarContacts = [
         ...mission.radarContacts.filter(
-          (contact) => nextTimestamp - contact.timestamp <= gameConfig.radar.contactLifetimeMs * mission.contactLifetimeMultiplier,
+          (contact) => nextTimestamp - contact.timestamp <= gameConfig.radar.contactLifetimeMs,
         ),
         ...radarResult.contacts,
       ];
@@ -488,9 +430,6 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         status: aircraftDestroyed ? "DEFEAT" : state.status,
         resources: { ...state.resources, airframeCondition },
         missionHistory: [...state.missionHistory, ...missionResult],
-        pendingRewardIds: terminalStatus === "SUCCESS"
-          ? generateRewardChoices(state.seed, state.playerBuild.moduleIds, state.missionHistory.length)
-          : state.pendingRewardIds,
         currentMission: {
           ...mission,
           status: terminalStatus,
@@ -498,7 +437,6 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
           aircraft,
           route: result.route,
           target,
-          weaponsRemaining,
           radars: operatorResult.radars,
           radarContacts,
           beliefMap,

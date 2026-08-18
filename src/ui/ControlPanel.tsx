@@ -2,7 +2,6 @@ import { canEditWaypoint } from "../domain/route";
 import { distanceBetween } from "../domain/missionRules";
 import type { MissionSession } from "../domain/types";
 import type { GameAction } from "../game/gameReducer";
-import { getModule } from "../build/moduleRegistry";
 
 interface ControlPanelProps {
   mission: MissionSession;
@@ -11,8 +10,6 @@ interface ControlPanelProps {
   dispatch: (action: GameAction) => void;
   onOpenCampaign: () => void;
   onReturnCampaign: () => void;
-  pendingRewardIds: string[];
-  moduleIds: string[];
 }
 
 const statusLabels = {
@@ -23,7 +20,7 @@ const statusLabels = {
   FAILED: "任务失败",
 } as const;
 
-export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpenCampaign, onReturnCampaign, pendingRewardIds, moduleIds }: ControlPanelProps) {
+export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpenCampaign, onReturnCampaign }: ControlPanelProps) {
   const editable = mission.status === "PLANNING" || mission.status === "PAUSED";
   const selectedEditable = selectedIndex !== null && canEditWaypoint(mission.route, selectedIndex);
   const targetDistance = distanceBetween(mission.aircraft.position, mission.target.position);
@@ -63,7 +60,7 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
           <button className="secondary-button" onClick={() => dispatch({ type: "RESET" })}>
             重置任务
           </button>
-          {(mission.status === "SUCCESS" || mission.status === "FAILED") && pendingRewardIds.length === 0 && (
+          {(mission.status === "SUCCESS" || mission.status === "FAILED") && (
             <button className="primary-button" onClick={() => {
               dispatch({ type: "RETURN_CAMPAIGN" });
               onReturnCampaign();
@@ -72,35 +69,6 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
         </div>
       </section>
 
-      {pendingRewardIds.length > 0 && (
-        <section className="panel-section reward-section">
-          <div className="section-heading"><span>TACTICAL REWARD</span><span>三选一</span></div>
-          {pendingRewardIds.map((moduleId) => {
-            const module = getModule(moduleId)!;
-            return (
-              <button className="reward-card" key={module.id} onClick={() => dispatch({ type: "CHOOSE_REWARD", moduleId })}>
-                <span>{module.archetype}</span><strong>{module.name}</strong><small>{module.description}</small>
-              </button>
-            );
-          })}
-        </section>
-      )}
-
-      {(moduleIds.length > 0 || mission.falseContactCharges > 0) && <section className="panel-section build-section">
-        <div className="section-heading"><span>PLAYER BUILD</span><span>{moduleIds.length} MODULES</span></div>
-        <div className="build-list">
-          {moduleIds.length === 0 && <span>尚未获得模块</span>}
-          {moduleIds.map((moduleId) => <span key={moduleId}>{getModule(moduleId)?.name ?? moduleId}</span>)}
-        </div>
-        {mission.falseContactCharges > 0 && (
-          <button
-            className="deception-button"
-            disabled={mission.status !== "RUNNING"}
-            onClick={() => dispatch({ type: "DEPLOY_FALSE_CONTACT" })}
-          >制造虚假 Contact ({mission.falseContactCharges})</button>
-        )}
-      </section>}
-
       <section className="panel-section objective-section">
         <div className="section-heading"><span>MISSION OBJECTIVE</span><span>{mission.target.id}</span></div>
         <div className={`objective-state ${mission.target.destroyed ? "destroyed" : ""}`}>
@@ -108,7 +76,7 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
         </div>
         <div className="objective-meta">
           <span>距离 {targetDistance.toFixed(0)} u</span>
-          <span>武器 {mission.weaponsRemaining}</span>
+          <span>{mission.target.destroyed ? "弹药已投放" : "弹药待命"}</span>
         </div>
         <p className="hint">进入目标半径 {mission.target.attackRadius} u 后自动投弹；攻击会显著提高敌方警戒。</p>
       </section>

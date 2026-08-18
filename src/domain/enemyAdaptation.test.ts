@@ -40,7 +40,6 @@ describe("Enemy Adaptation", () => {
         terrainMaskingPreference: 0.8,
         southernRouteBias: 0.82,
         aggressiveRouting: 0.9,
-        contactTolerance: 0.4,
       },
     };
 

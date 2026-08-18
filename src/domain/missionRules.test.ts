@@ -3,13 +3,13 @@ import { createMission } from "./factories";
 import { canAttackTarget, isInsideExtraction } from "./missionRules";
 
 describe("Mission Rules", () => {
-  it("只有进入攻击半径且有武器时才能攻击", () => {
+  it("只有进入攻击半径且目标仍有效时才能攻击", () => {
     const mission = createMission("ATTACK");
     mission.status = "PAUSED";
     expect(canAttackTarget(mission)).toBe(false);
     mission.aircraft.position = { ...mission.target.position };
     expect(canAttackTarget(mission)).toBe(true);
-    mission.weaponsRemaining = 0;
+    mission.target.destroyed = true;
     expect(canAttackTarget(mission)).toBe(false);
   });
 

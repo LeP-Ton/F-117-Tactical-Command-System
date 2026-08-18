@@ -1,23 +1,12 @@
-import { useEffect, useMemo, useReducer, useRef } from "react";
+import { useEffect, useReducer, useRef } from "react";
 import { gameConfig } from "../config/gameConfig";
-import { EventBus } from "../core/EventBus";
 import { createRun } from "../domain/factories";
-import type { GameEvent } from "../domain/types";
 import { gameReducer } from "./gameReducer";
 
 export function useGameController() {
   const [state, dispatch] = useReducer(gameReducer, undefined, () => createRun());
-  const eventBus = useMemo(() => new EventBus<GameEvent>(), []);
-  const publishedCount = useRef(0);
   const lastFrame = useRef<number | null>(null);
   const mission = state.currentMission;
-
-  // 将 reducer 生成的领域事件发布给未来的复盘、雷达和 AI 订阅者。
-  useEffect(() => {
-    const events = mission?.events ?? [];
-    events.slice(publishedCount.current).forEach((event) => eventBus.publish(event));
-    publishedCount.current = events.length;
-  }, [eventBus, mission?.events]);
 
   useEffect(() => {
     if (mission?.status !== "RUNNING") {
@@ -40,5 +29,5 @@ export function useGameController() {
     return () => cancelAnimationFrame(frameId);
   }, [mission?.status]);
 
-  return { state, dispatch, eventBus };
+  return { state, dispatch };
 }

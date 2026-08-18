@@ -1,6 +1,7 @@
 # 项目文档索引
 
 ## 当前变更文档
+`workflow/20260819073234-remove-redundant-systems.md` - 会话-33：统一情报质量资源，移除失活 Reward/Build、虚假 Contact、空 EventBus、接触容忍与固定武器计数；排查系统冗余或追踪简化边界时读取。
 `workflow/20260819063213-strengthen-radar-network-coordination.md` - 会话-28：强化跨雷达 Contact 共享、联合火控、Commander 响应延迟与搜索方位误差；理解多雷达协同和 Command Strike 实际价值时读取。
 `workflow/20260819053551-contain-ui-scroll-in-viewport.md` - 会话-17：固定根节点与应用外壳到视口，禁止全局滚动并让左右面板、Campaign 各自内部滚动；排查 UI 溢出或滚动边界时读取。
 `workflow/20260819052414-fix-ai-debug-map-resize.md` - 会话-16：固定战术工作区高度并让左右面板独立滚动，修复切换 AI DEBUG 导致地图缩放变化；排查地图尺寸或三栏布局时读取。

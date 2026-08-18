@@ -38,23 +38,10 @@ export interface CampaignState {
   edges: CampaignEdge[];
 }
 
-export interface PlayerBuild {
-  moduleIds: string[];
-}
-
-export type ModuleArchetype = "GHOST" | "INTELLIGENCE" | "DECEPTION" | "RISK";
-
-export interface TacticalModule {
-  id: string;
-  name: string;
-  archetype: ModuleArchetype;
-  description: string;
-}
-
 export interface RunResources {
   airframeCondition: number;
-  intel: number;
   enemyAlert: number;
+  /** 跨任务积累的情报质量加成，直接影响后续雷达情报准确度。 */
   intelAccuracyBonus: number;
 }
 
@@ -71,7 +58,6 @@ export interface PlayerTacticalProfile {
   terrainMaskingPreference: number;
   southernRouteBias: number;
   aggressiveRouting: number;
-  contactTolerance: number;
 }
 
 export interface MissionResult {
@@ -249,8 +235,6 @@ export type GameEventType =
   | "EXTRACTION"
   | "MISSION_SUCCESS"
   | "MISSION_FAILED"
-  | "BUILD_CHOICE"
-  | "FALSE_CONTACT"
   | "THREAT_STAGE_CHANGED"
   | "MISSILE_LAUNCHED"
   | "MISSILE_DEFEATED"
@@ -283,7 +267,6 @@ export interface MissionSession {
   commander: CommanderState;
   target: MissionTarget;
   extractionArea: ExtractionArea;
-  weaponsRemaining: number;
   intelAccuracy: number;
   generationInfo: {
     terrainCount: number;
@@ -291,9 +274,6 @@ export interface MissionSession {
     weatherCount: number;
   };
   detectionModifier: number;
-  contactLifetimeMultiplier: number;
-  falseContactCharges: number;
-  threatPredictionEnabled: boolean;
   commanderCoordinationModifier: number;
   adaptationNotes: string[];
   finalStrikeNotes: string[];
@@ -303,11 +283,9 @@ export interface MissionSession {
 export interface RunState {
   seed: string;
   campaign: CampaignState;
-  playerBuild: PlayerBuild;
   resources: RunResources;
   enemyState: PersistentEnemyState;
   missionHistory: MissionResult[];
-  pendingRewardIds: string[];
   currentMission?: MissionSession;
   status: RunStatus;
 }

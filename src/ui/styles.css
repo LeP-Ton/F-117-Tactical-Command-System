@@ -56,13 +56,6 @@ button:disabled { opacity: 0.32; cursor: not-allowed; }
 .objective-state.destroyed { color: #6fc7a9; }
 .objective-meta { display: flex; justify-content: space-between; margin: 10px 0; color: #668a7f; font-size: 9px; }
 .attack-button { width: 100%; color: #ef9a72; border-color: #a84e37; background: rgba(110, 38, 24, 0.22); }
-.reward-card { width: 100%; display: flex; flex-direction: column; gap: 5px; margin-bottom: 7px; text-align: left; }
-.reward-card span { color: #b7893a; font-size: 8px; }
-.reward-card strong { color: #e0b35a; font-size: 11px; }
-.reward-card small { color: #74978c; font-size: 9px; line-height: 1.4; }
-.build-list { display: flex; flex-wrap: wrap; gap: 5px; }
-.build-list span { padding: 4px 6px; color: #8db3a7; border: 1px solid #294d41; font-size: 8px; }
-.deception-button { width: 100%; margin-top: 10px; color: #bb9be0; border-color: #654b83; }
 .hint { color: #4d7367; font-size: 10px; line-height: 1.6; }
 
 .map-stage { position: relative; height: 100%; min-height: 0; overflow: hidden; background: #07100e; }

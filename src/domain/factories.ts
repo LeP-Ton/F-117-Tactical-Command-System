@@ -37,13 +37,9 @@ export function createMission(seed: string): MissionSession {
       destroyed: false,
     },
     extractionArea: { ...gameConfig.mission.extractionArea },
-    weaponsRemaining: 1,
     intelAccuracy: generated.intelAccuracy,
     generationInfo: generated.generationInfo,
     detectionModifier: 1,
-    contactLifetimeMultiplier: 1,
-    falseContactCharges: 0,
-    threatPredictionEnabled: false,
     commanderCoordinationModifier: 1,
     adaptationNotes: [],
     finalStrikeNotes: [],
@@ -57,8 +53,7 @@ export function createRun(seed: string = gameConfig.initialSeed): RunState {
   return {
     seed,
     campaign: { ...campaign, currentNodeId: firstNode.id },
-    playerBuild: { moduleIds: [] },
-    resources: { airframeCondition: 100, intel: 0, enemyAlert: 0, intelAccuracyBonus: 0 },
+    resources: { airframeCondition: 100, enemyAlert: 0, intelAccuracyBonus: 0 },
     enemyState: {
       adaptationLevel: 0,
       radarCoverageModifier: 1,
@@ -66,7 +61,6 @@ export function createRun(seed: string = gameConfig.initialSeed): RunState {
       tacticalProfile: createPlayerTacticalProfile(),
     },
     missionHistory: [],
-    pendingRewardIds: [],
     currentMission: createMission(firstNode.missionSeed),
     status: "ACTIVE",
   };

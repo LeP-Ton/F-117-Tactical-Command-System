@@ -48,7 +48,6 @@ describe("gameReducer", () => {
     };
     state = gameReducer(state, { type: "TICK", deltaSeconds: 0.01 });
     expect(state.currentMission?.target.destroyed).toBe(true);
-    expect(state.currentMission?.weaponsRemaining).toBe(0);
     expect(state.currentMission?.awareness.value).toBeGreaterThan(30);
     expect(state.currentMission?.events.some((event) => event.type === "ATTACK" && event.data.automatic === true)).toBe(true);
   });
@@ -110,7 +109,7 @@ describe("gameReducer", () => {
     state = { ...state, currentMission: { ...state.currentMission!, status: "SUCCESS" } };
     state = gameReducer(state, { type: "RETURN_CAMPAIGN" });
     expect(state.campaign.completedNodeIds).toContain("C0-0");
-    expect(state.resources.intel).toBe(2);
+    expect(state.resources.intelAccuracyBonus).toBeCloseTo(0.06);
     expect(state.campaign.nodes.filter((node) => node.layer === 1).every((node) => node.status === "AVAILABLE")).toBe(true);
   });
 
@@ -170,37 +169,6 @@ describe("gameReducer", () => {
     state = { ...state, resources: { ...state.resources, enemyAlert: 50 } };
     state = gameReducer(state, { type: "SELECT_CAMPAIGN_NODE", nodeId: node.id });
     expect(state.currentMission!.radars[0]!.range).toBeCloseTo(baseline * 1.2);
-  });
-
-  it("当前空奖励池下成功任务可直接返回 Campaign", () => {
-    let state = createRun("REWARD");
-    const mission = state.currentMission!;
-    const extractionPoint = { x: 900, y: 80 };
-    state = {
-      ...state,
-      currentMission: {
-        ...mission,
-        status: "RUNNING",
-        target: { ...mission.target, destroyed: true },
-        aircraft: { ...mission.aircraft, position: extractionPoint },
-        route: { activeWaypointIndex: 1, waypoints: [mission.route.waypoints[0]!, { id: "x", kind: "NAVIGATION", position: extractionPoint, status: "PENDING" }] },
-      },
-    };
-    state = gameReducer(state, { type: "TICK", deltaSeconds: 0.01 });
-    expect(state.pendingRewardIds).toEqual([]);
-    expect(gameReducer(state, { type: "RETURN_CAMPAIGN" })).not.toBe(state);
-  });
-
-  it("虚假接触会消耗充能并污染 Belief Map", () => {
-    let state = createRun("DECEPTION");
-    state = {
-      ...state,
-      currentMission: { ...state.currentMission!, status: "RUNNING", falseContactCharges: 1 },
-    };
-    state = gameReducer(state, { type: "DEPLOY_FALSE_CONTACT" });
-    expect(state.currentMission?.falseContactCharges).toBe(0);
-    expect(state.currentMission?.radarContacts.at(-1)?.id).toContain("FALSE");
-    expect(Math.max(...state.currentMission!.beliefMap.probabilities)).toBeGreaterThan(0);
   });
 
   it("完成任务后学习已飞航线并反制后续部署", () => {

@@ -41,7 +41,6 @@ describe("Final Strike 动态防空体系", () => {
         terrainMaskingPreference: 0.5,
         southernRouteBias: 0.8,
         aggressiveRouting: 0.85,
-        contactTolerance: 0.5,
       },
     }));
 
