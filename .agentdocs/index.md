@@ -1,6 +1,10 @@
 # 项目文档索引
 
 ## 当前变更文档
+`workflow/20260819084340-halve-aircraft-speed.md` - 会话-41：将飞机基础速度从 7.2 u/s 减半为 3.6 u/s；核对任务节奏或飞行耗时时读取。
+`workflow/20260819083706-remove-strike-position-search.md` - 会话-40：删除投弹后的目标区集中搜索与定位回退，恢复“投弹只提高 Awareness、方位只来自 Belief/CMD”；核对警戒值时期搜索方式时读取。
+`workflow/20260819082423-restore-awareness-without-silence.md` - 会话-39：恢复 Awareness 作为 Commander 搜索强度输入，同时保持雷达静默、网络静默和 Doctrine 已删除；区分警戒值与跟踪进度时读取。
+`workflow/20260819080320-simplify-core-radar-loop.md` - 会话-36：保留 Contact、Belief/CMD、Commander 与三种雷达搜索，删除静默、Doctrine、Awareness 和机体损伤层；理解当前核心雷达与单次命中失败规则时读取。
 `workflow/20260819073234-remove-redundant-systems.md` - 会话-33：统一情报质量资源，移除失活 Reward/Build、虚假 Contact、空 EventBus、接触容忍与固定武器计数；排查系统冗余或追踪简化边界时读取。
 `workflow/20260819063213-strengthen-radar-network-coordination.md` - 会话-28：强化跨雷达 Contact 共享、联合火控、Commander 响应延迟与搜索方位误差；理解多雷达协同和 Command Strike 实际价值时读取。
 `workflow/20260819053551-contain-ui-scroll-in-viewport.md` - 会话-17：固定根节点与应用外壳到视口，禁止全局滚动并让左右面板、Campaign 各自内部滚动；排查 UI 溢出或滚动边界时读取。
@@ -35,16 +39,16 @@
 - 只有 Radar Sensor 可读取飞机真实状态，后续 AI 只能消费带误差 Radar Contact。
 - Radar Operator 基于自身 Contact 和历史状态计算 Utility 评分，不共享真实飞机信息。
 - Belief Map 仅消费 Contact，以 24×24 网格保存概率分布并进行运动传播、扩散和衰减。
-- Commander 只读取 Awareness、Belief 与雷达状态，通过 Utility 偏置协调各 Radar Operator。
+- Commander 只读取 Awareness、Belief 与雷达状态，通过 Utility 偏置协调各 Radar Operator；投弹只提高警戒，不提供目标区定位，网络静默仍已移除。
 - 单 Mission 已形成 Plan → Infiltrate → Strike → High-alert Extraction → Result 闭环。
-- Mission 的地形、天气、雷达、目标、情报精度和 Commander Doctrine 均由 Seed 确定生成。
+- Mission 的地形、天气、雷达、目标和情报精度均由 Seed 确定生成。
 - Campaign Graph 由 Run Seed 生成，任务结果会修改节点、Intel、Enemy Alert 与后续雷达覆盖。
-- 当前 Tactical Reward Pool 为空，成功任务直接返回 Campaign；奖励与 Build 代码仅作为未来扩展框架。
-- 当前 Roguelike 差异集中在程序生成地图、雷达网络、天气、Doctrine 与 Campaign 防空构建，不依赖玩家奖励。
+- Tactical Reward 与 Player Build 已完整移除，成功任务直接返回 Campaign。
+- 当前 Roguelike 差异集中在程序生成地图、雷达网络、天气与 Campaign 防空构建。
 - Recon/ELINT、SEAD、Command Strike 与 Enemy Alert 会分别修改后续任务的情报精度、雷达覆盖或 Commander 协调。
 - 默认战术地图只呈现带误差的玩家雷达情报；敌方真实雷达、Contact、Belief、警戒和 Utility 仅在 AI DEBUG 中呈现。
 - Enemy Adaptation 仅分析已完成航点和历史 Contact，并根据地形利用、南北航路及直达倾向调整后续任务的雷达部署。
 - Final Strike 会综合 SEAD、Command Strike、情报任务、Enemy Alert、适应等级与失败历史动态生成最终防空体系。
 - 飞机基础速度为 `7.2 u/s`，运行中进入目标攻击半径后自动投弹，无需玩家手动操作。
-- 连续 Contact 会累积跟踪并触发导弹；切断新证据可以脱锁，首次命中造成持久损伤，第二次命中结束 Run。
+- 连续 Contact 会累积跟踪并触发导弹；切断新证据可以脱锁，导弹命中立即摧毁飞机并结束 Run。
 - 检索时先读取本索引，再按需读取具体 workflow 文档。

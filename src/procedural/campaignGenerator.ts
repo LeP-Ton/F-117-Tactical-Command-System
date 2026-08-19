@@ -43,7 +43,6 @@ export function generateCampaign(seed: string): CampaignState {
           radarDensity: generated.radars.length,
           weather: generated.weather.map((weather) => weather.kind).join(" + "),
           intelAccuracy: generated.intelAccuracy,
-          doctrine: generated.commander.doctrine,
           effect: effects[type],
         },
       });

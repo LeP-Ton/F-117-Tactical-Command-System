@@ -32,7 +32,6 @@ export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
         <div><span className="section-kicker">PROCEDURAL CAMPAIGN</span><h2>防空战役网络</h2></div>
         <div className="campaign-resources">
           <span>ENEMY ALERT <strong>{state.resources.enemyAlert}</strong></span>
-          <span>AIRFRAME <strong>{state.resources.airframeCondition}%</strong></span>
           <span>INTEL QUALITY <strong>+{(state.resources.intelAccuracyBonus * 100).toFixed(0)}%</strong></span>
           <span>RADAR NET <strong>{(state.enemyState.radarCoverageModifier * 100).toFixed(0)}%</strong></span>
           <span>CMD LINK <strong>{(state.enemyState.commanderCoordinationModifier * 100).toFixed(0)}%</strong></span>
@@ -70,7 +69,6 @@ export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
               <div><dt>雷达密度</dt><dd>{selected.preview.radarDensity}</dd></div>
               <div><dt>天气</dt><dd>{selected.preview.weather}</dd></div>
               <div><dt>情报可信度</dt><dd>{(selected.preview.intelAccuracy * 100).toFixed(0)}%</dd></div>
-              <div><dt>Commander</dt><dd>{selected.preview.doctrine}</dd></div>
             </dl>
             <p>{selected.preview.effect}</p>
             {selected.type === "FINAL_STRIKE" && <p>最终防空体系将在出击时根据本次 Run 的任务成果、Enemy Alert 与玩家历史动态组装。</p>}

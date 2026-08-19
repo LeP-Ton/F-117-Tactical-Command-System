@@ -5,7 +5,7 @@ export const gameConfig = {
     gridStep: 100,
   },
   aircraft: {
-    speed: 7.2,
+    speed: 3.6,
     waypointArrivalRadius: 5,
   },
   loop: {
@@ -26,8 +26,6 @@ export const gameConfig = {
     focusedContactMemoryMs: 4500,
     sectorContactMemoryMs: 9000,
     sharedContactMemoryMs: 4500,
-    shutdownDurationMs: 3000,
-    shutdownCooldownMs: 20000,
   },
   belief: {
     gridSize: 24,
@@ -71,9 +69,6 @@ export const gameConfig = {
     decayPerSecond: 14,
     missileGuidanceBreakThreshold: 32,
     missileFlightSeconds: 8,
-    hitDamage: 50,
-    damagedSpeedMultiplier: 0.72,
-    damagedDetectionMultiplier: 1.18,
   },
   mission: {
     attackRadius: 58,

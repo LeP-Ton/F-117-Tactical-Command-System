@@ -14,13 +14,11 @@ export function advanceRadarSensors(
   aircraft: AircraftState,
   terrain: TerrainZone[],
   weather: WeatherZone[],
-  detectionModifier: number,
   timestamp: number,
   deltaSeconds: number,
 ): RadarSimulationResult {
   const contacts: RadarContact[] = [];
   const nextRadars = radars.map((radar) => {
-    if (!radar.active) return radar;
     let accumulator = radar.scanAccumulatorSeconds + deltaSeconds;
     let scanCount = radar.scanCount;
     const wideSweep = (radar.sweepAngleDegrees + gameConfig.radar.sweepDegreesPerSecond * deltaSeconds) % 360;
@@ -41,7 +39,7 @@ export function advanceRadarSensors(
     while (accumulator >= gameConfig.radar.scanIntervalSeconds) {
       accumulator -= gameConfig.radar.scanIntervalSeconds;
       scanCount += 1;
-      const factors = calculateDetectionFactors(nextRadar, aircraft, terrain, weather, detectionModifier);
+      const factors = calculateDetectionFactors(nextRadar, aircraft, terrain, weather);
       const random = new SeededRandom(`${missionSeed}:${radar.id}:${scanCount}`);
       if (random.next() < factors.probability) {
         const confidence = Math.max(0.12, Math.min(0.96, factors.probability + 0.28));

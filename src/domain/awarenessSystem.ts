@@ -8,10 +8,10 @@ export function awarenessStage(value: number): AwarenessStage {
   return "CALM";
 }
 
-/** Awareness 只根据传感器证据变化，不读取飞机状态。 */
+/** 敌方警戒只由已经获得的 Contact 与已知打击事件变化，不读取飞机真实状态。 */
 export function advanceAwareness(
   state: AwarenessState,
-  contacts: RadarContact[],
+  contacts: readonly RadarContact[],
   deltaSeconds: number,
 ): AwarenessState {
   const evidence = contacts.reduce(

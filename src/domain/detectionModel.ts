@@ -36,7 +36,6 @@ export function calculateDetectionFactors(
   aircraft: AircraftState,
   terrainZones: TerrainZone[],
   weatherZones: WeatherZone[] = [],
-  aircraftModifier = 1,
 ): DetectionFactors {
   const distance = Math.hypot(
     aircraft.position.x - radar.position.x,
@@ -73,7 +72,7 @@ export function calculateDetectionFactors(
     .reduce((factor, weather) => factor * weather.detectionFactor, 1);
   const probability = Math.min(
     0.95,
-    gameConfig.radar.baseDetectionProbability * distanceFactor * aspectFactor * terrainFactor * weatherFactor * beamFactor * aircraftModifier,
+    gameConfig.radar.baseDetectionProbability * distanceFactor * aspectFactor * terrainFactor * weatherFactor * beamFactor,
   );
 
   return { distance: distanceFactor, aspect: aspectFactor, terrain: terrainFactor, weather: weatherFactor, beam: beamFactor, probability };

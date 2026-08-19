@@ -10,7 +10,6 @@ function createRadar(id = "R1"): RadarState {
     sweepAngleDegrees: 0,
     scanAccumulatorSeconds: 0,
     scanCount: 0,
-    active: true,
     operator: createRadarOperatorState(),
   };
 }
@@ -45,15 +44,9 @@ describe("Radar Operator Utility AI", () => {
     expect(wide[0]?.operator.mode).toBe("WIDE_SEARCH");
   });
 
-  it("长时间无证据时短暂关机并按冷却恢复", () => {
-    const shutdown = advanceRadarOperators([createRadar()], [], 21000, 0.5).radars;
-    expect(shutdown[0]?.operator.mode).toBe("SHUTDOWN");
-    expect(shutdown[0]?.active).toBe(false);
-    const holding = advanceRadarOperators(shutdown, [], 22500, 0.5).radars;
-    expect(holding[0]?.operator.mode).toBe("SHUTDOWN");
-    const restored = advanceRadarOperators(holding, [], 25001, 0.5).radars;
-    expect(restored[0]?.operator.mode).toBe("WIDE_SEARCH");
-    expect(restored[0]?.active).toBe(true);
+  it("长时间无证据时持续广域搜索", () => {
+    const result = advanceRadarOperators([createRadar()], [], 21000, 0.5);
+    expect(result.radars[0]?.operator.mode).toBe("WIDE_SEARCH");
   });
 
   it("高效指挥链允许其他雷达使用共享 Contact，受损后共享窗口缩短", () => {

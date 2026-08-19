@@ -63,7 +63,6 @@ describe("防空交战系统", () => {
       trackProgress: 40,
       missileTimeRemainingSeconds: 7,
       launches: 1,
-      hits: 0,
     }, [], 1, 1);
 
     expect(result.missileDefeated).toBe(true);
@@ -77,11 +76,9 @@ describe("防空交战系统", () => {
       trackProgress: 100,
       missileTimeRemainingSeconds: 0.1,
       launches: 1,
-      hits: 0,
     }, [], 0.2, 1);
 
     expect(result.aircraftHit).toBe(true);
-    expect(result.state.hits).toBe(1);
     expect(result.state.stage).toBe("TRACKED");
   });
 });

@@ -10,18 +10,19 @@
 - `RunState` 与 `MissionSession` 严格分离；Seed、Campaign 和 Enemy Adaptation 均保留独立扩展边界。
 - Canvas 只负责绘制与坐标交互，游戏状态以 reducer 和领域模型为唯一事实来源。
 - 雷达架构遵循 Reality → Radar Sensor → Imperfect Contact；只有 Sensor 层可读取飞机真实状态，后续 AI 只能消费带误差 Contact。
-- 每台 Radar Operator 独立保存模式、Contact 记忆和全部 Utility 评分；目前支持 Wide Search、Sector Search、Focused Track、Shutdown。
+- 每台 Radar Operator 独立保存模式、Contact 记忆和全部 Utility 评分；目前只支持 Wide Search、Sector Search 与 Focused Track，雷达始终开机扫描。
 - Belief Map 使用 24×24 概率网格，仅融合 Radar Contact；支持误差高斯注入、运动估计、扩散与衰减，完整内部状态只在调试热力图中展示。
-- Air Defense Commander 只读取 Awareness、Belief Map 与雷达状态，通过可解释 Utility 评分、跨雷达 Contact 共享和 Operator 偏置协调雷达，不读取飞机真实位置；指挥链受损会延迟决策、缩短共享窗口并扩大搜索方位误差。
-- 防空交战采用 Contact → 跟踪质量 → 火控锁定 → 导弹来袭链路；最强 Contact 保留本地火控能力，额外雷达证据通过指挥链形成联合跟踪，失去新证据可脱锁，命中造成持久机体损伤，机体归零会令 Run DEFEAT。
-- 飞机基础速度为 `7.2 u/s`；运行中进入攻击半径后自动投弹，目标摧毁会显著提升 Awareness，随后必须进入撤离区；航线结束但条件未满足判定失败。
+- Air Defense Commander 只读取 Awareness、Belief Map 与雷达状态，通过可解释 Utility 评分、跨雷达 Contact 共享和 Operator 偏置协调雷达，不读取飞机真实位置或把目标位置作为定位回退；指挥链受损会延迟决策、缩短共享窗口并扩大搜索方位误差。
+- Awareness 是任务内敌方总体警戒值，由 Contact 累积、失联后缓慢衰减、投弹时显著提升；它只驱动 Commander 搜索强度，不取代玩家可见的跟踪、锁定与导弹进度。
+- 防空交战采用 Contact → 跟踪质量 → 火控锁定 → 导弹来袭链路；最强 Contact 保留本地火控能力，额外雷达证据通过指挥链形成联合跟踪，失去新证据可脱锁，导弹命中会立即摧毁飞机并令 Run DEFEAT。
+- 飞机基础速度为 `3.6 u/s`；运行中进入攻击半径后自动投弹并提高 Awareness，随后玩家必须进入撤离区；航线结束但条件未满足判定失败。
 - 普通玩家视图通过 THREAT WARNING 显示可行动的模糊威胁阶段和导弹倒计时；真实 Contact、Belief 与 AI 评分仍只在 AI DEBUG 中显示。
-- Mission Generator 根据 Seed 生成 Terrain、Weather、Radar Network、Target、Intel Accuracy 与 Commander Doctrine；相同 Seed 必须完整复现。
+- Mission Generator 根据 Seed 生成 Terrain、Weather、Radar Network、Target 与 Intel Accuracy；相同 Seed 必须完整复现。
 - Campaign Generator 根据 Run Seed 生成分层 DAG（有向无环图）；节点结果解锁下一层并修改 Intel、Enemy Alert 或后续雷达覆盖。
-- Tactical Reward 与 Player Build 空框架已移除；当前核心玩法不依赖奖励模块，差异性来自动态航线、程序生成雷达/地形/天气、敌方 Belief 与 Commander 行为。
+- Tactical Reward 与 Player Build 已完整移除；当前核心玩法差异来自动态航线、程序生成雷达/地形/天气、敌方 Belief 与 Commander 行为。
 - 持久战役效果包括：Recon/ELINT 提高后续 Intel Accuracy，SEAD 降低 Radar Coverage，Command Strike 降低 Commander Coordination，Enemy Alert 提高未来 Radar Coverage。
 - Enemy Adaptation 只分析已完成航点，形成地形利用、南北航路和直达倾向画像，并据此调整后续雷达部署；禁止读取未来计划航点。
-- Final Strike 根据已完成节点、Enemy Alert、适应等级、玩家画像和失败历史动态增加后备/警戒/截击雷达并选择 Commander Doctrine，随后统一重新生成有限情报。
+- Final Strike 根据已完成节点、Enemy Alert、适应等级和玩家画像动态增加后备、警戒与截击雷达，随后统一重新生成有限情报。
 - 正常战术视图只显示由 Intel Accuracy 决定的雷达估计位置、误差区与估计覆盖；真实雷达、敌方 Contact、Belief 和 AI 决策仅在 AI DEBUG 中显示。
 - Recon/ELINT 的情报加成会提高后续任务的雷达发现率，并缩小位置与覆盖估计误差。
 - 战役只保留一个有效情报资源“情报质量”（代码字段 `intelAccuracyBonus`）；不再维护无用途的独立 Intel 点数。

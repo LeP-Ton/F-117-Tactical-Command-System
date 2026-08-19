@@ -8,7 +8,6 @@ function context(overrides: Partial<FinalStrikeContext> = {}): FinalStrikeContex
     enemyAlert: 0,
     adaptationLevel: 0,
     tacticalProfile: createRun("FINAL-CONTEXT").enemyState.tacticalProfile,
-    failedMissionCount: 0,
     ...overrides,
   };
 }
@@ -46,7 +45,6 @@ describe("Final Strike 动态防空体系", () => {
 
     expect(finalMission.radars.some((radar) => radar.id === "ALERT-GUARD")).toBe(true);
     expect(finalMission.radars.some((radar) => radar.id === "ADAPT-GUARD")).toBe(true);
-    expect(finalMission.commander.doctrine).toBe("AGGRESSIVE");
   });
 
   it("相同任务历史会生成完全一致的最终体系", () => {

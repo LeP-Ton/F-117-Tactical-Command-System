@@ -221,7 +221,7 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
         );
         context.strokeStyle = "rgba(239, 114, 80, 0.75)";
         context.stroke();
-        context.fillStyle = radar.active ? "#d76b50" : "#48534f";
+        context.fillStyle = "#d76b50";
         context.fillRect(radar.position.x - 6, radar.position.y - 6, 12, 12);
         context.font = "12px monospace";
         context.fillText(`${radar.id} ${radar.operator.mode}`, radar.position.x + 12, radar.position.y + 4);

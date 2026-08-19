@@ -86,11 +86,10 @@ button:disabled { opacity: 0.32; cursor: not-allowed; }
 .operator-title strong { color: #c8dbd5; }
 .operator-title span { color: #e1aa51; }
 .score-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 7px; color: #5f897c; font-size: 9px; }
-.mode-shutdown { color: #69726f !important; }
 .commander-intent { color: #efb553; font-size: 13px; margin: 4px 0 10px; }
-.commander-scores { color: #7fa79a; }
 .awareness-meter { height: 4px; margin-top: 10px; background: #1b2c27; overflow: hidden; }
 .awareness-meter i { display: block; height: 100%; background: linear-gradient(90deg, #5dc8a7, #e1ad4d, #dc6046); transition: width 180ms linear; }
+.commander-scores { color: #7fa79a; }
 .threat-section { border-color: rgba(216, 104, 67, 0.35); }
 .threat-progress { height: 7px; margin: 10px 0; overflow: hidden; background: #10211c; border: 1px solid #27483e; }
 .threat-progress i { display: block; height: 100%; background: linear-gradient(90deg, #5fae91, #e0b64d, #e2523b); transition: width 160ms linear; }

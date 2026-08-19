@@ -14,7 +14,7 @@
 4. 进入目标攻击半径后自动投放武器，无需暂停或手动确认。
 5. 摧毁目标后进入东北方向的撤离区。
 
-飞机基础飞行速度为 `7.2 u/s`。只有“目标已摧毁且飞机进入撤离区”才算成功。航线走完时目标仍存活，或者已经摧毁目标但没有进入撤离区，都会判定任务失败。
+飞机基础飞行速度为 `3.6 u/s`。只有“目标已摧毁且飞机进入撤离区”才算成功。航线走完时目标仍存活，或者已经摧毁目标但没有进入撤离区，都会判定任务失败。
 
 ## 2. 玩家能看到什么
 
@@ -53,9 +53,8 @@ Recon 和 ELINT 任务成功后会永久提高本次 Run 后续任务的情报�
 - 雷达是否开机以及当前 Operator 模式。
 - 敌方获得的 Radar Contact。
 - 敌方 Belief Map 概率热区。
-- Enemy Awareness 数值和阶段。
 - Commander 当前意图、目标和 Utility 评分。
-- 每部雷达的 W/S/F/X Utility 评分与实际指挥链效率。
+- 每部雷达的 W/S/F Utility 评分与实际指挥链效率。
 
 正常游玩时不应依据这些内部状态规划航线。它主要用于判断雷达动作、Contact、Belief 和 Commander 是否按规则工作。
 
@@ -68,7 +67,6 @@ Recon 和 ELINT 任务成功后会永久提高本次 Run 后续任务的情报�
 - 朝向：机头或机尾朝向雷达时风险较低，侧面暴露时风险更高。
 - 地形：飞机处在地形遮蔽区时，探测概率下降。
 - 天气：Cloud 和 Storm 都能降低探测概率，Storm 通常影响更强。
-- 机体状态：受损飞机更容易被探测，这是当前唯一的额外探测修正。
 
 因此，扫描线经过飞机却没有出现 Contact 是正常的概率结果；进入覆盖圈也不等于立刻暴露。
 
@@ -80,7 +78,7 @@ Recon 和 ELINT 任务成功后会永久提高本次 Run 后续任务的情报�
 - 探测条件越好，Contact 一般越可信、误差越小。
 - Contact 默认保留 8 秒，过期后从活动 Contact 列表删除。
 - 雷达 Operator 优先读取自己的本地 Contact；指挥链正常时，也可在有限时间内接收其他雷达共享的最新 Contact。
-- Belief、Awareness 和 Commander 都不能直接读取飞机真实位置。
+- Belief 和 Commander 都不能直接读取飞机真实位置。
 
 需要区分两类黄色标记：
 
@@ -89,9 +87,9 @@ Recon 和 ELINT 任务成功后会永久提高本次 Run 后续任务的情报�
 
 两者的信息方向完全相反。
 
-## 5. 雷达的四种动作
+## 5. 雷达的三种动作
 
-每部雷达每 0.5 秒重新计算一次四种动作的 Utility（效用）评分，得分最高的动作成为当前模式。评分来自本雷达的 Contact 证据以及 Commander 下达的偏置。
+每部雷达每 0.5 秒重新计算一次三种动作的 Utility（效用）评分，得分最高的动作成为当前模式。评分来自本雷达的 Contact 证据以及 Commander 下达的偏置。
 
 ### 5.1 WIDE_SEARCH：广域搜索
 
@@ -114,16 +112,6 @@ Recon 和 ELINT 任务成功后会永久提高本次 Run 后续任务的情报�
 - 意义：敌方正在重点检查预测位置，但瞄准的是带误差的 Contact/Belief，而不是真实飞机坐标。
 - 玩家应对：迅速改变原航向并利用地形或天气破坏连续接触；继续沿原轨迹飞行风险最高。
 
-### 5.4 SHUTDOWN：静默关机
-
-- 行为：雷达关闭，扫描线停止，也不会产生新的 Contact。
-- 触发倾向：长期没有近期证据时，单个 Operator 可能自主静默；Commander 的 Network Silence 会强烈推动整张雷达网静默。
-- 持续与冷却：一次静默至少保持约 3 秒；进入静默后约 20 秒内不会再次自主重复静默。
-- 不会发生的事：静默不会删除已有 Contact、清空 Belief 或重置 Awareness。
-- 玩家意义：这是短暂的穿越窗口，但正常视图不会直接告诉玩家雷达实时开关状态。
-
-静默关机目前只减少敌方探测能力。游戏尚未实现“雷达开机会暴露自身辐射位置”、反辐射导弹或实时电子测向，所以静默暂时不是完整的双向电磁博弈。
-
 ## 6. 防空交战与生存压力
 
 连续 Radar Contact 会累积 0–100 的跟踪质量，并形成玩家可见的威胁阶段：
@@ -138,20 +126,11 @@ Contact 的可信度和信号强度决定证据强度。最强 Contact 代表单
 
 导弹来袭后有 8 秒飞行时间。期间跟踪质量降到 32 以下，导弹失去制导并被判定规避成功；倒计时结束时仍保持制导则命中飞机。该过程没有额外随机命中判定，结果来自玩家是否及时切断连续跟踪。
 
-第一次命中造成以下后果：
-
-- Airframe Condition 降低 50 点。
-- 飞行速度变为命中前的 72%。
-- 后续被雷达探测的概率修正变为 118%。
-- 损伤会延续到后续任务。
-
-第二次命中会使机体状态归零、任务失败，并令整个 Run 进入 `DEFEAT`。Campaign Map 此后不允许继续执行任务。
+导弹一旦命中就会摧毁飞机、令当前任务失败，并让整个 Run 进入 `DEFEAT`。Campaign Map 此后不允许继续执行任务。
 
 普通视图中的 `THREAT WARNING` 会显示威胁阶段、辐射威胁进度和导弹倒计时。这是玩家可以合理获知的座舱告警，不需要开启 AI DEBUG。
 
-## 7. Belief Map 与 Enemy Awareness
-
-### 7.1 Belief Map
+## 7. Belief Map
 
 敌方把所有新 Radar Contact 融合到一张 24×24 概率地图中：
 
@@ -162,38 +141,28 @@ Contact 的可信度和信号强度决定证据强度。最强 Contact 代表单
 
 Belief Map 只在 AI DEBUG 中显示。
 
-### 7.2 Enemy Awareness
+### 7.1 Enemy Awareness
 
-Awareness 是任务内的敌方总体警戒值，范围为 0–100：
+Awareness 是任务内敌方总体警戒值，范围为 0–100：
 
-- `CALM`：0–17，敌方平静。
-- `SUSPICIOUS`：18–41，敌方开始怀疑。
-- `SEARCHING`：42–71，敌方主动搜索。
-- `HUNTING`：72–100，敌方进入猎杀状态。
+- `CALM`：0–17，维持常规监视。
+- `SUSPICIOUS`：18–41，开始提高协同搜索倾向。
+- `SEARCHING`：42–71，主动组织多雷达搜索。
+- `HUNTING`：72–100，强烈倾向集中跟踪。
 
-新的 Contact 会根据可信度和信号强度提升 Awareness；没有新证据时，它会缓慢下降。飞机进入目标半径后会自动投弹并显著提高警戒，因此撤离阶段通常比渗透阶段危险。
-
-任务内 Awareness 与跨任务的 Enemy Alert 不是同一个变量：前者描述当前任务的即时警戒，后者描述整次 Campaign 对未来任务的长期影响。
+Contact 会根据可信度和信号强度提高 Awareness；失去新证据后它会缓慢下降。投弹会额外增加 34 点，因为敌方已经确认目标区遭到攻击。Awareness 负责 Commander 的全局搜索强度，玩家可见的跟踪进度则负责锁定、导弹与脱锁，两者用途不同。
 
 ## 8. Air Defense Commander
 
-Commander 在 100% 指挥链效率下每秒评估一次全局 Awareness、Belief 和雷达状态，然后选择一个意图；效率下降会按反比延长决策间隔。
+Commander 在 100% 指挥链效率下每秒评估一次 Awareness、Belief 和雷达状态，然后选择一个意图；效率下降会按反比延长决策间隔。
 
 - `MONITOR`：持续监视，提高广域搜索倾向。
 - `COORDINATED_SEARCH`：协同搜索，提高扇区搜索倾向，并让不同雷达以错开的方位覆盖可疑区域。
 - `CONCENTRATE_SEARCH`：集中搜索，强烈提高聚焦跟踪倾向。
-- `NETWORK_SILENCE`：网络静默，强烈提高所有雷达的 Shutdown 倾向。
+- 目标被摧毁后：投弹只提高 Awareness；Commander 仍必须依靠 Belief/CMD 确定搜索方位，不会把目标区当成飞机位置。
+- Commander 不包含网络静默意图，Radar Operator 也不包含关机模式。
 
-“单雷达静默”和“网络静默”的区别是：前者是某个 Operator 根据自身证据自主选择，后者是 Commander 对整张雷达网施加的协同命令。
-
-### 8.1 Commander Doctrine
-
-- `CONSERVATIVE`：偏向持续监视，较少进行集中搜索。
-- `AGGRESSIVE`：更偏向协同搜索和集中搜索。
-- `AMBUSH`：任务开局平静时倾向短暂网络静默，进入高警戒后更积极集中搜索。
-- `ANALYTICAL`：没有额外 Doctrine 偏置，主要按 Awareness 和 Belief 决策。
-
-### 8.2 指挥链效率
+### 8.1 指挥链效率
 
 指挥链效率控制整张雷达网共享证据和执行 Commander 命令的能力：
 
@@ -206,7 +175,7 @@ Command Strike 成功后，后续任务的指挥链效率乘以 75%，最低不�
 
 ## 9. Campaign 与持久效果
 
-每个 Run 根据 Seed 生成分层 Campaign Graph。相同 Seed 会复现节点、地图、雷达网络、天气、目标、初始情报精度和 Doctrine。
+每个 Run 根据 Seed 生成分层 Campaign Graph。相同 Seed 会复现节点、地图、雷达网络、天气、目标和初始情报精度。
 
 当前节点效果如下：
 
@@ -225,9 +194,9 @@ Recon 与 ELINT 的累计情报质量加成上限为 24%，单次任务最终情
 ## 10. 当前成长边界
 
 - 成功任务后直接返回 Campaign Map，不插入奖励选择流程。
-- 已移除不参与正式玩法的 Tactical Reward 与 Player Build 空框架。
-- 当前成长只来自情报质量、机体状态、Enemy Alert、Radar Network、Command Link 和敌方适应。
-- 正式玩法差异来自程序生成地图、雷达、天气、Doctrine 和 Campaign 防空变化。
+- 游戏不包含 Tactical Reward 或 Player Build 流程。
+- 当前成长只来自情报质量、Enemy Alert、Radar Network、Command Link 和敌方适应。
+- 正式玩法差异来自程序生成地图、雷达、天气和 Campaign 防空变化。
 
 ## 11. Enemy Adaptation
 
@@ -253,7 +222,7 @@ Recon 与 ELINT 的累计情报质量加成上限为 24%，单次任务最终情
 - 地形和恶劣天气能够降低探测概率，但不会提供绝对隐身。
 - 被敌方接触后及时改变航向，避免让 Sector Search 和 Focused Track 持续命中预测路线。
 - 出现持续照射或火控锁定时应立即规划脱离雷达波束；导弹来袭后必须在 8 秒内把跟踪质量压到 32 以下。
-- 攻击会提升 Awareness，应在攻击前提前规划好撤离航线。
+- 攻击会提高 Awareness，使 Commander 更倾向协同或集中搜索；实际搜索方位仍来自 Belief/CMD。
 - Campaign 前期选择 Recon/ELINT 能提高路线信息质量；选择 SEAD 能直接缩小后续危险区；Command Strike 则削弱多雷达协同。
 - 连续使用同一走廊会让后续雷达向该区域移动；适时改变南北路线、地形利用方式和突击角度。
 
@@ -264,8 +233,6 @@ Recon 与 ELINT 的累计情报质量加成上限为 24%，单次任务最终情
 - 未完成 SEAD：目标区增加一部后备雷达；完成 SEAD 则阻止其上线。
 - Enemy Alert ≥ 15：增加一部警戒增援雷达，其覆盖还会随 Alert 小幅增加。
 - Enemy Adaptation ≥ 2：根据历史南北航路偏好增加一部自适应截击雷达。
-- 有失败记录或 Enemy Alert ≥ 20：最终 Commander 转为 `AGGRESSIVE`。
-- 玩家长期采用直达路线且没有触发激进条件时：最终 Commander 倾向 `AMBUSH`。
 - Command Strike 的指挥链削弱、Recon/ELINT 的情报加成和 SEAD 的覆盖削弱仍会继续生效。
 
 进入最终任务后，`FINAL DEFENSE BRIEFING` 会列出每项历史造成的结果；新增雷达也会经过有限情报系统，不会向玩家直接暴露真实位置。成功摧毁目标并撤离后，本次 Run 状态变为 `VICTORY`。
@@ -274,7 +241,7 @@ Recon 与 ELINT 的累计情报质量加成上限为 24%，单次任务最终情
 
 - 反辐射导弹与直接摧毁任务内雷达。
 - 雷达开机辐射暴露、实时 ELINT 测向与玩家侧实时更新情报。
-- 燃油、弹药载荷、机体受损对飞行性能的动态影响。
+- 燃油与弹药载荷。
 - 正式难度设置、教程关卡和存档系统。
 
 这些未实现能力不应通过 AI DEBUG 模拟；AI DEBUG 始终只是观察敌方内部状态的开发工具。

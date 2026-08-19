@@ -8,7 +8,6 @@ export interface FinalStrikeContext {
   enemyAlert: number;
   adaptationLevel: number;
   tacticalProfile: PlayerTacticalProfile;
-  failedMissionCount: number;
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -32,7 +31,6 @@ function createGuardRadar(
     sweepAngleDegrees,
     scanAccumulatorSeconds: 0,
     scanCount: 0,
-    active: true,
     operator: createRadarOperatorState(),
   };
 }
@@ -88,19 +86,12 @@ export function applyFinalStrikeDefense(
     notes.push(`${context.tacticalProfile.southernRouteBias > 0.5 ? "南部" : "北部"}历史航路部署自适应截击雷达`);
   }
 
-  const doctrine = context.failedMissionCount > 0 || context.enemyAlert >= 20
-    ? "AGGRESSIVE" as const
-    : context.tacticalProfile.aggressiveRouting >= 0.72
-      ? "AMBUSH" as const
-      : mission.commander.doctrine;
   if (completed.has("COMMAND_STRIKE")) notes.push("Command Strike 战果削弱最终指挥链");
   if (completed.has("RECON") || completed.has("ELINT")) notes.push("情报战果提高最终目标雷达识别质量");
-  if (doctrine !== mission.commander.doctrine) notes.push(`Campaign 历史促使 Commander 切换为 ${doctrine}`);
 
   return {
     ...mission,
     radars,
-    commander: { ...mission.commander, doctrine },
     generationInfo: { ...mission.generationInfo, radarCount: radars.length },
     finalStrikeNotes: notes,
   };

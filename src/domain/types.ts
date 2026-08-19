@@ -20,7 +20,6 @@ export interface CampaignNode {
     radarDensity: number;
     weather: string;
     intelAccuracy: number;
-    doctrine: CommanderDoctrine;
     effect: string;
   };
 }
@@ -39,7 +38,6 @@ export interface CampaignState {
 }
 
 export interface RunResources {
-  airframeCondition: number;
   enemyAlert: number;
   /** 跨任务积累的情报质量加成，直接影响后续雷达情报准确度。 */
   intelAccuracyBonus: number;
@@ -110,11 +108,10 @@ export interface RadarState {
   sweepAngleDegrees: number;
   scanAccumulatorSeconds: number;
   scanCount: number;
-  active: boolean;
   operator: RadarOperatorState;
 }
 
-export type RadarOperatorMode = "WIDE_SEARCH" | "SECTOR_SEARCH" | "FOCUSED_TRACK" | "SHUTDOWN";
+export type RadarOperatorMode = "WIDE_SEARCH" | "SECTOR_SEARCH" | "FOCUSED_TRACK";
 
 export type RadarUtilityScores = Record<RadarOperatorMode, number>;
 
@@ -123,7 +120,6 @@ export interface RadarOperatorState {
   utilityScores: RadarUtilityScores;
   decisionAccumulatorSeconds: number;
   modeChangedAt: number;
-  lastShutdownAt?: number;
   lastContactAt?: number;
   focusBearingDegrees?: number;
   commanderBias: RadarUtilityScores;
@@ -184,22 +180,18 @@ export interface EngagementState {
   trackProgress: number;
   missileTimeRemainingSeconds?: number;
   launches: number;
-  hits: number;
 }
 
-export type CommanderIntent = "MONITOR" | "COORDINATED_SEARCH" | "CONCENTRATE_SEARCH" | "NETWORK_SILENCE";
+export type CommanderIntent = "MONITOR" | "COORDINATED_SEARCH" | "CONCENTRATE_SEARCH";
 export type CommanderUtilityScores = Record<CommanderIntent, number>;
 
 export interface CommanderState {
-  doctrine: CommanderDoctrine;
   intent: CommanderIntent;
   utilityScores: CommanderUtilityScores;
   decisionAccumulatorSeconds: number;
   lastDecisionAt: number;
   targetPosition?: Vector2;
 }
-
-export type CommanderDoctrine = "CONSERVATIVE" | "AGGRESSIVE" | "AMBUSH" | "ANALYTICAL";
 
 export interface MissionTarget {
   id: string;
@@ -238,7 +230,7 @@ export type GameEventType =
   | "THREAT_STAGE_CHANGED"
   | "MISSILE_LAUNCHED"
   | "MISSILE_DEFEATED"
-  | "AIRCRAFT_HIT";
+  | "AIRCRAFT_DESTROYED";
 
 export interface GameEvent {
   id: string;
@@ -273,7 +265,6 @@ export interface MissionSession {
     radarCount: number;
     weatherCount: number;
   };
-  detectionModifier: number;
   commanderCoordinationModifier: number;
   adaptationNotes: string[];
   finalStrikeNotes: string[];

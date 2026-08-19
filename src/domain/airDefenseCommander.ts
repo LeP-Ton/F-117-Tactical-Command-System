@@ -5,7 +5,6 @@ import type {
   AwarenessState,
   BeliefMapState,
   CommanderIntent,
-  CommanderDoctrine,
   CommanderState,
   CommanderUtilityScores,
   RadarState,
@@ -18,11 +17,10 @@ export interface CommanderResult {
   orderChanged: boolean;
 }
 
-export function createCommanderState(doctrine: CommanderDoctrine = "ANALYTICAL"): CommanderState {
+export function createCommanderState(): CommanderState {
   return {
-    doctrine,
     intent: "MONITOR",
-    utilityScores: { MONITOR: 70, COORDINATED_SEARCH: 20, CONCENTRATE_SEARCH: 10, NETWORK_SILENCE: 12 },
+    utilityScores: { MONITOR: 70, COORDINATED_SEARCH: 20, CONCENTRATE_SEARCH: 10 },
     decisionAccumulatorSeconds: 0,
     lastDecisionAt: 0,
   };
@@ -30,14 +28,13 @@ export function createCommanderState(doctrine: CommanderDoctrine = "ANALYTICAL")
 
 function biasForIntent(intent: CommanderIntent): RadarUtilityScores {
   switch (intent) {
-    case "MONITOR": return { WIDE_SEARCH: 16, SECTOR_SEARCH: 0, FOCUSED_TRACK: 0, SHUTDOWN: 0 };
-    case "COORDINATED_SEARCH": return { WIDE_SEARCH: 0, SECTOR_SEARCH: 22, FOCUSED_TRACK: 6, SHUTDOWN: 0 };
-    case "CONCENTRATE_SEARCH": return { WIDE_SEARCH: 0, SECTOR_SEARCH: 8, FOCUSED_TRACK: 30, SHUTDOWN: 0 };
-    case "NETWORK_SILENCE": return { WIDE_SEARCH: 0, SECTOR_SEARCH: 0, FOCUSED_TRACK: 0, SHUTDOWN: 62 };
+    case "MONITOR": return { WIDE_SEARCH: 16, SECTOR_SEARCH: 0, FOCUSED_TRACK: 0 };
+    case "COORDINATED_SEARCH": return { WIDE_SEARCH: 0, SECTOR_SEARCH: 22, FOCUSED_TRACK: 6 };
+    case "CONCENTRATE_SEARCH": return { WIDE_SEARCH: 0, SECTOR_SEARCH: 8, FOCUSED_TRACK: 30 };
   }
 }
 
-/** Commander 只接收 Awareness、Belief 和雷达状态，不接收 AircraftState。 */
+/** Commander 只接收敌方警戒与 Belief，不接收 AircraftState 或目标打击位置。 */
 export function advanceCommander(
   state: CommanderState,
   awareness: AwarenessState,
@@ -64,19 +61,7 @@ export function advanceCommander(
     MONITOR: 72 - awareness.value * 0.72,
     COORDINATED_SEARCH: 22 + awareness.value * 0.62 + confidence * 18,
     CONCENTRATE_SEARCH: 8 + awareness.value * 0.72 + confidence * 32,
-    NETWORK_SILENCE: awareness.stage === "CALM" && timestamp > 25000 ? 34 : 4,
   };
-  if (state.doctrine === "CONSERVATIVE") {
-    scores.MONITOR += 14;
-    scores.CONCENTRATE_SEARCH -= 8;
-  } else if (state.doctrine === "AGGRESSIVE") {
-    scores.COORDINATED_SEARCH += 12;
-    scores.CONCENTRATE_SEARCH += 14;
-  } else if (state.doctrine === "AMBUSH") {
-    // 首轮短暂静默制造伏击窗口，随后必须恢复搜索，避免防空网络永久离线。
-    scores.NETWORK_SILENCE += awareness.stage === "CALM" && timestamp < 6000 ? 72 : 0;
-    scores.CONCENTRATE_SEARCH += awareness.stage === "HUNTING" ? 18 : 0;
-  }
   const intent = (Object.entries(scores) as [CommanderIntent, number][])
     .reduce((best, candidate) => candidate[1] > best[1] ? candidate : best)[0];
   const hasBelief = peak.position !== undefined;
@@ -85,7 +70,6 @@ export function advanceCommander(
     WIDE_SEARCH: baseBias.WIDE_SEARCH * coordinationModifier,
     SECTOR_SEARCH: baseBias.SECTOR_SEARCH * coordinationModifier,
     FOCUSED_TRACK: baseBias.FOCUSED_TRACK * coordinationModifier,
-    SHUTDOWN: baseBias.SHUTDOWN * coordinationModifier,
   };
   const coordinatedRadars = radars.map((radar, index) => {
     const baseBearing = hasBelief

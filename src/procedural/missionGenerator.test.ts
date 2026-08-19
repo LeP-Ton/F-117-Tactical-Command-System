@@ -37,10 +37,4 @@ describe("Mission Generator", () => {
     expect(signatures.size).toBe(10);
   });
 
-  it("Doctrine 来自受支持集合", () => {
-    const supported = ["CONSERVATIVE", "AGGRESSIVE", "AMBUSH", "ANALYTICAL"];
-    for (let index = 0; index < 20; index += 1) {
-      expect(supported).toContain(generateMissionContent(`DOCTRINE-${index}`).commander.doctrine);
-    }
-  });
 });

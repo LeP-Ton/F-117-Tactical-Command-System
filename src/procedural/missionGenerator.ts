@@ -1,7 +1,7 @@
 import { SeededRandom } from "../core/SeededRandom";
 import { createCommanderState } from "../domain/airDefenseCommander";
 import { createRadarOperatorState } from "../domain/radarOperatorAI";
-import type { CommanderDoctrine, RadarState, TerrainZone, WeatherZone } from "../domain/types";
+import type { RadarState, TerrainZone, WeatherZone } from "../domain/types";
 
 export interface GeneratedMissionContent {
   terrain: TerrainZone[];
@@ -12,8 +12,6 @@ export interface GeneratedMissionContent {
   commander: ReturnType<typeof createCommanderState>;
   generationInfo: { terrainCount: number; radarCount: number; weatherCount: number };
 }
-
-const doctrines: readonly CommanderDoctrine[] = ["CONSERVATIVE", "AGGRESSIVE", "AMBUSH", "ANALYTICAL"];
 
 export function generateMissionContent(seed: string): GeneratedMissionContent {
   const random = new SeededRandom(`${seed}:MISSION-CONTENT`);
@@ -48,17 +46,15 @@ export function generateMissionContent(seed: string): GeneratedMissionContent {
     sweepAngleDegrees: random.range(0, 360),
     scanAccumulatorSeconds: 0,
     scanCount: 0,
-    active: true,
     operator: createRadarOperatorState(),
   }));
-  const doctrine = random.pick(doctrines);
   return {
     terrain,
     weather,
     radars,
     targetPosition: { x: random.range(400, 790), y: random.range(100, 390) },
     intelAccuracy: random.range(0.68, 0.94),
-    commander: createCommanderState(doctrine),
+    commander: createCommanderState(),
     generationInfo: { terrainCount, radarCount, weatherCount },
   };
 }

@@ -6,14 +6,14 @@ import type { AircraftState, RadarState } from "./types";
 describe("Radar Sensor", () => {
   const radar: RadarState = {
     id: "R-DETERMINISTIC", position: { x: 0, y: 0 }, range: 1000,
-    sweepAngleDegrees: 90, scanAccumulatorSeconds: 0.24, scanCount: 8, active: true,
+    sweepAngleDegrees: 90, scanAccumulatorSeconds: 0.24, scanCount: 8,
     operator: createRadarOperatorState(),
   };
   const aircraft: AircraftState = { position: { x: 50, y: 0 }, headingDegrees: 0, speed: 70 };
 
   it("相同任务状态产生可复现结果", () => {
-    const first = advanceRadarSensors("SEED", [radar], aircraft, [], [], 1, 1000, 0.02);
-    const second = advanceRadarSensors("SEED", [radar], aircraft, [], [], 1, 1000, 0.02);
+    const first = advanceRadarSensors("SEED", [radar], aircraft, [], [], 1000, 0.02);
+    const second = advanceRadarSensors("SEED", [radar], aircraft, [], [], 1000, 0.02);
     expect(first).toEqual(second);
   });
 
@@ -24,7 +24,6 @@ describe("Radar Sensor", () => {
       aircraft,
       [],
       [],
-      1,
       2000,
       0.01,
     );

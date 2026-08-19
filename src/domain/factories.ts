@@ -39,7 +39,6 @@ export function createMission(seed: string): MissionSession {
     extractionArea: { ...gameConfig.mission.extractionArea },
     intelAccuracy: generated.intelAccuracy,
     generationInfo: generated.generationInfo,
-    detectionModifier: 1,
     commanderCoordinationModifier: 1,
     adaptationNotes: [],
     finalStrikeNotes: [],
@@ -53,7 +52,7 @@ export function createRun(seed: string = gameConfig.initialSeed): RunState {
   return {
     seed,
     campaign: { ...campaign, currentNodeId: firstNode.id },
-    resources: { airframeCondition: 100, enemyAlert: 0, intelAccuracyBonus: 0 },
+    resources: { enemyAlert: 0, intelAccuracyBonus: 0 },
     enemyState: {
       adaptationLevel: 0,
       radarCoverageModifier: 1,

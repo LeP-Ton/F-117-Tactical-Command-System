@@ -28,22 +28,21 @@ const eventLabels: Record<string, string> = {
   THREAT_STAGE_CHANGED: "威胁阶段变化",
   MISSILE_LAUNCHED: "导弹发射",
   MISSILE_DEFEATED: "导弹脱锁",
-  AIRCRAFT_HIT: "飞机受损",
+  AIRCRAFT_DESTROYED: "飞机损毁",
 };
 
 const modeLabels = {
   WIDE_SEARCH: "广域搜索",
   SECTOR_SEARCH: "扇区搜索",
   FOCUSED_TRACK: "聚焦跟踪",
-  SHUTDOWN: "静默关机",
 } as const;
 
 const awarenessLabels = { CALM: "平静", SUSPICIOUS: "怀疑", SEARCHING: "搜索", HUNTING: "猎杀" } as const;
+
 const intentLabels = {
   MONITOR: "持续监视",
   COORDINATED_SEARCH: "协同搜索",
   CONCENTRATE_SEARCH: "集中搜索",
-  NETWORK_SILENCE: "网络静默",
 } as const;
 const threatLabels = {
   UNDETECTED: "未发现异常",
@@ -137,11 +136,10 @@ export function App() {
               <div><dt>航向</dt><dd>{mission.aircraft.headingDegrees.toFixed(0)}°</dd></div>
               <div><dt>速度</dt><dd>{mission.aircraft.speed} u/s</dd></div>
               <div><dt>当前目标</dt><dd>{activeWaypoint ? `WP-${mission.route.activeWaypointIndex}` : "—"}</dd></div>
-              <div><dt>机体状态</dt><dd>{state.resources.airframeCondition}%</dd></div>
               <div><dt>已知雷达情报</dt><dd>{visibleRadarIntel.length} 个</dd></div>
               <div><dt>未定位信号</dt><dd>{mission.radarIntel.length - visibleRadarIntel.length} 个</dd></div>
               <div><dt>敌方适应</dt><dd>LV.{state.enemyState.adaptationLevel}</dd></div>
-              {showBelief && <div><dt>活动雷达</dt><dd>{mission.radars.filter((radar) => radar.active).length}</dd></div>}
+              {showBelief && <div><dt>雷达数量</dt><dd>{mission.radars.length}</dd></div>}
               {showBelief && <div><dt>有效 Contact</dt><dd>{mission.radarContacts.length}</dd></div>}
               {showBelief && <div><dt>Belief 峰值</dt><dd>{(beliefPeak.probability * 100).toFixed(1)}% / {beliefPeak.isValid ? "有效" : "失联"}</dd></div>}
               {showBelief && <div><dt>推测位置</dt><dd>{beliefPeak.position ? `${beliefPeak.position.x.toFixed(0)}, ${beliefPeak.position.y.toFixed(0)}` : "未知"}</dd></div>}
@@ -184,13 +182,12 @@ export function App() {
             </ol>
           </section>
           {showBelief && <section className="panel-section commander-section">
-            <div className="section-heading"><span>AIR DEFENSE COMMANDER</span><span>{mission.commander.doctrine}</span></div>
+            <div className="section-heading"><span>AIR DEFENSE COMMANDER</span><span>ALERT {mission.awareness.value.toFixed(0)}%</span></div>
             <div className="commander-intent">{intentLabels[mission.commander.intent]}</div>
             <div className="score-grid commander-scores">
               <span>M {mission.commander.utilityScores.MONITOR.toFixed(0)}</span>
               <span>C {mission.commander.utilityScores.COORDINATED_SEARCH.toFixed(0)}</span>
               <span>F {mission.commander.utilityScores.CONCENTRATE_SEARCH.toFixed(0)}</span>
-              <span>N {mission.commander.utilityScores.NETWORK_SILENCE.toFixed(0)}</span>
             </div>
             <div className="awareness-meter"><i style={{ width: `${mission.awareness.value}%` }} /></div>
           </section>}
@@ -206,7 +203,6 @@ export function App() {
                   <span>W {radar.operator.utilityScores.WIDE_SEARCH.toFixed(0)}</span>
                   <span>S {radar.operator.utilityScores.SECTOR_SEARCH.toFixed(0)}</span>
                   <span>F {radar.operator.utilityScores.FOCUSED_TRACK.toFixed(0)}</span>
-                  <span>X {radar.operator.utilityScores.SHUTDOWN.toFixed(0)}</span>
                 </div>
               </div>
             ))}

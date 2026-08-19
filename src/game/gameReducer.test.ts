@@ -52,8 +52,8 @@ describe("gameReducer", () => {
     expect(state.currentMission?.events.some((event) => event.type === "ATTACK" && event.data.automatic === true)).toBe(true);
   });
 
-  it("新任务基础飞行速度为原值十分之一", () => {
-    expect(createRun("SLOW-FLIGHT").currentMission?.aircraft.speed).toBe(7.2);
+  it("新任务基础飞行速度为 3.6 u/s", () => {
+    expect(createRun("SLOW-FLIGHT").currentMission?.aircraft.speed).toBe(3.6);
   });
 
   it("摧毁目标并进入撤离区后记录成功", () => {
@@ -222,12 +222,11 @@ describe("gameReducer", () => {
     expect(state.currentMission!.radarIntel).toHaveLength(state.currentMission!.radars.length);
   });
 
-  it("第二次导弹命中会摧毁飞机并使任务失败", () => {
+  it("导弹首次命中即摧毁飞机并使整个 Run 失败", () => {
     let state = createRun("MISSILE-HIT");
     const mission = state.currentMission!;
     state = {
       ...state,
-      resources: { ...state.resources, airframeCondition: 50 },
       currentMission: {
         ...mission,
         status: "RUNNING",
@@ -235,8 +234,7 @@ describe("gameReducer", () => {
           stage: "MISSILE_INBOUND",
           trackProgress: 100,
           missileTimeRemainingSeconds: 0.01,
-          launches: 2,
-          hits: 1,
+          launches: 1,
         },
         route: {
           activeWaypointIndex: 1,
@@ -250,54 +248,9 @@ describe("gameReducer", () => {
 
     state = gameReducer(state, { type: "TICK", deltaSeconds: 0.02 });
 
-    expect(state.resources.airframeCondition).toBe(0);
     expect(state.status).toBe("DEFEAT");
     expect(state.currentMission!.status).toBe("FAILED");
-    expect(state.currentMission!.events.some((event) => event.type === "AIRCRAFT_HIT")).toBe(true);
+    expect(state.currentMission!.events.some((event) => event.type === "AIRCRAFT_DESTROYED")).toBe(true);
     expect(state.currentMission!.events.at(-1)?.data.reason).toBe("AIRCRAFT_DESTROYED");
-  });
-
-  it("第一次导弹命中会降低速度并扩大后续可探测性", () => {
-    let state = createRun("MISSILE-DAMAGE");
-    const mission = state.currentMission!;
-    state = {
-      ...state,
-      currentMission: {
-        ...mission,
-        status: "RUNNING",
-        engagement: {
-          stage: "MISSILE_INBOUND",
-          trackProgress: 100,
-          missileTimeRemainingSeconds: 0.01,
-          launches: 1,
-          hits: 0,
-        },
-        route: {
-          activeWaypointIndex: 1,
-          waypoints: [
-            mission.route.waypoints[0]!,
-            { id: "damage", kind: "NAVIGATION", status: "PENDING", position: { x: 500, y: 500 } },
-          ],
-        },
-      },
-    };
-
-    state = gameReducer(state, { type: "TICK", deltaSeconds: 0.02 });
-
-    expect(state.resources.airframeCondition).toBe(50);
-    expect(state.currentMission!.status).toBe("RUNNING");
-    expect(state.currentMission!.aircraft.speed).toBeCloseTo(7.2 * 0.72);
-    expect(state.currentMission!.detectionModifier).toBeCloseTo(1.18);
-  });
-
-  it("带伤状态会延续到后续任务", () => {
-    let state = createRun("PERSISTENT-DAMAGE");
-    const available = state.campaign.nodes.find((node) => node.status === "AVAILABLE")!;
-    state = { ...state, resources: { ...state.resources, airframeCondition: 50 } };
-
-    state = gameReducer(state, { type: "SELECT_CAMPAIGN_NODE", nodeId: available.id });
-
-    expect(state.currentMission!.aircraft.speed).toBeCloseTo(7.2 * 0.72);
-    expect(state.currentMission!.detectionModifier).toBeCloseTo(1.18);
   });
 });

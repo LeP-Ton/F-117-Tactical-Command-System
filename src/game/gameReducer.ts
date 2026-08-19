@@ -49,7 +49,6 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
       const node = state.campaign.nodes.find((candidate) => candidate.id === action.nodeId);
       if (!node || node.status !== "AVAILABLE") return state;
       const selectedMission = createMission(node.missionSeed);
-      const carriesDamage = state.resources.airframeCondition <= 50;
       const alertCoverageMultiplier = 1 + state.resources.enemyAlert / 250;
       const adjustedRadars = selectedMission.radars.map((radar) => ({
         ...radar,
@@ -58,12 +57,6 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
       const adjustedIntelAccuracy = Math.min(0.99, selectedMission.intelAccuracy + state.resources.intelAccuracyBonus);
       const adaptedMission = applyEnemyCounterDeployment({
         ...selectedMission,
-        aircraft: carriesDamage
-          ? { ...selectedMission.aircraft, speed: selectedMission.aircraft.speed * gameConfig.engagement.damagedSpeedMultiplier }
-          : selectedMission.aircraft,
-        detectionModifier: carriesDamage
-          ? selectedMission.detectionModifier * gameConfig.engagement.damagedDetectionMultiplier
-          : selectedMission.detectionModifier,
         radars: adjustedRadars,
         intelAccuracy: adjustedIntelAccuracy,
       }, state.enemyState);
@@ -75,7 +68,6 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
           enemyAlert: state.resources.enemyAlert,
           adaptationLevel: state.enemyState.adaptationLevel,
           tacticalProfile: state.enemyState.tacticalProfile,
-          failedMissionCount: state.missionHistory.filter((result) => result.outcome === "FAILED").length,
         })
         : adaptedMission;
       return {
@@ -253,7 +245,6 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         result.aircraft,
         mission.terrain,
         mission.weather,
-        mission.detectionModifier,
         nextTimestamp,
         action.deltaSeconds,
       );
@@ -385,16 +376,11 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
           ? [{ ...createGameEvent(mission, "MISSILE_DEFEATED", {}, "F-117"), timestamp: nextTimestamp }]
           : []),
         ...(engagementResult.aircraftHit
-          ? [{ ...createGameEvent(mission, "AIRCRAFT_HIT", { damage: gameConfig.engagement.hitDamage }, "AIR_DEFENSE_NETWORK"), timestamp: nextTimestamp }]
+          ? [{ ...createGameEvent(mission, "AIRCRAFT_DESTROYED", {}, "AIR_DEFENSE_NETWORK"), timestamp: nextTimestamp }]
           : []),
       ];
-      const airframeCondition = engagementResult.aircraftHit
-        ? Math.max(0, state.resources.airframeCondition - gameConfig.engagement.hitDamage)
-        : state.resources.airframeCondition;
-      const aircraftDestroyed = airframeCondition <= 0;
-      const aircraft = engagementResult.aircraftHit
-        ? { ...result.aircraft, speed: result.aircraft.speed * gameConfig.engagement.damagedSpeedMultiplier }
-        : result.aircraft;
+      const aircraftDestroyed = engagementResult.aircraftHit;
+      const aircraft = result.aircraft;
       const extracted = target.destroyed
         && isInsideExtraction(aircraft.position, mission.extractionArea);
       const terminalStatus = aircraftDestroyed
@@ -428,7 +414,6 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
       return {
         ...state,
         status: aircraftDestroyed ? "DEFEAT" : state.status,
-        resources: { ...state.resources, airframeCondition },
         missionHistory: [...state.missionHistory, ...missionResult],
         currentMission: {
           ...mission,
@@ -442,9 +427,6 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
           beliefMap,
           awareness,
           engagement: engagementResult.state,
-          detectionModifier: engagementResult.aircraftHit
-            ? mission.detectionModifier * gameConfig.engagement.damagedDetectionMultiplier
-            : mission.detectionModifier,
           commander: commanderResult.commander,
           events: [
             ...mission.events,

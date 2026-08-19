@@ -5,7 +5,7 @@ import type { AircraftState, RadarState, TerrainZone } from "./types";
 
 const radar: RadarState = {
   id: "R1", position: { x: 0, y: 0 }, range: 500, sweepAngleDegrees: 90,
-  scanAccumulatorSeconds: 0, scanCount: 0, active: true,
+  scanAccumulatorSeconds: 0, scanCount: 0,
   operator: createRadarOperatorState(),
 };
 const aircraft: AircraftState = { position: { x: 100, y: 0 }, headingDegrees: 0, speed: 70 };
@@ -42,9 +42,4 @@ describe("雷达探测模型", () => {
     expect(storm.probability).toBeCloseTo(clear.probability * 0.55);
   });
 
-  it("低可探测维护系数降低最终探测概率", () => {
-    const base = calculateDetectionFactors(radar, aircraft, []);
-    const maintained = calculateDetectionFactors(radar, aircraft, [], [], 0.82);
-    expect(maintained.probability).toBeCloseTo(base.probability * 0.82);
-  });
 });
