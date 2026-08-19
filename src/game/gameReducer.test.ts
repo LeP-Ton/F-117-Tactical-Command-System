@@ -3,6 +3,44 @@ import { createMission, createRun } from "../domain/factories";
 import { gameReducer } from "./gameReducer";
 
 describe("gameReducer", () => {
+  it("重置任务会保留当前战役节点与 Run 持久状态", () => {
+    let state = createRun("RESET-CURRENT-NODE");
+    const secondNode = state.campaign.nodes.find((node) => node.id === "C0-1")!;
+    state = gameReducer(state, { type: "SELECT_CAMPAIGN_NODE", nodeId: secondNode.id });
+    state = {
+      ...state,
+      resources: { ...state.resources, enemyAlert: 25, intelAccuracyBonus: 0.1 },
+      enemyState: {
+        ...state.enemyState,
+        radarCoverageModifier: 0.85,
+        commanderCoordinationModifier: 0.75,
+      },
+      missionHistory: [{ missionId: "earlier-mission", outcome: "SUCCESS" }],
+      currentMission: {
+        ...state.currentMission!,
+        status: "PAUSED",
+        elapsedMs: 12_000,
+      },
+    };
+
+    const campaignBeforeReset = state.campaign;
+    const resourcesBeforeReset = state.resources;
+    const enemyStateBeforeReset = state.enemyState;
+    const historyBeforeReset = state.missionHistory;
+    state = gameReducer(state, { type: "RESET" });
+
+    expect(state.campaign).toBe(campaignBeforeReset);
+    expect(state.campaign.currentNodeId).toBe("C0-1");
+    expect(state.resources).toBe(resourcesBeforeReset);
+    expect(state.enemyState).toBe(enemyStateBeforeReset);
+    expect(state.missionHistory).toBe(historyBeforeReset);
+    expect(state.currentMission?.id).toBe(`mission-${secondNode.missionSeed}`);
+    expect(state.currentMission?.status).toBe("PLANNING");
+    expect(state.currentMission?.elapsedMs).toBe(0);
+    expect(state.currentMission?.commanderCoordinationModifier).toBeCloseTo(0.75);
+    expect(state.currentMission?.events.map((event) => event.type)).toEqual(["MISSION_RESET"]);
+  });
+
   it("规划、开始、暂停、重规划并继续", () => {
     let state = createRun("TEST");
     state = gameReducer(state, { type: "ADD_WAYPOINT", position: { x: 200, y: 800 } });

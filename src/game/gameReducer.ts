@@ -17,7 +17,7 @@ import {
   removeWaypoint,
   reorderWaypoint,
 } from "../domain/route";
-import type { RunState, Vector2 } from "../domain/types";
+import type { CampaignNode, MissionSession, RunState, Vector2 } from "../domain/types";
 
 export type GameAction =
   | { type: "NEW_RUN"; seed: string }
@@ -38,6 +38,42 @@ function isEditable(state: RunState): boolean {
   return status === "PLANNING" || status === "PAUSED";
 }
 
+/**
+ * 使用当前 Run 的持久状态准备指定节点任务。
+ * 节点选择与任务重置必须共用这条路径，避免遗漏情报、防空削弱或敌方适应效果。
+ */
+function prepareCampaignMission(state: RunState, node: CampaignNode): MissionSession {
+  const selectedMission = createMission(node.missionSeed);
+  const alertCoverageMultiplier = 1 + state.resources.enemyAlert / 250;
+  const adjustedRadars = selectedMission.radars.map((radar) => ({
+    ...radar,
+    range: radar.range * state.enemyState.radarCoverageModifier * alertCoverageMultiplier,
+  }));
+  const adjustedIntelAccuracy = Math.min(0.99, selectedMission.intelAccuracy + state.resources.intelAccuracyBonus);
+  const adaptedMission = applyEnemyCounterDeployment({
+    ...selectedMission,
+    radars: adjustedRadars,
+    intelAccuracy: adjustedIntelAccuracy,
+  }, state.enemyState);
+  const finalMission = node.type === "FINAL_STRIKE"
+    ? applyFinalStrikeDefense(adaptedMission, {
+      completedNodeTypes: state.campaign.nodes
+        .filter((candidate) => state.campaign.completedNodeIds.includes(candidate.id))
+        .map((candidate) => candidate.type),
+      enemyAlert: state.resources.enemyAlert,
+      adaptationLevel: state.enemyState.adaptationLevel,
+      tacticalProfile: state.enemyState.tacticalProfile,
+    })
+    : adaptedMission;
+
+  return {
+    ...finalMission,
+    radarIntel: generateRadarIntel(selectedMission.seed, finalMission.radars, adjustedIntelAccuracy),
+    intelAccuracy: adjustedIntelAccuracy,
+    commanderCoordinationModifier: state.enemyState.commanderCoordinationModifier,
+  };
+}
+
 export function gameReducer(state: RunState, action: GameAction): RunState {
   const mission = state.currentMission;
   if (!mission) return state;
@@ -48,37 +84,10 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
     case "SELECT_CAMPAIGN_NODE": {
       const node = state.campaign.nodes.find((candidate) => candidate.id === action.nodeId);
       if (!node || node.status !== "AVAILABLE") return state;
-      const selectedMission = createMission(node.missionSeed);
-      const alertCoverageMultiplier = 1 + state.resources.enemyAlert / 250;
-      const adjustedRadars = selectedMission.radars.map((radar) => ({
-        ...radar,
-        range: radar.range * state.enemyState.radarCoverageModifier * alertCoverageMultiplier,
-      }));
-      const adjustedIntelAccuracy = Math.min(0.99, selectedMission.intelAccuracy + state.resources.intelAccuracyBonus);
-      const adaptedMission = applyEnemyCounterDeployment({
-        ...selectedMission,
-        radars: adjustedRadars,
-        intelAccuracy: adjustedIntelAccuracy,
-      }, state.enemyState);
-      const finalMission = node.type === "FINAL_STRIKE"
-        ? applyFinalStrikeDefense(adaptedMission, {
-          completedNodeTypes: state.campaign.nodes
-            .filter((candidate) => state.campaign.completedNodeIds.includes(candidate.id))
-            .map((candidate) => candidate.type),
-          enemyAlert: state.resources.enemyAlert,
-          adaptationLevel: state.enemyState.adaptationLevel,
-          tacticalProfile: state.enemyState.tacticalProfile,
-        })
-        : adaptedMission;
       return {
         ...state,
         campaign: { ...state.campaign, currentNodeId: node.id },
-        currentMission: {
-          ...finalMission,
-          radarIntel: generateRadarIntel(selectedMission.seed, finalMission.radars, adjustedIntelAccuracy),
-          intelAccuracy: adjustedIntelAccuracy,
-          commanderCoordinationModifier: state.enemyState.commanderCoordinationModifier,
-        },
+        currentMission: prepareCampaignMission(state, node),
       };
     }
     case "RETURN_CAMPAIGN": {
@@ -446,11 +455,11 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
       };
     }
     case "RESET": {
-      const resetState = createRun(state.seed);
-      const resetMission = resetState.currentMission;
-      if (!resetMission) return resetState;
+      const currentNode = state.campaign.nodes.find((node) => node.id === state.campaign.currentNodeId);
+      if (!currentNode) return state;
+      const resetMission = prepareCampaignMission(state, currentNode);
       return {
-        ...resetState,
+        ...state,
         currentMission: {
           ...resetMission,
           events: [createGameEvent(resetMission, "MISSION_RESET")],
