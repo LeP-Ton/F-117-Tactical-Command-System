@@ -4,6 +4,7 @@ import { ControlPanel } from "./ControlPanel";
 import { TacticalMap } from "./TacticalMap";
 import { getBeliefPeak } from "../domain/beliefMap";
 import { CampaignMap } from "./CampaignMap";
+import { useGameAudio } from "../audio/useGameAudio";
 
 const eventLabels: Record<string, string> = {
   WAYPOINT_ADDED: "新增航点",
@@ -59,6 +60,7 @@ export function App() {
   const [seedInput, setSeedInput] = useState(state.seed);
   const [campaignView, setCampaignView] = useState(true);
   const mission = state.currentMission;
+  const { muted, volume, setMuted, setVolume } = useGameAudio(mission);
 
   if (!mission) return <main className="fatal-state">任务会话初始化失败</main>;
 
@@ -77,16 +79,32 @@ export function App() {
             <p>F-117 战术航线规划系统 // PHASE 12</p>
           </div>
         </div>
-        <form className="seed-control" onSubmit={(event) => {
-          event.preventDefault();
-          dispatch({ type: "NEW_RUN", seed: seedInput });
-          setSelectedIndex(null);
-          setCampaignView(true);
-        }}>
-          <label htmlFor="run-seed">RUN SEED</label>
-          <input id="run-seed" value={seedInput} onChange={(event) => setSeedInput(event.target.value)} />
-          <button type="submit">生成任务</button>
-        </form>
+        <div className="topbar-controls">
+          <div className="audio-control">
+            <button type="button" onClick={() => setMuted(!muted)}>{muted ? "SOUND OFF" : "SOUND ON"}</button>
+            <label htmlFor="master-volume">VOL</label>
+            <input
+              id="master-volume"
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={volume}
+              onChange={(event) => setVolume(Number(event.target.value))}
+              aria-label="游戏音效音量"
+            />
+          </div>
+          <form className="seed-control" onSubmit={(event) => {
+            event.preventDefault();
+            dispatch({ type: "NEW_RUN", seed: seedInput });
+            setSelectedIndex(null);
+            setCampaignView(true);
+          }}>
+            <label htmlFor="run-seed">RUN SEED</label>
+            <input id="run-seed" value={seedInput} onChange={(event) => setSeedInput(event.target.value)} />
+            <button type="submit">生成任务</button>
+          </form>
+        </div>
       </header>
 
       {campaignView ? (

@@ -17,6 +17,7 @@
 - 防空交战采用 Contact → 跟踪质量 → 火控锁定 → 导弹来袭链路；最强 Contact 保留本地火控能力，额外雷达证据通过指挥链形成联合跟踪，失去新证据可脱锁，导弹命中会立即摧毁飞机并令 Run DEFEAT。
 - 飞机基础速度为 `3.6 u/s`；运行中进入攻击半径后自动投弹并提高 Awareness，随后玩家必须进入撤离区；航线结束但条件未满足判定失败。
 - 普通玩家视图通过 THREAT WARNING 显示可行动的模糊威胁阶段和导弹倒计时；真实 Contact、Belief 与 AI 评分仍只在 AI DEBUG 中显示。
+- 音效使用原生 Web Audio API 合成并由领域事件驱动；锁定与导弹警报属于可清理循环音，暂停、脱锁、任务结束或组件卸载时必须停止，顶部提供静音与总音量控制。
 - Mission Generator 根据 Seed 生成 Terrain、Weather、Radar Network、Target 与 Intel Accuracy；相同 Seed 必须完整复现。
 - Campaign Generator 根据 Run Seed 生成分层 DAG（有向无环图）；节点结果解锁下一层并修改 Intel、Enemy Alert 或后续雷达覆盖。
 - Tactical Reward 与 Player Build 已完整移除；当前核心玩法差异来自动态航线、程序生成雷达/地形/天气、敌方 Belief 与 Commander 行为。

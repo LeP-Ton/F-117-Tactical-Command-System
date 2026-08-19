@@ -47,6 +47,8 @@ Radar Contact 会累积任务内 Awareness（敌方警戒值）；Air Defense Co
 
 连续高质量 Contact 会依次形成疑似搜索、持续跟踪、火控锁定和导弹来袭。导弹飞行期间切断雷达新证据可使其脱锁；未能脱锁会直接摧毁飞机并结束本次 Run。
 
+游戏使用 Web Audio API 合成 Contact、警戒升级、火控锁定、导弹来袭、脱锁、投弹、成功与失败音效。顶部 `SOUND ON/OFF` 和 `VOL` 可控制静音与总音量；浏览器会在首次点击或按键后启用音频。
+
 任务结束后，敌方会分析已经实际飞过的航点，形成地形利用、南北航路和直达倾向画像；后续任务可能针对山地出口、偏好航路或直达轴线调整雷达部署。
 
 Final Strike 会根据 Campaign 历史动态组装最终防空：SEAD 决定后备雷达、Enemy Alert 决定警戒增援、Enemy Adaptation 决定历史航路截击部署，Command Strike 与情报任务则继续影响指挥链和有限情报。

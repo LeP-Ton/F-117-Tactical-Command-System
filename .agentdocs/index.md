@@ -1,6 +1,7 @@
 # 项目文档索引
 
 ## 当前变更文档
+`workflow/20260819090321-add-game-audio.md` - 会话-48：新增 Web Audio 合成音效、事件映射、锁定/导弹循环警报、静音和音量控制；排查音效触发或循环清理时读取。
 `workflow/20260819084340-halve-aircraft-speed.md` - 会话-41：将飞机基础速度从 7.2 u/s 减半为 3.6 u/s；核对任务节奏或飞行耗时时读取。
 `workflow/20260819083706-remove-strike-position-search.md` - 会话-40：删除投弹后的目标区集中搜索与定位回退，恢复“投弹只提高 Awareness、方位只来自 Belief/CMD”；核对警戒值时期搜索方式时读取。
 `workflow/20260819082423-restore-awareness-without-silence.md` - 会话-39：恢复 Awareness 作为 Commander 搜索强度输入，同时保持雷达静默、网络静默和 Doctrine 已删除；区分警戒值与跟踪进度时读取。

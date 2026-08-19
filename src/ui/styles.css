@@ -19,6 +19,11 @@ button { font: inherit; }
 .brand-block h1 { margin: 0; color: #f0c15d; font-size: 21px; letter-spacing: 0.2em; }
 .brand-block p { margin: 5px 0 0; color: #638f80; font-size: 10px; letter-spacing: 0.1em; }
 .section-kicker { color: #527b6e; font-size: 10px; letter-spacing: 0.14em; }
+.topbar-controls { display: flex; align-items: center; gap: 16px; }
+.audio-control { display: flex; align-items: center; gap: 7px; }
+.audio-control button { padding: 7px 9px; color: #74ad9c; font-size: 9px; }
+.audio-control label { color: #527b6e; font-size: 9px; }
+.audio-control input { width: 76px; accent-color: #c1943f; }
 .seed-control { display: flex; align-items: center; gap: 8px; }
 .seed-control label { color: #527b6e; font-size: 9px; letter-spacing: 0.12em; }
 .seed-control input { width: 175px; padding: 7px 8px; color: #d7e8e2; border: 1px solid #31584b; outline: none; background: #081410; font: inherit; font-size: 10px; }
