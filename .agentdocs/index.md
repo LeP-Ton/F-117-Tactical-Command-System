@@ -1,6 +1,11 @@
 # 项目文档索引
 
 ## 当前变更文档
+`workflow/20260819153738-use-top-silhouette-on-map.md` - 会话-6：使用 `f117-top-silhouette.png` 替换地图中的简化三角飞机符号，并按实时航向旋转；核对地图飞机图标加载、尺寸或方向时读取。
+`workflow/20260819152458-update-brand-subtitle.md` - 会话-5：将顶部品牌副标题由阶段说明替换为 `FROM USA AIR FORCE // VERSION 1.0`；核对品牌副标题或版本文案时读取。
+`workflow/20260819150830-use-brand-image-directly.md` - 会话-4：直接使用用户更新后的 `f117-side-silhouette.png`，移除 SVG 颜色矩阵及所有图像效果；核对顶部品牌图标渲染方式时读取。
+`workflow/20260819145249-use-reference-f117-brand-icon.md` - 会话-3：使用 `.temp/image copy 2.png` 的原始 F-117 侧面轮廓替换手绘 SVG，并通过 SVG 亮度滤镜统一呈现金色、移除白底；核对顶部品牌图标来源、比例或颜色时读取。
+`workflow/20260819144506-rename-game-and-update-brand-icon.md` - 会话-2：游戏更名为 F-117 Tactical Command System（F-117 战术指挥系统），并将左上角 ZR 菱形标记替换为 F-117 侧面矢量剪影；核对品牌名称或顶部图标时读取。
 `workflow/20260819090321-add-game-audio.md` - 会话-48：新增 Web Audio 合成音效、事件映射、锁定/导弹循环警报、静音和音量控制；排查音效触发或循环清理时读取。
 `workflow/20260819084340-halve-aircraft-speed.md` - 会话-41：将飞机基础速度从 7.2 u/s 减半为 3.6 u/s；核对任务节奏或飞行耗时时读取。
 `workflow/20260819083706-remove-strike-position-search.md` - 会话-40：删除投弹后的目标区集中搜索与定位回退，恢复“投弹只提高 Awareness、方位只来自 Belief/CMD”；核对警戒值时期搜索方式时读取。
@@ -33,8 +38,7 @@
 `workflow/20260818202500-air-defense-engagement.md` - 会话-94：实现可逆的跟踪、锁定、导弹、脱锁、持久损伤与 Run 失败链路；需要理解路线风险和防空交战规则时读取。
 
 ## 关键记忆
-- 项目正式目录名为 `f117-nighthawk-route`。
-- 项目中文名为 `F-117：夜鹰航线`。
+- 项目名称为 `F-117 Tactical Command System`，中文名为 `F-117 战术指挥系统`，包名为 `f117-tactical-command-system`。
 - 当前完成 Phase 0–12，采用 React、TypeScript、Vite 与 HTML Canvas。
 - `RunState` 与 `MissionSession` 分离，Canvas 不持有领域状态。
 - 只有 Radar Sensor 可读取飞机真实状态，后续 AI 只能消费带误差 Radar Contact。

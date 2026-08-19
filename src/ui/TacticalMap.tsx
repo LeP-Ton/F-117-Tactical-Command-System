@@ -4,6 +4,7 @@ import { getBeliefHeatmapOpacityScale, getBeliefPeak } from "../domain/beliefMap
 import { canEditWaypoint } from "../domain/route";
 import type { MissionSession, Vector2 } from "../domain/types";
 import type { GameAction } from "../game/gameReducer";
+import f117TopSilhouette from "../assets/f117-top-silhouette.png";
 
 interface TacticalMapProps {
   mission: MissionSession;
@@ -50,20 +51,19 @@ function screenToWorld(canvas: HTMLCanvasElement, clientX: number, clientY: numb
   };
 }
 
-function drawAircraft(context: CanvasRenderingContext2D, position: Vector2, heading: number): void {
+function drawAircraft(
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  position: Vector2,
+  heading: number,
+): void {
+  if (!image.complete || image.naturalWidth === 0) return;
+
   context.save();
   context.translate(position.x, position.y);
   context.rotate((heading * Math.PI) / 180);
-  context.beginPath();
-  context.moveTo(0, -15);
-  context.lineTo(11, 11);
-  context.lineTo(0, 6);
-  context.lineTo(-11, 11);
-  context.closePath();
-  context.fillStyle = "#f2bd4a";
-  context.shadowColor = "#f2bd4a";
-  context.shadowBlur = 12;
-  context.fill();
+  // 图片机头朝上，与航向 0° 的地图坐标基准一致，无需额外角度修正。
+  context.drawImage(image, -16, -24, 32, 48);
   context.restore();
 }
 
@@ -77,6 +77,8 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
     if (!canvas) return;
     const context = canvas.getContext("2d");
     if (!context) return;
+    const aircraftImage = new Image();
+    aircraftImage.src = f117TopSilhouette;
 
     const render = () => {
       const pixelRatio = window.devicePixelRatio || 1;
@@ -284,14 +286,18 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
         context.fillText(index === 0 ? "INS" : String(index).padStart(2, "0"), waypoint.position.x + 16, waypoint.position.y + 5);
       });
 
-      drawAircraft(context, mission.aircraft.position, mission.aircraft.headingDegrees);
+      drawAircraft(context, aircraftImage, mission.aircraft.position, mission.aircraft.headingDegrees);
       context.restore();
     };
 
+    aircraftImage.addEventListener("load", render);
     render();
     const observer = new ResizeObserver(render);
     observer.observe(canvas);
-    return () => observer.disconnect();
+    return () => {
+      aircraftImage.removeEventListener("load", render);
+      observer.disconnect();
+    };
   }, [mission, selectedIndex, showBelief]);
 
   const findWaypointIndex = (position: Vector2): number => {

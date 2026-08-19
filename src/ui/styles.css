@@ -15,8 +15,9 @@ button { font: inherit; }
 .app-shell { width: 100%; height: 100vh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 .topbar { flex: 0 0 76px; height: 76px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #24463c; background: rgba(5, 12, 10, 0.92); }
 .brand-block { display: flex; align-items: center; gap: 14px; }
-.brand-mark { width: 40px; height: 40px; display: grid; place-items: center; color: #07100e; background: #d3a744; font-weight: 900; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
-.brand-block h1 { margin: 0; color: #f0c15d; font-size: 21px; letter-spacing: 0.2em; }
+.brand-mark { width: 92px; height: 40px; display: grid; place-items: center; }
+.brand-aircraft-silhouette { display: block; width: 100%; height: 100%; object-fit: contain; }
+.brand-block h1 { margin: 0; color: #f0c15d; font-size: 18px; letter-spacing: 0.12em; }
 .brand-block p { margin: 5px 0 0; color: #638f80; font-size: 10px; letter-spacing: 0.1em; }
 .section-kicker { color: #527b6e; font-size: 10px; letter-spacing: 0.14em; }
 .topbar-controls { display: flex; align-items: center; gap: 16px; }

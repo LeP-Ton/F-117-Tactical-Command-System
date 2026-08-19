@@ -5,6 +5,7 @@ import { TacticalMap } from "./TacticalMap";
 import { getBeliefPeak } from "../domain/beliefMap";
 import { CampaignMap } from "./CampaignMap";
 import { useGameAudio } from "../audio/useGameAudio";
+import f117SideSilhouette from "../assets/f117-side-silhouette.png";
 
 const eventLabels: Record<string, string> = {
   WAYPOINT_ADDED: "新增航点",
@@ -73,10 +74,12 @@ export function App() {
     <main className="app-shell">
       <header className="topbar">
         <div className="brand-block">
-          <div className="brand-mark">ZR</div>
+          <div className="brand-mark" aria-label="F-117 侧面剪影">
+            <img className="brand-aircraft-silhouette" src={f117SideSilhouette} alt="" />
+          </div>
           <div>
-            <h1>ZERO RETURN</h1>
-            <p>F-117 战术航线规划系统 // PHASE 12</p>
+            <h1>F-117 TACTICAL COMMAND SYSTEM</h1>
+            <p>FROM USA AIR FORCE // VERSION 1.0</p>
           </div>
         </div>
         <div className="topbar-controls">

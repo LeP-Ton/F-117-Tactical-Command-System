@@ -1,7 +1,7 @@
 # 项目整体认知
 
 ## 基本信息
-- 项目名称：`f117-nighthawk-route`（中文名：`F-117：夜鹰航线`）。
+- 项目名称：`F-117 Tactical Command System`（中文名：`F-117 战术指挥系统`，包名：`f117-tactical-command-system`）。
 - 当前状态：已完成 Phase 0–12；当前产品聚焦纯动态航线规划，Campaign 选择与玩家历史会持续改变后续任务及 Final Strike 的情报、雷达部署、Enemy Alert 与 Commander 协调。
 
 ## 技术选型与核心架构
