@@ -1,6 +1,7 @@
 # 项目文档索引
 
 ## 当前变更文档
+`workflow/20260819225946-document-commander-personality-design.md` - 会话-64：在 `TODO.md` 中记录旧版 Commander Doctrine、当前中性 Commander，以及未来三种可读防空指挥风格和验收条件；评估或恢复指挥官性格时读取。
 `workflow/20260819222015-collapsible-sidebars-and-scrollbars.md` - 会话-61：为左右侧栏及内部长列表定制终端风格滚动条，并为航点、遥测、事件、战役简报和 AI Debug 长内容增加独立折叠；排查侧栏溢出、滚动条或折叠交互时读取。
 `workflow/20260819220914-reset-current-campaign-mission.md` - 会话-60：修复“重置任务”误重建整个 Run 的问题；重置现在保留当前战役节点、Campaign 进度、资源与敌方持久状态，并重新应用当前节点生成规则；排查任务重置或节点跳转异常时读取。
 `workflow/20260819153738-use-top-silhouette-on-map.md` - 会话-6：使用 `f117-top-silhouette.png` 替换地图中的简化三角飞机符号，并按实时航向旋转；核对地图飞机图标加载、尺寸或方向时读取。
