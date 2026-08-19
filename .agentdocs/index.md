@@ -1,6 +1,7 @@
 # 项目文档索引
 
 ## 当前变更文档
+`workflow/20260819222015-collapsible-sidebars-and-scrollbars.md` - 会话-61：为左右侧栏及内部长列表定制终端风格滚动条，并为航点、遥测、事件、战役简报和 AI Debug 长内容增加独立折叠；排查侧栏溢出、滚动条或折叠交互时读取。
 `workflow/20260819220914-reset-current-campaign-mission.md` - 会话-60：修复“重置任务”误重建整个 Run 的问题；重置现在保留当前战役节点、Campaign 进度、资源与敌方持久状态，并重新应用当前节点生成规则；排查任务重置或节点跳转异常时读取。
 `workflow/20260819153738-use-top-silhouette-on-map.md` - 会话-6：使用 `f117-top-silhouette.png` 替换地图中的简化三角飞机符号，并按实时航向旋转；核对地图飞机图标加载、尺寸或方向时读取。
 `workflow/20260819152458-update-brand-subtitle.md` - 会话-5：将顶部品牌副标题由阶段说明替换为 `FROM USA AIR FORCE // VERSION 1.0`；核对品牌副标题或版本文案时读取。

@@ -33,6 +33,14 @@ button { font: inherit; }
 
 .workspace { flex: 1 1 auto; width: 100%; height: auto; min-height: 0; display: grid; grid-template-columns: 290px minmax(500px, 1fr) 270px; overflow: hidden; }
 .control-panel, .telemetry-panel { height: 100%; min-height: 0; max-height: 100%; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; background: rgba(7, 16, 14, 0.86); }
+.control-panel, .telemetry-panel, .waypoint-list, .operator-section .collapsible-content, .campaign-screen {
+  scrollbar-width: thin;
+  scrollbar-color: #3f7565 #091612;
+}
+.control-panel::-webkit-scrollbar, .telemetry-panel::-webkit-scrollbar, .waypoint-list::-webkit-scrollbar, .operator-section .collapsible-content::-webkit-scrollbar, .campaign-screen::-webkit-scrollbar { width: 8px; height: 8px; }
+.control-panel::-webkit-scrollbar-track, .telemetry-panel::-webkit-scrollbar-track, .waypoint-list::-webkit-scrollbar-track, .operator-section .collapsible-content::-webkit-scrollbar-track, .campaign-screen::-webkit-scrollbar-track { background: #091612; border-left: 1px solid #142b24; }
+.control-panel::-webkit-scrollbar-thumb, .telemetry-panel::-webkit-scrollbar-thumb, .waypoint-list::-webkit-scrollbar-thumb, .operator-section .collapsible-content::-webkit-scrollbar-thumb, .campaign-screen::-webkit-scrollbar-thumb { border: 2px solid #091612; border-radius: 999px; background: linear-gradient(#467d6c, #294f43); }
+.control-panel::-webkit-scrollbar-thumb:hover, .telemetry-panel::-webkit-scrollbar-thumb:hover, .waypoint-list::-webkit-scrollbar-thumb:hover, .operator-section .collapsible-content::-webkit-scrollbar-thumb:hover, .campaign-screen::-webkit-scrollbar-thumb:hover { background: linear-gradient(#63a38f, #376b5b); }
 .control-panel { border-right: 1px solid #1e3d34; }
 .telemetry-panel { border-left: 1px solid #1e3d34; }
 .panel-section { padding: 20px; border-bottom: 1px solid #173329; }
@@ -48,6 +56,13 @@ button:disabled { opacity: 0.32; cursor: not-allowed; }
 .secondary-button { flex: 1; }
 
 .section-heading { display: flex; justify-content: space-between; color: #70998c; font-size: 11px; letter-spacing: 0.08em; margin-bottom: 12px; }
+.collapsible-heading { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0; border: 0; color: #70998c; background: transparent; font-size: 11px; letter-spacing: 0.08em; text-align: left; }
+.collapsible-heading:hover:not(:disabled) { border-color: transparent; color: #a5c8bd; background: transparent; }
+.collapsible-meta { display: flex; align-items: center; gap: 8px; color: #587d72; white-space: nowrap; }
+.collapsible-meta i { width: 7px; height: 7px; border-right: 1px solid currentColor; border-bottom: 1px solid currentColor; transform: rotate(45deg); transition: transform 140ms ease; }
+.collapsible-meta i.expanded { transform: rotate(225deg); }
+.collapsible-content { margin-top: 12px; }
+.collapsible-content[hidden] { display: none; }
 .waypoint-list { display: flex; flex-direction: column; max-height: calc(100vh - 405px); overflow: auto; }
 .waypoint-row { width: 100%; display: grid; grid-template-columns: 38px 1fr auto; align-items: center; gap: 7px; padding: 10px 7px; border: 0; border-bottom: 1px solid #163028; background: transparent; text-align: left; }
 .waypoint-row.selected { background: rgba(205, 161, 68, 0.11); box-shadow: inset 2px 0 #d5a748; }
@@ -86,7 +101,7 @@ button:disabled { opacity: 0.32; cursor: not-allowed; }
 .event-list li { display: grid; grid-template-columns: 50px 1fr; padding: 7px 0; color: #8db0a5; border-bottom: 1px solid #132b24; font-size: 10px; }
 .event-list time { color: #c29a48; }
 .empty-event { color: #47695e !important; }
-.operator-section { max-height: 270px; overflow: auto; }
+.operator-section .collapsible-content { max-height: 270px; overflow: auto; }
 .operator-card { padding: 9px 0; border-bottom: 1px solid #173329; }
 .operator-title { display: flex; justify-content: space-between; font-size: 10px; }
 .operator-title strong { color: #c8dbd5; }

@@ -2,6 +2,7 @@ import { canEditWaypoint } from "../domain/route";
 import { distanceBetween } from "../domain/missionRules";
 import type { MissionSession } from "../domain/types";
 import type { GameAction } from "../game/gameReducer";
+import { CollapsibleSection } from "./CollapsibleSection";
 
 interface ControlPanelProps {
   mission: MissionSession;
@@ -81,11 +82,11 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
         <p className="hint">进入目标半径 {mission.target.attackRadius} u 后自动投弹；攻击会显著提高敌方警戒。</p>
       </section>
 
-      <section className="panel-section route-section">
-        <div className="section-heading">
-          <span>航点序列</span>
-          <span>{mission.route.waypoints.length - 1} NAV</span>
-        </div>
+      <CollapsibleSection
+        className="route-section"
+        title="航点序列"
+        meta={`${mission.route.waypoints.length - 1} NAV`}
+      >
         <div className="waypoint-list">
           {mission.route.waypoints.map((waypoint, index) => {
             const canEdit = editable && canEditWaypoint(mission.route, index);
@@ -133,7 +134,7 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
           </button>
         </div>
         <p className="hint">点击地图添加航点，拖动航点调整位置。飞行中需先暂停才能重规划。</p>
-      </section>
+      </CollapsibleSection>
     </aside>
   );
 }

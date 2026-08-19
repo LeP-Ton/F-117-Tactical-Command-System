@@ -6,6 +6,7 @@ import { getBeliefPeak } from "../domain/beliefMap";
 import { CampaignMap } from "./CampaignMap";
 import { useGameAudio } from "../audio/useGameAudio";
 import f117SideSilhouette from "../assets/f117-side-silhouette.png";
+import { CollapsibleSection } from "./CollapsibleSection";
 
 const eventLabels: Record<string, string> = {
   WAYPOINT_ADDED: "新增航点",
@@ -144,8 +145,7 @@ export function App() {
           </div>
         </section>
         <aside className="telemetry-panel">
-          <section className="panel-section">
-            <div className="section-kicker">FLIGHT TELEMETRY</div>
+          <CollapsibleSection title="FLIGHT TELEMETRY">
             <dl className="telemetry-grid">
               <div><dt>任务 Seed</dt><dd>{mission.seed}</dd></div>
               <div><dt>情报精度</dt><dd>{(mission.intelAccuracy * 100).toFixed(0)}%</dd></div>
@@ -168,7 +168,7 @@ export function App() {
               <div><dt>目标状态</dt><dd>{mission.target.destroyed ? "已摧毁" : "有效"}</dd></div>
               <div><dt>任务结果</dt><dd>{mission.status === "SUCCESS" ? "成功" : mission.status === "FAILED" ? "失败" : "进行中"}</dd></div>
             </dl>
-          </section>
+          </CollapsibleSection>
           <section className={`panel-section threat-section threat-${mission.engagement.stage.toLowerCase()}`}>
             <div className="section-heading"><span>THREAT WARNING</span><span>{threatLabels[mission.engagement.stage]}</span></div>
             <div className="threat-progress"><i style={{ width: `${mission.engagement.trackProgress}%` }} /></div>
@@ -178,20 +178,17 @@ export function App() {
               <p className="threat-message">辐射威胁 {mission.engagement.trackProgress.toFixed(0)}% // 失去新 Contact 后会逐步下降</p>
             )}
           </section>
-          {mission.adaptationNotes.length > 0 && <section className="panel-section">
-            <div className="section-heading"><span>COUNTER DEPLOYMENT</span><span>{mission.adaptationNotes.length}</span></div>
+          {mission.adaptationNotes.length > 0 && <CollapsibleSection title="COUNTER DEPLOYMENT" meta={mission.adaptationNotes.length}>
             <ol className="event-list">
               {mission.adaptationNotes.map((note) => <li key={note}><span>{note}</span></li>)}
             </ol>
-          </section>}
-          {mission.finalStrikeNotes.length > 0 && <section className="panel-section">
-            <div className="section-heading"><span>FINAL DEFENSE BRIEFING</span><span>{mission.radars.length}</span></div>
+          </CollapsibleSection>}
+          {mission.finalStrikeNotes.length > 0 && <CollapsibleSection title="FINAL DEFENSE BRIEFING" meta={mission.radars.length}>
             <ol className="event-list">
               {mission.finalStrikeNotes.map((note) => <li key={note}><span>{note}</span></li>)}
             </ol>
-          </section>}
-          <section className="panel-section event-section">
-            <div className="section-heading"><span>结构化事件</span><span>{mission.events.length}</span></div>
+          </CollapsibleSection>}
+          <CollapsibleSection className="event-section" title="结构化事件" meta={mission.events.length}>
             <ol className="event-list">
               {recentEvents.length === 0 && <li className="empty-event">等待操作事件…</li>}
               {recentEvents.map((event) => (
@@ -201,9 +198,8 @@ export function App() {
                 </li>
               ))}
             </ol>
-          </section>
-          {showBelief && <section className="panel-section commander-section">
-            <div className="section-heading"><span>AIR DEFENSE COMMANDER</span><span>ALERT {mission.awareness.value.toFixed(0)}%</span></div>
+          </CollapsibleSection>
+          {showBelief && <CollapsibleSection className="commander-section" title="AIR DEFENSE COMMANDER" meta={`ALERT ${mission.awareness.value.toFixed(0)}%`}>
             <div className="commander-intent">{intentLabels[mission.commander.intent]}</div>
             <div className="score-grid commander-scores">
               <span>M {mission.commander.utilityScores.MONITOR.toFixed(0)}</span>
@@ -211,9 +207,8 @@ export function App() {
               <span>F {mission.commander.utilityScores.CONCENTRATE_SEARCH.toFixed(0)}</span>
             </div>
             <div className="awareness-meter"><i style={{ width: `${mission.awareness.value}%` }} /></div>
-          </section>}
-          {showBelief && <section className="panel-section operator-section">
-            <div className="section-heading"><span>RADAR OPERATOR AI</span><span>UTILITY</span></div>
+          </CollapsibleSection>}
+          {showBelief && <CollapsibleSection className="operator-section" title="RADAR OPERATOR AI" meta="UTILITY">
             {mission.radars.map((radar) => (
               <div className="operator-card" key={radar.id}>
                 <div className="operator-title">
@@ -227,7 +222,7 @@ export function App() {
                 </div>
               </div>
             ))}
-          </section>}
+          </CollapsibleSection>}
           <section className="architecture-note">
             <span>ARCHITECTURE STATUS</span>
             <strong>RUN ≠ MISSION</strong>
