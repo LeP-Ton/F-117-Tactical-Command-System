@@ -8,6 +8,7 @@ import { useGameAudio } from "../audio/useGameAudio";
 import f117SideSilhouette from "../assets/f117-side-silhouette.png";
 import { CollapsibleSection } from "./CollapsibleSection";
 import { getAdaptationLevel } from "../domain/enemyAdaptation";
+import { getWeatherSpeedFactor } from "../domain/weatherSystem";
 
 const eventLabels: Record<string, string> = {
   WAYPOINT_ADDED: "新增航点",
@@ -74,6 +75,7 @@ export function App() {
   const terrainCount = mission.terrain.length;
   const weatherCount = mission.weather.length;
   const adaptationLevel = getAdaptationLevel(state.enemyState.tacticalProfile);
+  const weatherSpeedFactor = getWeatherSpeedFactor(mission.aircraft.position, mission.weather);
 
   return (
     <main className="app-shell">
@@ -159,7 +161,8 @@ export function App() {
               <div><dt>坐标 X</dt><dd>{mission.aircraft.position.x.toFixed(1)}</dd></div>
               <div><dt>坐标 Y</dt><dd>{mission.aircraft.position.y.toFixed(1)}</dd></div>
               <div><dt>航向</dt><dd>{mission.aircraft.headingDegrees.toFixed(0)}°</dd></div>
-              <div><dt>速度</dt><dd>{mission.aircraft.speed} u/s</dd></div>
+              <div><dt>速度</dt><dd>{mission.aircraft.speed.toFixed(2)} u/s</dd></div>
+              <div><dt>天气减速</dt><dd>{weatherSpeedFactor < 1 ? `${((1 - weatherSpeedFactor) * 100).toFixed(0)}%` : "无"}</dd></div>
               <div><dt>剩余航程</dt><dd>{mission.aircraft.fuelRemaining.toFixed(0)} / {mission.aircraft.fuelCapacity} u</dd></div>
               <div><dt>当前目标</dt><dd>{activeWaypoint ? `WP-${mission.route.activeWaypointIndex}` : "—"}</dd></div>
               <div><dt>已知雷达情报</dt><dd>{visibleRadarIntel.length} 个</dd></div>

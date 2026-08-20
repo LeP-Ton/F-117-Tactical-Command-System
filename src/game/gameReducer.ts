@@ -11,7 +11,7 @@ import { generateRadarIntel } from "../domain/intelSystem";
 import { analyzeCompletedMission, applyEnemyCounterDeployment } from "../domain/enemyAdaptation";
 import { applyFinalStrikeDefense } from "../domain/finalStrike";
 import { advanceEngagement } from "../domain/engagementSystem";
-import { advanceWeather } from "../domain/weatherSystem";
+import { advanceWeather, getWeatherSpeedFactor } from "../domain/weatherSystem";
 import {
   addWaypoint,
   moveWaypoint,
@@ -244,11 +244,16 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
     }
     case "TICK": {
       if (mission.status !== "RUNNING") return state;
+      const weatherSpeedFactor = getWeatherSpeedFactor(mission.aircraft.position, mission.weather);
+      const flightAircraft = {
+        ...mission.aircraft,
+        speed: gameConfig.aircraft.speed * weatherSpeedFactor,
+      };
       // 只允许飞机移动剩余燃油能够覆盖的距离，避免最后一帧透支航程。
-      const fuelLimitedSeconds = mission.aircraft.speed > 0
-        ? Math.min(action.deltaSeconds, mission.aircraft.fuelRemaining / mission.aircraft.speed)
+      const fuelLimitedSeconds = flightAircraft.speed > 0
+        ? Math.min(action.deltaSeconds, mission.aircraft.fuelRemaining / flightAircraft.speed)
         : 0;
-      const result = advanceAutopilot(mission.aircraft, mission.route, fuelLimitedSeconds);
+      const result = advanceAutopilot(flightAircraft, mission.route, fuelLimitedSeconds);
       const aircraft = {
         ...result.aircraft,
         fuelRemaining: Math.max(0, mission.aircraft.fuelRemaining - result.distanceTraveled),

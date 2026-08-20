@@ -4,6 +4,13 @@ import type { WeatherCell, WeatherForecast, WeatherKind } from "./types";
 
 const weatherCycle: readonly WeatherKind[] = ["CLOUD", "RAIN", "STORM", "RAIN", "FOG"];
 
+const speedFactors: Record<WeatherKind, number> = {
+  CLOUD: 0.9,
+  FOG: 0.85,
+  RAIN: 0.8,
+  STORM: 0.7,
+};
+
 function wrap(value: number, maximum: number): number {
   return ((value % maximum) + maximum) % maximum;
 }
@@ -44,6 +51,20 @@ export function projectWeatherCell(cell: WeatherCell, elapsedSeconds: number): W
 
 export function advanceWeather(cells: WeatherCell[], elapsedMs: number): WeatherCell[] {
   return cells.map((cell) => projectWeatherCell(cell, elapsedMs / 1000));
+}
+
+/** 多个天气单元重叠时只取最强减速，避免倍率连乘造成异常低速。 */
+export function getWeatherSpeedFactor(
+  position: { x: number; y: number },
+  cells: WeatherCell[],
+): number {
+  return cells.reduce((factor, cell) => {
+    const inside = position.x >= cell.x
+      && position.x <= cell.x + cell.width
+      && position.y >= cell.y
+      && position.y <= cell.y + cell.height;
+    return inside ? Math.min(factor, speedFactors[cell.kind]) : factor;
+  }, 1);
 }
 
 /** 预报包含由任务 Seed 固定生成的位置与尺度误差，但不泄露完整真实演化。 */

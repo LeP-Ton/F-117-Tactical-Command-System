@@ -100,6 +100,36 @@ describe("gameReducer", () => {
     expect(createRun("SLOW-FLIGHT").currentMission?.aircraft.speed).toBe(3.6);
   });
 
+  it("飞机进入风暴区域后减速 30%", () => {
+    let state = createRun("WEATHER-SLOWDOWN");
+    const mission = state.currentMission!;
+    const start = mission.aircraft.position;
+    state = {
+      ...state,
+      currentMission: {
+        ...mission,
+        status: "RUNNING",
+        weather: [{
+          id: "storm", kind: "STORM", initialKind: "STORM",
+          x: start.x - 20, y: start.y - 20, width: 100, height: 100,
+          detectionFactor: 0.5, origin: { ...start }, baseSize: { width: 100, height: 100 },
+          velocity: { x: 0, y: 0 }, baseIntensity: 1, phaseSeconds: 0, evolutionPeriodSeconds: 60,
+        }],
+        route: {
+          activeWaypointIndex: 1,
+          waypoints: [
+            mission.route.waypoints[0]!,
+            { id: "weather-leg", kind: "NAVIGATION", status: "PENDING", position: { x: start.x + 100, y: start.y } },
+          ],
+        },
+      },
+    };
+    state = gameReducer(state, { type: "TICK", deltaSeconds: 1 });
+    expect(state.currentMission!.aircraft.speed).toBeCloseTo(2.52);
+    expect(state.currentMission!.aircraft.position.x - start.x).toBeCloseTo(2.52);
+    expect(state.currentMission!.aircraft.fuelRemaining).toBeCloseTo(2000 - 2.52);
+  });
+
   it("满油航程为地图两条边并按实际飞行距离消耗", () => {
     let state = createRun("FUEL-RANGE");
     const mission = state.currentMission!;

@@ -1,6 +1,7 @@
 # 项目文档索引
 
 ## 当前变更文档
+`workflow/20260820212200-weather-flight-slowdown.md` - 会话-31：为 Cloud/Fog/Rain/Storm 增加 10%–30% 分级飞行减速，重叠取最强效果并保持按距离扣油；核对天气战术代价、有效速度或燃油关系时读取。
 `workflow/20260820204645-add-f117-fuel-range.md` - 会话-29：增加 2000 u 满油航程、按实际飞行距离扣油、耗尽失败与燃油遥测告警；核对航线成本、自动驾驶累计距离或任务失败原因时读取。
 `workflow/20260820174641-split-dynamic-weather-and-forecast.md` - 会话-25：重新拆分静态 Terrain 与动态 Weather Cell，增加四种天气的可复现时空演化及 T+30/60/90 有误差预报；核对天气 Tick、探测影响、预报 UI 或 Seed 复现时读取。
 `workflow/20260820104300-unify-detection-zones-and-adaptation.md` - 会话-10 第三批：统一地形/天气探测修正区，改用真实轨迹分析 Enemy Adaptation，并按空间距离选择反制雷达；核对环境判定或敌方画像时读取。
@@ -64,5 +65,6 @@
 - Final Strike 会综合 SEAD、Command Strike、情报任务、Enemy Alert、适应等级与失败历史动态生成最终防空体系。
 - 飞机基础速度为 `3.6 u/s`，运行中进入目标攻击半径后自动投弹，无需玩家手动操作。
 - F-117 满油航程为 `2000 u`，按真实累计飞行距离消耗；燃油耗尽会停止飞机并令当前任务失败。
+- Weather Cell 会令飞机减速 10%–30%，多个天气重叠时只取最强效果；天气延长暴露时间但不额外增加单位距离油耗。
 - 连续 Contact 会累积跟踪并触发导弹；切断新证据可以脱锁，导弹命中立即摧毁飞机并结束 Run。
 - 检索时先读取本索引，再按需读取具体 workflow 文档。
