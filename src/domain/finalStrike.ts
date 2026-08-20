@@ -1,7 +1,7 @@
 import { gameConfig } from "../config/gameConfig";
 import { SeededRandom } from "../core/SeededRandom";
 import { createRadarOperatorState } from "./radarOperatorAI";
-import type { MissionNodeType, MissionSession, PlayerTacticalProfile, RadarState } from "./types";
+import type { MissionNodeType, MissionSession, PlayerTacticalProfile, RadarState, RadarType } from "./types";
 
 export interface FinalStrikeContext {
   completedNodeTypes: MissionNodeType[];
@@ -19,9 +19,11 @@ function createGuardRadar(
   y: number,
   range: number,
   sweepAngleDegrees: number,
+  type: RadarType,
 ): RadarState {
   return {
     id,
+    type,
     position: {
       x: clamp(x, 90, gameConfig.world.width - 90),
       y: clamp(y, 90, gameConfig.world.height - 90),
@@ -56,6 +58,7 @@ export function applyFinalStrikeDefense(
       mission.target.position.y + Math.sin(angle) * 145,
       averageRange * 0.92,
       random.range(0, 360),
+      "FIRE_CONTROL",
     ));
     notes.push("未执行 SEAD：目标区后备雷达上线");
   }
@@ -67,6 +70,7 @@ export function applyFinalStrikeDefense(
       mission.target.position.y + 165,
       averageRange * (1 + Math.min(0.18, context.enemyAlert / 500)),
       random.range(0, 360),
+      "EARLY_WARNING",
     ));
     notes.push(`Enemy Alert ${context.enemyAlert}：增援警戒雷达部署`);
   } else {
@@ -81,6 +85,7 @@ export function applyFinalStrikeDefense(
       corridorY,
       averageRange * 0.86,
       random.range(0, 360),
+      "ACQUISITION",
     ));
     notes.push(`${context.tacticalProfile.southernRouteBias > 0.5 ? "南部" : "北部"}历史航路部署自适应截击雷达`);
   }

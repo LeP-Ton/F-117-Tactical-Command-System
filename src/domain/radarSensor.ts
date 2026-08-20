@@ -2,6 +2,7 @@ import { gameConfig } from "../config/gameConfig";
 import { SeededRandom } from "../core/SeededRandom";
 import { calculateDetectionFactors } from "./detectionModel";
 import type { AircraftState, RadarContact, RadarState, TerrainZone, WeatherCell } from "./types";
+import { radarTypeProfiles } from "./radarTypes";
 
 interface RadarSimulationResult {
   radars: RadarState[];
@@ -19,9 +20,10 @@ export function advanceRadarSensors(
 ): RadarSimulationResult {
   const contacts: RadarContact[] = [];
   const nextRadars = radars.map((radar) => {
+    const profile = radarTypeProfiles[radar.type];
     let accumulator = radar.scanAccumulatorSeconds + deltaSeconds;
     let scanCount = radar.scanCount;
-    const wideSweep = (radar.sweepAngleDegrees + gameConfig.radar.sweepDegreesPerSecond * deltaSeconds) % 360;
+    const wideSweep = (radar.sweepAngleDegrees + profile.sweepDegreesPerSecond * deltaSeconds) % 360;
     const sectorSweep = radar.operator.focusBearingDegrees === undefined
       ? wideSweep
       : radar.operator.focusBearingDegrees + Math.sin(timestamp / 1300) * 42;
@@ -36,13 +38,13 @@ export function advanceRadarSensors(
       sweepAngleDegrees: (sweepAngleDegrees + 360) % 360,
     };
 
-    while (accumulator >= gameConfig.radar.scanIntervalSeconds) {
-      accumulator -= gameConfig.radar.scanIntervalSeconds;
+    while (accumulator >= profile.scanIntervalSeconds) {
+      accumulator -= profile.scanIntervalSeconds;
       scanCount += 1;
       const factors = calculateDetectionFactors(nextRadar, aircraft, terrain, weather);
       const random = new SeededRandom(`${missionSeed}:${radar.id}:${scanCount}`);
       if (random.next() < factors.probability) {
-        const confidence = Math.max(0.12, Math.min(0.96, factors.probability + 0.28));
+        const confidence = Math.max(0.12, Math.min(0.96, (factors.probability + 0.28) * profile.contactAccuracyMultiplier));
         const errorRadius = gameConfig.radar.maxErrorRadius
           - confidence * (gameConfig.radar.maxErrorRadius - gameConfig.radar.minErrorRadius);
         const errorAngle = random.range(0, Math.PI * 2);
@@ -58,6 +60,7 @@ export function advanceRadarSensors(
           confidence,
           signalStrength: factors.distance * factors.aspect * factors.terrain * factors.weather,
           errorRadius,
+          engagementQuality: profile.engagementQuality,
         });
       }
     }

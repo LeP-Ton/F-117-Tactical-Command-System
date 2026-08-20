@@ -30,7 +30,7 @@ export function advanceEngagement(
   coordinationModifier: number,
 ): EngagementResult {
   const contactEvidence = newContacts
-    .map((contact) => contact.confidence * 0.72 + contact.signalStrength * 0.28)
+    .map((contact) => (contact.confidence * 0.72 + contact.signalStrength * 0.28) * contact.engagementQuality)
     .sort((first, second) => second - first);
   // 最强 Contact 代表雷达本地火控能力；其余 Contact 需要通过指挥链完成联合跟踪。
   const localEvidence = contactEvidence[0] ?? 0;

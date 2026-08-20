@@ -10,6 +10,7 @@ const contact: RadarContact = {
   confidence: 0.9,
   signalStrength: 0.8,
   errorRadius: 20,
+  engagementQuality: 1,
 };
 
 describe("Enemy Awareness", () => {

@@ -7,10 +7,18 @@ import { generateRadarIntel } from "./intelSystem";
 import { createPlayerTacticalProfile } from "./enemyAdaptation";
 import { createEngagementState } from "./engagementSystem";
 import { advanceWeather } from "./weatherSystem";
+import { ensureTargetFireControlCoverage } from "./targetDefense";
 import type { GameEvent, GameEventType, MissionSession, RunState } from "./types";
 
 export function createMission(seed: string): MissionSession {
   const generated = generateMissionContent(seed);
+  const target = {
+    id: "COMMAND-BUNKER",
+    position: generated.targetPosition,
+    attackRadius: gameConfig.mission.attackRadius,
+    destroyed: false,
+  };
+  const radars = ensureTargetFireControlCoverage(generated.radars, target);
   return {
     id: `mission-${seed}`,
     seed: `${seed}-M01`,
@@ -28,19 +36,14 @@ export function createMission(seed: string): MissionSession {
     terrain: generated.terrain,
     weather: advanceWeather(generated.weather, 0),
     weatherForecast: generated.weatherForecast,
-    radars: generated.radars,
-    radarIntel: generateRadarIntel(`${seed}-M01`, generated.radars, generated.intelAccuracy),
+    radars,
+    radarIntel: generateRadarIntel(`${seed}-M01`, radars, generated.intelAccuracy),
     radarContacts: [],
     beliefMap: createBeliefMap(),
     awareness: { value: 0, stage: "CALM" },
     engagement: createEngagementState(),
     commander: generated.commander,
-    target: {
-      id: "COMMAND-BUNKER",
-      position: generated.targetPosition,
-      attackRadius: gameConfig.mission.attackRadius,
-      destroyed: false,
-    },
+    target,
     extractionArea: { ...gameConfig.mission.extractionArea },
     intelAccuracy: generated.intelAccuracy,
     commanderCoordinationModifier: 1,

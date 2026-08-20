@@ -1,6 +1,8 @@
 # 项目文档索引
 
 ## 当前变更文档
+`workflow/20260820223709-ensure-target-fire-control-coverage.md` - 会话-43：保证至少一部 Fire Control 完整覆盖目标攻击区并保留 20 u 余量，且保护唯一目标区火控不被适应系统移位；核对目标防御、SEAD 后覆盖或雷达重部署时读取。
+`workflow/20260820214842-add-radar-types.md` - 会话-34：增加 Early Warning、Acquisition、Fire Control 三类真实雷达，差异接入覆盖、扫描、波束、Contact 精度和火控贡献；核对分层防空、雷达生成或类型平衡时读取。
 `workflow/20260820213439-sync-realtime-meters.md` - 会话-32：移除 Fuel、Threat 与 Awareness 高频仪表的宽度过渡，修复持续 Tick 时视觉进度滞后于数据；排查进度条暂停后突变或不增长时读取。
 `workflow/20260820212200-weather-flight-slowdown.md` - 会话-31：为 Cloud/Fog/Rain/Storm 增加 10%–30% 分级飞行减速，重叠取最强效果并保持按距离扣油；核对天气战术代价、有效速度或燃油关系时读取。
 `workflow/20260820204645-add-f117-fuel-range.md` - 会话-29：增加 2000 u 满油航程、按实际飞行距离扣油、耗尽失败与燃油遥测告警；核对航线成本、自动驾驶累计距离或任务失败原因时读取。
@@ -52,6 +54,8 @@
 - 当前完成 Phase 0–12，采用 React、TypeScript、Vite 与 HTML Canvas。
 - `RunState` 与 `MissionSession` 分离，Canvas 不持有领域状态。
 - 只有 Radar Sensor 可读取飞机真实状态，后续 AI 只能消费带误差 Radar Contact。
+- 雷达网络由 Early Warning、Acquisition、Fire Control 三类组成，类型分别影响覆盖、扫描周期、波束、探测概率、Contact 精度和火控贡献。
+- 每场任务最终至少一部 Fire Control 完整覆盖目标攻击区并保留 20 u 余量；唯一目标区火控雷达不参与 Enemy Adaptation 移位。
 - Radar Operator 基于自身 Contact 和历史状态计算 Utility 评分，不共享真实飞机信息。
 - Belief Map 仅消费 Contact，以 24×24 网格保存概率分布并进行运动传播、扩散和衰减。
 - Commander 只读取 Awareness、Belief 与雷达状态，通过 Utility 偏置协调各 Radar Operator；投弹只提高警戒，不提供目标区定位，网络静默仍已移除。

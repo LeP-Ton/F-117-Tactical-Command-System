@@ -2,7 +2,8 @@ import { SeededRandom } from "../core/SeededRandom";
 import { createCommanderState } from "../domain/airDefenseCommander";
 import { createRadarOperatorState } from "../domain/radarOperatorAI";
 import { generateWeatherForecast } from "../domain/weatherSystem";
-import type { RadarState, TerrainZone, WeatherCell } from "../domain/types";
+import { radarTypeProfiles } from "../domain/radarTypes";
+import type { RadarState, RadarType, TerrainZone, WeatherCell } from "../domain/types";
 
 export interface GeneratedMissionContent {
   terrain: TerrainZone[];
@@ -49,15 +50,21 @@ export function generateMissionContent(seed: string): GeneratedMissionContent {
       evolutionPeriodSeconds: random.range(55, 95),
     };
   });
-  const radars = Array.from({ length: radarCount }, (_, index): RadarState => ({
-    id: `RADAR-${String(index + 1).padStart(2, "0")}`,
-    position: { x: random.range(230, 900), y: random.range(140, 800) },
-    range: random.range(235, 350),
-    sweepAngleDegrees: random.range(0, 360),
-    scanAccumulatorSeconds: 0,
-    scanCount: 0,
-    operator: createRadarOperatorState(),
-  }));
+  const typeSequence: readonly RadarType[] = ["EARLY_WARNING", "ACQUISITION", "FIRE_CONTROL"];
+  const radars = Array.from({ length: radarCount }, (_, index): RadarState => {
+    const type = typeSequence[index % typeSequence.length]!;
+    const profile = radarTypeProfiles[type];
+    return {
+      id: `${type === "EARLY_WARNING" ? "EW" : type === "ACQUISITION" ? "ACQ" : "FC"}-${String(index + 1).padStart(2, "0")}`,
+      type,
+      position: { x: random.range(230, 900), y: random.range(140, 800) },
+      range: random.range(...profile.range),
+      sweepAngleDegrees: random.range(0, 360),
+      scanAccumulatorSeconds: 0,
+      scanCount: 0,
+      operator: createRadarOperatorState(),
+    };
+  });
   return {
     terrain,
     weather,

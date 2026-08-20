@@ -12,6 +12,7 @@ import { analyzeCompletedMission, applyEnemyCounterDeployment } from "../domain/
 import { applyFinalStrikeDefense } from "../domain/finalStrike";
 import { advanceEngagement } from "../domain/engagementSystem";
 import { advanceWeather, getWeatherSpeedFactor } from "../domain/weatherSystem";
+import { ensureTargetFireControlCoverage } from "../domain/targetDefense";
 import {
   addWaypoint,
   moveWaypoint,
@@ -81,10 +82,12 @@ function prepareCampaignMission(state: RunState, node: CampaignNode): MissionSes
       tacticalProfile: state.enemyState.tacticalProfile,
     })
     : adaptedMission;
+  const radars = ensureTargetFireControlCoverage(finalMission.radars, finalMission.target);
 
   return {
     ...finalMission,
-    radarIntel: generateRadarIntel(selectedMission.seed, finalMission.radars, adjustedIntelAccuracy),
+    radars,
+    radarIntel: generateRadarIntel(selectedMission.seed, radars, adjustedIntelAccuracy),
     intelAccuracy: adjustedIntelAccuracy,
     commanderCoordinationModifier: state.enemyState.commanderCoordinationModifier,
   };

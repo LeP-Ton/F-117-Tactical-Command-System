@@ -10,6 +10,7 @@ const strongContact: RadarContact = {
   confidence: 0.9,
   signalStrength: 0.85,
   errorRadius: 20,
+  engagementQuality: 1,
 };
 
 const supportingContact: RadarContact = {
@@ -33,6 +34,12 @@ describe("防空交战系统", () => {
     expect(launched).toBe(true);
     expect(state.stage).toBe("MISSILE_INBOUND");
     expect(state.missileTimeRemainingSeconds).toBeDefined();
+  });
+
+  it("火控雷达 Contact 对跟踪进度贡献高于预警雷达", () => {
+    const early = advanceEngagement(createEngagementState(), [{ ...strongContact, engagementQuality: 0.55 }], 0.25, 1);
+    const fireControl = advanceEngagement(createEngagementState(), [{ ...strongContact, engagementQuality: 1.5 }], 0.25, 1);
+    expect(fireControl.state.trackProgress).toBeGreaterThan(early.state.trackProgress);
   });
 
   it("失去新证据后跟踪质量会下降", () => {

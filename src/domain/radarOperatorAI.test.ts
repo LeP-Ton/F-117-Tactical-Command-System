@@ -5,6 +5,7 @@ import type { RadarContact, RadarState } from "./types";
 function createRadar(id = "R1"): RadarState {
   return {
     id,
+    type: "ACQUISITION",
     position: { x: 100, y: 100 },
     range: 300,
     sweepAngleDegrees: 0,
@@ -23,6 +24,7 @@ function createContact(timestamp: number, confidence: number, radarId = "R1"): R
     confidence,
     signalStrength: 0.7,
     errorRadius: 30,
+    engagementQuality: 1,
   };
 }
 

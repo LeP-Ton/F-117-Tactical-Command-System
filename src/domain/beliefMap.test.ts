@@ -11,6 +11,7 @@ function contact(x: number, y: number, timestamp = 1000, confidence = 0.9): Rada
     confidence,
     signalStrength: 0.8,
     errorRadius: 35,
+    engagementQuality: 1,
   };
 }
 

@@ -117,8 +117,11 @@ export interface WeatherForecast {
   confidence: "高" | "中" | "低";
 }
 
+export type RadarType = "EARLY_WARNING" | "ACQUISITION" | "FIRE_CONTROL";
+
 export interface RadarState {
   id: string;
+  type: RadarType;
   position: Vector2;
   range: number;
   sweepAngleDegrees: number;
@@ -147,6 +150,8 @@ export interface RadarContact {
   confidence: number;
   signalStrength: number;
   errorRadius: number;
+  /** 不同雷达对跟踪、锁定和导弹制导链路的证据权重。 */
+  engagementQuality: number;
 }
 
 export type RadarIntelLevel = "CONFIRMED" | "PROBABLE" | "POSSIBLE" | "UNKNOWN";
@@ -154,6 +159,7 @@ export type RadarIntelLevel = "CONFIRMED" | "PROBABLE" | "POSSIBLE" | "UNKNOWN";
 /** 玩家在任务开始前获得的雷达情报；它只保存估计值，不泄露敌方实时状态。 */
 export interface RadarIntelReport {
   radarId: string;
+  radarType: RadarType;
   level: RadarIntelLevel;
   estimatedPosition?: Vector2;
   positionErrorRadius: number;

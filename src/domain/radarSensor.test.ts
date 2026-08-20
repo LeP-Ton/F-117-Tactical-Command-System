@@ -5,7 +5,7 @@ import type { AircraftState, RadarState } from "./types";
 
 describe("Radar Sensor", () => {
   const radar: RadarState = {
-    id: "R-DETERMINISTIC", position: { x: 0, y: 0 }, range: 1000,
+    id: "R-DETERMINISTIC", type: "ACQUISITION", position: { x: 0, y: 0 }, range: 1000,
     sweepAngleDegrees: 90, scanAccumulatorSeconds: 0.24, scanCount: 8,
     operator: createRadarOperatorState(),
   };
@@ -35,5 +35,12 @@ describe("Radar Sensor", () => {
       expect(contact.confidence).toBeGreaterThan(0);
       expect(contact).not.toHaveProperty("realPosition");
     });
+  });
+
+  it("火控雷达扫描周期短于预警雷达", () => {
+    const early = advanceRadarSensors("TYPE", [{ ...radar, type: "EARLY_WARNING", scanAccumulatorSeconds: 0 }], aircraft, [], [], 500, 0.2);
+    const fireControl = advanceRadarSensors("TYPE", [{ ...radar, type: "FIRE_CONTROL", scanAccumulatorSeconds: 0 }], aircraft, [], [], 500, 0.2);
+    expect(early.radars[0]!.scanCount).toBe(8);
+    expect(fireControl.radars[0]!.scanCount).toBe(9);
   });
 });

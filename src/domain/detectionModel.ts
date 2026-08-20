@@ -1,5 +1,6 @@
 import { gameConfig } from "../config/gameConfig";
 import type { AircraftState, RadarState, TerrainZone, WeatherCell } from "./types";
+import { radarTypeProfiles } from "./radarTypes";
 
 function normalizeAngle(angle: number): number {
   return ((angle % 360) + 360) % 360;
@@ -41,6 +42,7 @@ export function calculateDetectionFactors(
     aircraft.position.x - radar.position.x,
     aircraft.position.y - radar.position.y,
   );
+  const profile = radarTypeProfiles[radar.type];
   const distanceFactor = Math.max(0, 1 - Math.pow(distance / radar.range, 1.7));
   const radarBearing = bearingDegrees(
     radar.position.x,
@@ -49,7 +51,7 @@ export function calculateDetectionFactors(
     aircraft.position.y,
   );
   const beamDifference = angleDifference(radar.sweepAngleDegrees, radarBearing);
-  const beamFactor = beamDifference <= gameConfig.radar.beamWidthDegrees / 2 ? 1 : 0;
+  const beamFactor = beamDifference <= profile.beamWidthDegrees / 2 ? 1 : 0;
 
   // 机头/机尾朝向雷达时 RCS 风险低，侧面对雷达时风险高。
   const aircraftToRadar = bearingDegrees(
@@ -69,7 +71,8 @@ export function calculateDetectionFactors(
     .reduce((factor, zone) => factor * zone.detectionFactor, 1);
   const probability = Math.min(
     0.95,
-    gameConfig.radar.baseDetectionProbability * distanceFactor * aspectFactor * terrainFactor * weatherFactor * beamFactor,
+    gameConfig.radar.baseDetectionProbability * profile.detectionProbabilityMultiplier
+      * distanceFactor * aspectFactor * terrainFactor * weatherFactor * beamFactor,
   );
 
   return { distance: distanceFactor, aspect: aspectFactor, terrain: terrainFactor, weather: weatherFactor, beam: beamFactor, probability };

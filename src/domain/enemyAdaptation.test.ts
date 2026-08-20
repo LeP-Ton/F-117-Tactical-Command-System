@@ -48,12 +48,16 @@ describe("Enemy Adaptation", () => {
 
     const first = applyEnemyCounterDeployment(mission, enemyState);
     const second = applyEnemyCounterDeployment(mission, enemyState);
+    const protectedFireControl = mission.radars.find((radar) => radar.type === "FIRE_CONTROL")!;
 
     expect(second.radars).toEqual(first.radars);
     expect(first.radars).not.toEqual(mission.radars);
     expect(first.adaptationNotes).toContain("山地出口增设搜索覆盖");
     expect(first.adaptationNotes).toContain("南部航路搜索加强");
     expect(first.adaptationNotes).toContain("直达目标轴线增加拦截覆盖");
+    expect(first.radars.find((radar) => radar.id === protectedFireControl.id)?.position).toEqual(
+      protectedFireControl.position,
+    );
   });
 
   it("没有历史样本时不改变雷达部署", () => {

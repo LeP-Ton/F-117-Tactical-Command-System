@@ -6,6 +6,7 @@ import type { RadarContact, RadarState } from "./types";
 
 const radar: RadarState = {
   id: "R1",
+  type: "ACQUISITION",
   position: { x: 100, y: 100 },
   range: 300,
   sweepAngleDegrees: 0,
@@ -22,6 +23,7 @@ const contact: RadarContact = {
   confidence: 0.9,
   signalStrength: 0.8,
   errorRadius: 30,
+  engagementQuality: 1,
 };
 
 describe("Air Defense Commander", () => {

@@ -9,6 +9,7 @@ import f117SideSilhouette from "../assets/f117-side-silhouette.png";
 import { CollapsibleSection } from "./CollapsibleSection";
 import { getAdaptationLevel } from "../domain/enemyAdaptation";
 import { getWeatherSpeedFactor } from "../domain/weatherSystem";
+import { radarTypeProfiles } from "../domain/radarTypes";
 
 const eventLabels: Record<string, string> = {
   WAYPOINT_ADDED: "新增航点",
@@ -242,7 +243,9 @@ export function App() {
               <div className="operator-card" key={radar.id}>
                 <div className="operator-title">
                   <strong>{radar.id}</strong>
-                  <span className={`mode-${radar.operator.mode.toLowerCase()}`}>{modeLabels[radar.operator.mode]}</span>
+                  <span className={`mode-${radar.operator.mode.toLowerCase()}`}>
+                    {radarTypeProfiles[radar.type].label} / {modeLabels[radar.operator.mode]}
+                  </span>
                 </div>
                 <div className="score-grid">
                   <span>W {radar.operator.utilityScores.WIDE_SEARCH.toFixed(0)}</span>

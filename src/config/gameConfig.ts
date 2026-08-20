@@ -17,9 +17,6 @@ export const gameConfig = {
     waypointHitRadius: 18,
   },
   radar: {
-    scanIntervalSeconds: 0.25,
-    sweepDegreesPerSecond: 38,
-    beamWidthDegrees: 24,
     baseDetectionProbability: 0.46,
     contactLifetimeMs: 8000,
     minErrorRadius: 16,

@@ -73,9 +73,10 @@ function moveNearestRadar(
   target: Vector2,
   strength: number,
   usedRadarIds: Set<string>,
+  protectedRadarId?: string,
 ): void {
   const radar = radars
-    .filter((candidate) => !usedRadarIds.has(candidate.id))
+    .filter((candidate) => !usedRadarIds.has(candidate.id) && candidate.id !== protectedRadarId)
     .sort((first, second) => distance(first.position, target) - distance(second.position, target))[0];
   if (!radar) return;
   const index = radars.findIndex((candidate) => candidate.id === radar.id);
@@ -97,17 +98,21 @@ export function applyEnemyCounterDeployment(
   const notes: string[] = [];
   const strength = Math.min(0.42, 0.12 + getAdaptationLevel(profile) * 0.06);
   const usedRadarIds = new Set<string>();
+  // 目标区最近的火控雷达承担固定防御职责，不参与历史航路反制移位。
+  const protectedFireControlId = radars
+    .filter((radar) => radar.type === "FIRE_CONTROL")
+    .sort((first, second) => distance(first.position, mission.target.position) - distance(second.position, mission.target.position))[0]?.id;
 
   const primaryTerrain = mission.terrain[0];
   if (profile.terrainMaskingPreference >= 0.35 && primaryTerrain) {
     const exit = { x: primaryTerrain.x + primaryTerrain.width, y: primaryTerrain.y + primaryTerrain.height / 2 };
-    moveNearestRadar(radars, exit, strength, usedRadarIds);
+    moveNearestRadar(radars, exit, strength, usedRadarIds, protectedFireControlId);
     notes.push("山地出口增设搜索覆盖");
   }
 
   if (Math.abs(profile.southernRouteBias - 0.5) >= 0.08) {
     const corridorY = profile.southernRouteBias * gameConfig.world.height;
-    moveNearestRadar(radars, { x: gameConfig.world.width * 0.58, y: corridorY }, strength, usedRadarIds);
+    moveNearestRadar(radars, { x: gameConfig.world.width * 0.58, y: corridorY }, strength, usedRadarIds, protectedFireControlId);
     notes.push(profile.southernRouteBias > 0.5 ? "南部航路搜索加强" : "北部航路搜索加强");
   }
 
@@ -116,7 +121,7 @@ export function applyEnemyCounterDeployment(
       x: (mission.route.waypoints[0]!.position.x + mission.target.position.x) / 2,
       y: (mission.route.waypoints[0]!.position.y + mission.target.position.y) / 2,
     };
-    moveNearestRadar(radars, directAxis, strength, usedRadarIds);
+    moveNearestRadar(radars, directAxis, strength, usedRadarIds, protectedFireControlId);
     notes.push("直达目标轴线增加拦截覆盖");
   }
 

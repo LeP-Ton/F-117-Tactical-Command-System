@@ -83,6 +83,33 @@ Intel 行动成功后会永久提高本次 Run 后续任务的情报精度。因
 
 因此，扫描线经过飞机却没有出现 Contact 是正常的概率结果；进入覆盖圈也不等于立刻暴露。
 
+### 3.2 雷达类型与分层防空
+
+普通任务至少包含一部以下每种雷达：
+
+| 类型 | 基础覆盖 | 扫描周期 | 波束宽度 | Contact / 火控特点 |
+|---|---:|---:|---:|---|
+| Early Warning | 380–470 u | 0.40 s | 36° | 远程预警，探测率和精度偏低，锁定贡献 0.55× |
+| Acquisition | 270–360 u | 0.25 s | 24° | 均衡搜索与目标获取，锁定贡献 1.00× |
+| Fire Control | 180–260 u | 0.16 s | 12° | 覆盖较小但扫描快、精度高，锁定贡献 1.50× |
+
+Early Warning 更容易在远距离和较宽方向范围内形成早期 Contact，但难以单独快速完成火控锁定；Fire Control 必须把窄波束准确指向目标，一旦连续命中便会快速提高跟踪质量。Acquisition 位于两者之间，并通过 Commander 的 Contact 共享帮助火控雷达集中搜索。
+
+Final Strike 的增援同样承担明确职责：目标区 `FINAL-GUARD` 是 Fire Control，Enemy Alert 触发的 `ALERT-GUARD` 是 Early Warning，历史航路触发的 `ADAPT-GUARD` 是 Acquisition。
+
+### 3.3 目标区火控覆盖
+
+任务生成与全部 Campaign 修正结束后，系统必须保证至少一部 Fire Control 完整覆盖目标攻击区：
+
+```text
+火控雷达到目标中心距离 + 目标攻击半径
+≤ 火控雷达实际范围 - 20 u
+```
+
+若现有部署不满足条件，系统只移动距离目标最近的 Fire Control，并保留 Seed 生成的相对方位。该校验发生在 SEAD 缩圈、Enemy Adaptation 移位和 Final Strike 增援之后；Enemy Adaptation 也不会移动唯一承担目标防御的火控雷达。
+
+完整覆盖只保证飞机攻击目标时处于 Fire Control 的真实范围内，不保证立即暴露。窄波束、概率探测、飞机朝向、地形和天气仍然决定是否形成连续 Contact。
+
 ## 4. Radar Contact 与敌方认知
 
 成功探测不会把飞机真实坐标直接交给敌方 AI，而是生成带误差的 `Radar Contact（雷达接触）`：

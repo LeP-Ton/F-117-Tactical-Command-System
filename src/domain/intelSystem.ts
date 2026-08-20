@@ -31,6 +31,7 @@ export function generateRadarIntel(
     if (!revealed) {
       return {
         radarId: radar.id,
+        radarType: radar.type,
         level: "UNKNOWN",
         positionErrorRadius: 0,
       };
@@ -48,6 +49,7 @@ export function generateRadarIntel(
 
     return {
       radarId: radar.id,
+      radarType: radar.type,
       level,
       estimatedPosition,
       positionErrorRadius,

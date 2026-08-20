@@ -4,7 +4,7 @@ import { createRadarOperatorState } from "./radarOperatorAI";
 import type { AircraftState, RadarState, TerrainZone, WeatherCell } from "./types";
 
 const radar: RadarState = {
-  id: "R1", position: { x: 0, y: 0 }, range: 500, sweepAngleDegrees: 90,
+  id: "R1", type: "ACQUISITION", position: { x: 0, y: 0 }, range: 500, sweepAngleDegrees: 90,
   scanAccumulatorSeconds: 0, scanCount: 0,
   operator: createRadarOperatorState(),
 };
@@ -45,6 +45,14 @@ describe("雷达探测模型", () => {
     };
     const stormFactors = calculateDetectionFactors(radar, aircraft, [], [storm]);
     expect(stormFactors.probability).toBeCloseTo(clear.probability * 0.55);
+  });
+
+  it("预警雷达宽波束可覆盖火控雷达波束之外的目标", () => {
+    const offsetSweep = { ...radar, sweepAngleDegrees: 105 };
+    const earlyWarning = calculateDetectionFactors({ ...offsetSweep, type: "EARLY_WARNING" }, aircraft, [], []);
+    const fireControl = calculateDetectionFactors({ ...offsetSweep, type: "FIRE_CONTROL" }, aircraft, [], []);
+    expect(earlyWarning.beam).toBe(1);
+    expect(fireControl.beam).toBe(0);
   });
 
 });

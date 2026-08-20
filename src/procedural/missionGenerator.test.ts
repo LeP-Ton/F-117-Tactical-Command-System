@@ -25,6 +25,9 @@ describe("Mission Generator", () => {
       expect(terrain.length).toBeLessThanOrEqual(4);
       expect(generated.radars.length).toBeGreaterThanOrEqual(3);
       expect(generated.radars.length).toBeLessThanOrEqual(5);
+      expect(new Set(generated.radars.map((radar) => radar.type))).toEqual(
+        new Set(["EARLY_WARNING", "ACQUISITION", "FIRE_CONTROL"]),
+      );
       expect(weather.length).toBeGreaterThanOrEqual(1);
       expect(generated.intelAccuracy).toBeGreaterThanOrEqual(0.68);
       expect(generated.intelAccuracy).toBeLessThanOrEqual(0.94);

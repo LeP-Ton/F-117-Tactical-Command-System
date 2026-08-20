@@ -256,6 +256,11 @@ describe("gameReducer", () => {
     const baseline = createMission(available.missionSeed).radars[0]!.range;
     state = gameReducer(state, { type: "SELECT_CAMPAIGN_NODE", nodeId: available.id });
     expect(state.currentMission!.radars[0]!.range).toBeCloseTo(baseline * 0.85);
+    expect(state.currentMission!.radars.some((radar) => radar.type === "FIRE_CONTROL"
+      && Math.hypot(
+        radar.position.x - state.currentMission!.target.position.x,
+        radar.position.y - state.currentMission!.target.position.y,
+      ) + state.currentMission!.target.attackRadius <= radar.range - 20 + 0.000001)).toBe(true);
   });
 
   it("INTEL 会提高后续任务情报精度", () => {

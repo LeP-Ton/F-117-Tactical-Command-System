@@ -5,6 +5,7 @@ import { canEditWaypoint } from "../domain/route";
 import type { MissionSession, Vector2 } from "../domain/types";
 import type { GameAction } from "../game/gameReducer";
 import f117TopSilhouette from "../assets/f117-top-silhouette.png";
+import { radarTypeProfiles } from "../domain/radarTypes";
 
 interface TacticalMapProps {
   mission: MissionSession;
@@ -225,16 +226,19 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
         context.fillStyle = "#e4bd63";
         context.font = "12px monospace";
         context.fillText(
-          `${report.radarId}? ${report.level}`,
+          `${report.radarId}? ${radarTypeProfiles[report.radarType].label} ${report.level}`,
           position.x + 12,
           position.y + 4,
         );
       });
 
       if (showBelief) mission.radars.forEach((radar) => {
+        const radarColor = radar.type === "EARLY_WARNING"
+          ? "rgba(224, 176, 72, 0.76)"
+          : radar.type === "FIRE_CONTROL" ? "rgba(229, 74, 62, 0.82)" : "rgba(224, 112, 78, 0.78)";
         context.beginPath();
         context.arc(radar.position.x, radar.position.y, radar.range, 0, Math.PI * 2);
-        context.strokeStyle = "rgba(198, 92, 67, 0.22)";
+        context.strokeStyle = radarColor.replace(/0\.\d+\)$/, "0.24)");
         context.lineWidth = 2 / metrics.scale;
         context.stroke();
         const sweepRadians = ((radar.sweepAngleDegrees - 90) * Math.PI) / 180;
@@ -244,12 +248,12 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
           radar.position.x + Math.cos(sweepRadians) * radar.range,
           radar.position.y + Math.sin(sweepRadians) * radar.range,
         );
-        context.strokeStyle = "rgba(239, 114, 80, 0.75)";
+        context.strokeStyle = radarColor;
         context.stroke();
-        context.fillStyle = "#d76b50";
+        context.fillStyle = radarColor;
         context.fillRect(radar.position.x - 6, radar.position.y - 6, 12, 12);
         context.font = "12px monospace";
-        context.fillText(`${radar.id} ${radar.operator.mode}`, radar.position.x + 12, radar.position.y + 4);
+        context.fillText(`${radar.id} ${radarTypeProfiles[radar.type].label} ${radar.operator.mode}`, radar.position.x + 12, radar.position.y + 4);
       });
 
       if (showBelief) mission.radarContacts.forEach((contact) => {

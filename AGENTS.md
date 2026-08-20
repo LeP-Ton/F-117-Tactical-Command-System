@@ -10,7 +10,9 @@
 - `RunState` 与 `MissionSession` 严格分离；Seed、Campaign 和 Enemy Adaptation 均保留独立扩展边界。
 - Canvas 只负责绘制与坐标交互，游戏状态以 reducer 和领域模型为唯一事实来源。
 - 雷达架构遵循 Reality → Radar Sensor → Imperfect Contact；只有 Sensor 层可读取飞机真实状态，后续 AI 只能消费带误差 Contact。
-- 每台 Radar Operator 独立保存模式、Contact 记忆和全部 Utility 评分；目前只支持 Wide Search、Sector Search 与 Focused Track，雷达始终开机扫描。
+- 雷达网络由 Early Warning（远程宽波束、低火控质量）、Acquisition（中程均衡）与 Fire Control（近程窄波束、高精度高火控质量）三类组成；类型差异统一影响覆盖、扫描周期、波束、探测率、Contact 误差与锁定贡献。
+- 每场任务最终准备完成后，至少一部 Fire Control 必须完整覆盖目标攻击区并保留 `20 u` 余量；唯一承担目标防御的火控雷达不参与 Enemy Adaptation 移位。
+- 每台 Radar Operator 独立保存模式、Contact 记忆和全部 Utility 评分；支持 Wide Search、Sector Search 与 Focused Track，雷达始终开机扫描。
 - Belief Map 使用 24×24 概率网格，仅融合 Radar Contact；支持误差高斯注入、运动估计、扩散与衰减，完整内部状态只在调试热力图中展示。
 - Air Defense Commander 只读取 Awareness、Belief Map 与雷达状态，通过可解释 Utility 评分、跨雷达 Contact 共享和 Operator 偏置协调雷达，不读取飞机真实位置或把目标位置作为定位回退；指挥链受损会延迟决策、缩短共享窗口并扩大搜索方位误差。
 - Awareness 是任务内敌方总体警戒值，由 Contact 累积、失联后缓慢衰减、投弹时显著提升；它只驱动 Commander 搜索强度，不取代玩家可见的跟踪、锁定与导弹进度。
