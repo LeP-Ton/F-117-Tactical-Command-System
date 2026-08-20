@@ -1,6 +1,7 @@
 # 项目文档索引
 
 ## 当前变更文档
+`workflow/20260821073449-fix-campaign-edge-alignment.md` - 会话-46：统一任务方块百分比定位与 SVG 连线的横纵缩放规则，修复大屏任务网络虚线脱节；排查 Campaign 响应式布局或节点连线对齐时读取。
 `workflow/20260820223709-ensure-target-fire-control-coverage.md` - 会话-43：保证至少一部 Fire Control 完整覆盖目标攻击区并保留 20 u 余量，且保护唯一目标区火控不被适应系统移位；核对目标防御、SEAD 后覆盖或雷达重部署时读取。
 `workflow/20260820214842-add-radar-types.md` - 会话-34：增加 Early Warning、Acquisition、Fire Control 三类真实雷达，差异接入覆盖、扫描、波束、Contact 精度和火控贡献；核对分层防空、雷达生成或类型平衡时读取。
 `workflow/20260820213439-sync-realtime-meters.md` - 会话-32：移除 Fuel、Threat 与 Awareness 高频仪表的宽度过渡，修复持续 Tick 时视觉进度滞后于数据；排查进度条暂停后突变或不增长时读取。

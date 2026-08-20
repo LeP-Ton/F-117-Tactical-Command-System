@@ -40,7 +40,11 @@ export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
       </div>
       <div className="campaign-content">
         <div className="campaign-graph">
-          <svg viewBox="0 0 1000 600" aria-label="战役节点连线">
+          <svg
+            viewBox="0 0 1000 600"
+            preserveAspectRatio="none"
+            aria-label="战役节点连线"
+          >
             {state.campaign.edges.map((edge) => {
               const from = state.campaign.nodes.find((node) => node.id === edge.from)!;
               const to = state.campaign.nodes.find((node) => node.id === edge.to)!;
