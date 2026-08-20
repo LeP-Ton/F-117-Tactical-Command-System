@@ -27,7 +27,6 @@ describe("游戏音效事件映射", () => {
   });
 
   it("不需要声音的内部事件不会生成提示", () => {
-    expect(cueForEvent(event("BELIEF_UPDATED"))).toBeUndefined();
     expect(cueForEvent(event("COMMANDER_ORDER"))).toBeUndefined();
   });
 });

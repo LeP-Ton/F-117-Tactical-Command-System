@@ -7,6 +7,7 @@ import { CampaignMap } from "./CampaignMap";
 import { useGameAudio } from "../audio/useGameAudio";
 import f117SideSilhouette from "../assets/f117-side-silhouette.png";
 import { CollapsibleSection } from "./CollapsibleSection";
+import { getAdaptationLevel } from "../domain/enemyAdaptation";
 
 const eventLabels: Record<string, string> = {
   WAYPOINT_ADDED: "新增航点",
@@ -21,7 +22,6 @@ const eventLabels: Record<string, string> = {
   ROUTE_COMPLETED: "航线完成",
   RADAR_CONTACT: "雷达接触",
   RADAR_MODE_CHANGED: "雷达模式切换",
-  BELIEF_UPDATED: "Belief 概率更新",
   AWARENESS_STAGE_CHANGED: "警戒阶段变化",
   COMMANDER_ORDER: "Commander 命令",
   ATTACK: "武器投放",
@@ -70,6 +70,9 @@ export function App() {
   const recentEvents = mission.events.slice(-5).reverse();
   const beliefPeak = getBeliefPeak(mission.beliefMap, mission.elapsedMs);
   const visibleRadarIntel = mission.radarIntel.filter((report) => report.level !== "UNKNOWN");
+  const terrainCount = mission.terrain.length;
+  const weatherCount = mission.weather.length;
+  const adaptationLevel = getAdaptationLevel(state.enemyState.tacticalProfile);
 
   return (
     <main className="app-shell">
@@ -149,7 +152,7 @@ export function App() {
             <dl className="telemetry-grid">
               <div><dt>任务 Seed</dt><dd>{mission.seed}</dd></div>
               <div><dt>情报精度</dt><dd>{(mission.intelAccuracy * 100).toFixed(0)}%</dd></div>
-              <div><dt>生成规模</dt><dd>T{mission.generationInfo.terrainCount} / R{mission.generationInfo.radarCount} / W{mission.generationInfo.weatherCount}</dd></div>
+              <div><dt>生成规模</dt><dd>T{terrainCount} / R{mission.radars.length} / W{weatherCount}</dd></div>
               {showBelief && <div><dt>指挥链效率</dt><dd>{(mission.commanderCoordinationModifier * 100).toFixed(0)}%</dd></div>}
               <div><dt>飞行时间</dt><dd>{(mission.elapsedMs / 1000).toFixed(1)} s</dd></div>
               <div><dt>坐标 X</dt><dd>{mission.aircraft.position.x.toFixed(1)}</dd></div>
@@ -159,7 +162,7 @@ export function App() {
               <div><dt>当前目标</dt><dd>{activeWaypoint ? `WP-${mission.route.activeWaypointIndex}` : "—"}</dd></div>
               <div><dt>已知雷达情报</dt><dd>{visibleRadarIntel.length} 个</dd></div>
               <div><dt>未定位信号</dt><dd>{mission.radarIntel.length - visibleRadarIntel.length} 个</dd></div>
-              <div><dt>敌方适应</dt><dd>LV.{state.enemyState.adaptationLevel}</dd></div>
+              <div><dt>敌方适应</dt><dd>LV.{adaptationLevel}</dd></div>
               {showBelief && <div><dt>雷达数量</dt><dd>{mission.radars.length}</dd></div>}
               {showBelief && <div><dt>有效 Contact</dt><dd>{mission.radarContacts.length}</dd></div>}
               {showBelief && <div><dt>Belief 峰值</dt><dd>{(beliefPeak.probability * 100).toFixed(1)}% / {beliefPeak.isValid ? "有效" : "失联"}</dd></div>}
@@ -178,6 +181,19 @@ export function App() {
               <p className="threat-message">辐射威胁 {mission.engagement.trackProgress.toFixed(0)}% // 失去新 Contact 后会逐步下降</p>
             )}
           </section>
+          <CollapsibleSection title="WEATHER FORECAST" meta={`${mission.weather.length} CELLS`}>
+            <ol className="weather-forecast-list">
+              {mission.weatherForecast.map((forecast) => (
+                <li key={`${forecast.weatherId}-${forecast.horizonSeconds}`}>
+                  <strong>{forecast.weatherId} / T+{forecast.horizonSeconds}s</strong>
+                  <span>{forecast.kind} · {forecast.intensityTrend} · 可信度{forecast.confidence}</span>
+                  <small>
+                    预计区域 {forecast.estimatedPosition.x.toFixed(0)},{forecast.estimatedPosition.y.toFixed(0)} · {forecast.estimatedSize.width.toFixed(0)}×{forecast.estimatedSize.height.toFixed(0)}
+                  </small>
+                </li>
+              ))}
+            </ol>
+          </CollapsibleSection>
           {mission.adaptationNotes.length > 0 && <CollapsibleSection title="COUNTER DEPLOYMENT" meta={mission.adaptationNotes.length}>
             <ol className="event-list">
               {mission.adaptationNotes.map((note) => <li key={note}><span>{note}</span></li>)}
@@ -188,7 +204,7 @@ export function App() {
               {mission.finalStrikeNotes.map((note) => <li key={note}><span>{note}</span></li>)}
             </ol>
           </CollapsibleSection>}
-          <CollapsibleSection className="event-section" title="结构化事件" meta={mission.events.length}>
+          {showBelief && <CollapsibleSection className="event-section" title="结构化事件" meta={mission.events.length}>
             <ol className="event-list">
               {recentEvents.length === 0 && <li className="empty-event">等待操作事件…</li>}
               {recentEvents.map((event) => (
@@ -198,7 +214,7 @@ export function App() {
                 </li>
               ))}
             </ol>
-          </CollapsibleSection>
+          </CollapsibleSection>}
           {showBelief && <CollapsibleSection className="commander-section" title="AIR DEFENSE COMMANDER" meta={`ALERT ${mission.awareness.value.toFixed(0)}%`}>
             <div className="commander-intent">{intentLabels[mission.commander.intent]}</div>
             <div className="score-grid commander-scores">
@@ -223,11 +239,6 @@ export function App() {
               </div>
             ))}
           </CollapsibleSection>}
-          <section className="architecture-note">
-            <span>ARCHITECTURE STATUS</span>
-            <strong>RUN ≠ MISSION</strong>
-            <p>单任务闭环：规划 → 渗透 → 打击 → 高警戒撤离。</p>
-          </section>
         </aside>
       </div>}
     </main>

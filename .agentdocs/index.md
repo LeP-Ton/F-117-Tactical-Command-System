@@ -1,6 +1,10 @@
 # 项目文档索引
 
 ## 当前变更文档
+`workflow/20260820174641-split-dynamic-weather-and-forecast.md` - 会话-25：重新拆分静态 Terrain 与动态 Weather Cell，增加四种天气的可复现时空演化及 T+30/60/90 有误差预报；核对天气 Tick、探测影响、预报 UI 或 Seed 复现时读取。
+`workflow/20260820104300-unify-detection-zones-and-adaptation.md` - 会话-10 第三批：统一地形/天气探测修正区，改用真实轨迹分析 Enemy Adaptation，并按空间距离选择反制雷达；核对环境判定或敌方画像时读取。
+`workflow/20260820104259-simplify-campaign-choices.md` - 会话-10 第二批：合并同质任务类型，将 Campaign 改为三个顺序二选一阶段并在选择后关闭同层节点；核对战役解锁或持久效果时读取。
+`workflow/20260820104258-clean-redundant-state-and-events.md` - 会话-10 第一批：限制事件历史、隐藏正常视图内部日志，并删除未消费或可派生状态；排查事件音频、状态边界或普通/调试信息隔离时读取。
 `workflow/20260819225946-document-commander-personality-design.md` - 会话-64：在 `TODO.md` 中记录旧版 Commander Doctrine、当前中性 Commander，以及未来三种可读防空指挥风格和验收条件；评估或恢复指挥官性格时读取。
 `workflow/20260819222015-collapsible-sidebars-and-scrollbars.md` - 会话-61：为左右侧栏及内部长列表定制终端风格滚动条，并为航点、遥测、事件、战役简报和 AI Debug 长内容增加独立折叠；排查侧栏溢出、滚动条或折叠交互时读取。
 `workflow/20260819220914-reset-current-campaign-mission.md` - 会话-60：修复“重置任务”误重建整个 Run 的问题；重置现在保留当前战役节点、Campaign 进度、资源与敌方持久状态，并重新应用当前节点生成规则；排查任务重置或节点跳转异常时读取。
@@ -49,14 +53,14 @@
 - Belief Map 仅消费 Contact，以 24×24 网格保存概率分布并进行运动传播、扩散和衰减。
 - Commander 只读取 Awareness、Belief 与雷达状态，通过 Utility 偏置协调各 Radar Operator；投弹只提高警戒，不提供目标区定位，网络静默仍已移除。
 - 单 Mission 已形成 Plan → Infiltrate → Strike → High-alert Extraction → Result 闭环。
-- Mission 的地形、天气、雷达、目标和情报精度均由 Seed 确定生成。
-- Campaign Graph 由 Run Seed 生成，任务结果会修改节点、Intel、Enemy Alert 与后续雷达覆盖。
+- Mission 的静态地形、动态天气初始参数与演化、天气预报、雷达、目标和情报精度均由 Seed 确定生成；相同任务时间可复现相同真实天气。
+- Campaign 固定为三个顺序二选一阶段与 Final Strike；选择后同层节点失效，普通失败仍推进并增加 Enemy Alert。
 - Tactical Reward 与 Player Build 已完整移除，成功任务直接返回 Campaign。
 - 当前 Roguelike 差异集中在程序生成地图、雷达网络、天气与 Campaign 防空构建。
-- Recon/ELINT、SEAD、Command Strike 与 Enemy Alert 会分别修改后续任务的情报精度、雷达覆盖或 Commander 协调。
+- Intel、SEAD、Command Strike 与 Enemy Alert 会分别修改后续任务的情报精度、雷达覆盖或 Commander 协调。
 - 默认战术地图只呈现带误差的玩家雷达情报；敌方真实雷达、Contact、Belief、警戒和 Utility 仅在 AI DEBUG 中呈现。
-- Enemy Adaptation 仅分析已完成航点和历史 Contact，并根据地形利用、南北航路及直达倾向调整后续任务的雷达部署。
+- Enemy Adaptation 仅分析按位移采样的真实已飞轨迹，并根据地形利用、南北航路及直达倾向选择空间上最合适的雷达调整部署。
 - Final Strike 会综合 SEAD、Command Strike、情报任务、Enemy Alert、适应等级与失败历史动态生成最终防空体系。
-- 飞机基础速度为 `7.2 u/s`，运行中进入目标攻击半径后自动投弹，无需玩家手动操作。
+- 飞机基础速度为 `3.6 u/s`，运行中进入目标攻击半径后自动投弹，无需玩家手动操作。
 - 连续 Contact 会累积跟踪并触发导弹；切断新证据可以脱锁，导弹命中立即摧毁飞机并结束 Run。
 - 检索时先读取本索引，再按需读取具体 workflow 文档。

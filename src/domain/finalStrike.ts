@@ -6,7 +6,6 @@ import type { MissionNodeType, MissionSession, PlayerTacticalProfile, RadarState
 export interface FinalStrikeContext {
   completedNodeTypes: MissionNodeType[];
   enemyAlert: number;
-  adaptationLevel: number;
   tacticalProfile: PlayerTacticalProfile;
 }
 
@@ -74,7 +73,7 @@ export function applyFinalStrikeDefense(
     notes.push("低 Enemy Alert：未触发警戒增援");
   }
 
-  if (context.adaptationLevel >= 2) {
+  if (context.tacticalProfile.missionSamples >= 2) {
     const corridorY = context.tacticalProfile.southernRouteBias * gameConfig.world.height;
     radars.push(createGuardRadar(
       "ADAPT-GUARD",
@@ -87,12 +86,11 @@ export function applyFinalStrikeDefense(
   }
 
   if (completed.has("COMMAND_STRIKE")) notes.push("Command Strike 战果削弱最终指挥链");
-  if (completed.has("RECON") || completed.has("ELINT")) notes.push("情报战果提高最终目标雷达识别质量");
+  if (completed.has("INTEL")) notes.push("情报战果提高最终目标雷达识别质量");
 
   return {
     ...mission,
     radars,
-    generationInfo: { ...mission.generationInfo, radarCount: radars.length },
     finalStrikeNotes: notes,
   };
 }

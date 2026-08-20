@@ -1,6 +1,6 @@
 import { gameConfig } from "../config/gameConfig";
 import { advanceAutopilot } from "../domain/autopilot";
-import { advanceBeliefMap, getBeliefPeak } from "../domain/beliefMap";
+import { advanceBeliefMap } from "../domain/beliefMap";
 import { advanceAwareness, awarenessStage } from "../domain/awarenessSystem";
 import { advanceCommander } from "../domain/airDefenseCommander";
 import { createGameEvent, createMission, createRun } from "../domain/factories";
@@ -11,6 +11,7 @@ import { generateRadarIntel } from "../domain/intelSystem";
 import { analyzeCompletedMission, applyEnemyCounterDeployment } from "../domain/enemyAdaptation";
 import { applyFinalStrikeDefense } from "../domain/finalStrike";
 import { advanceEngagement } from "../domain/engagementSystem";
+import { advanceWeather } from "../domain/weatherSystem";
 import {
   addWaypoint,
   moveWaypoint,
@@ -18,6 +19,22 @@ import {
   reorderWaypoint,
 } from "../domain/route";
 import type { CampaignNode, MissionSession, RunState, Vector2 } from "../domain/types";
+
+const MAX_STORED_EVENTS = 200;
+const FLIGHT_PATH_SAMPLE_DISTANCE = 20;
+
+function appendEvents(mission: MissionSession, events: MissionSession["events"]): MissionSession["events"] {
+  if (events.length === 0) return mission.events;
+  return [...mission.events, ...events].slice(-MAX_STORED_EVENTS);
+}
+
+function sampleFlightPath(mission: MissionSession, position: Vector2): Vector2[] {
+  const last = mission.flightPath.at(-1);
+  if (last && Math.hypot(position.x - last.x, position.y - last.y) < FLIGHT_PATH_SAMPLE_DISTANCE) {
+    return mission.flightPath;
+  }
+  return [...mission.flightPath, { ...position }];
+}
 
 export type GameAction =
   | { type: "NEW_RUN"; seed: string }
@@ -58,10 +75,9 @@ function prepareCampaignMission(state: RunState, node: CampaignNode): MissionSes
   const finalMission = node.type === "FINAL_STRIKE"
     ? applyFinalStrikeDefense(adaptedMission, {
       completedNodeTypes: state.campaign.nodes
-        .filter((candidate) => state.campaign.completedNodeIds.includes(candidate.id))
+        .filter((candidate) => candidate.status === "COMPLETED")
         .map((candidate) => candidate.type),
       enemyAlert: state.resources.enemyAlert,
-      adaptationLevel: state.enemyState.adaptationLevel,
       tacticalProfile: state.enemyState.tacticalProfile,
     })
     : adaptedMission;
@@ -95,40 +111,33 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
       const currentNode = state.campaign.nodes.find((node) => node.id === state.campaign.currentNodeId);
       if (!currentNode) return state;
       const succeeded = mission.status === "SUCCESS";
-      const completedNodeIds = succeeded
-        ? [...new Set([...state.campaign.completedNodeIds, currentNode.id])]
-        : state.campaign.completedNodeIds;
-      const outgoingIds = new Set(
-        state.campaign.edges.filter((edge) => edge.from === currentNode.id).map((edge) => edge.to),
-      );
+      const nextLayer = currentNode.layer + 1;
       const nodes = state.campaign.nodes.map((node) => {
         if (node.id === currentNode.id) return { ...node, status: succeeded ? "COMPLETED" as const : "FAILED" as const };
-        if (outgoingIds.has(node.id) && node.status === "LOCKED") return { ...node, status: "AVAILABLE" as const };
+        if (node.layer === currentNode.layer && node.status === "AVAILABLE") {
+          return { ...node, status: "EXPIRED" as const };
+        }
+        if (node.layer === nextLayer && node.status === "LOCKED") return { ...node, status: "AVAILABLE" as const };
         return node;
       });
       const alertDelta = succeeded && currentNode.type === "SEAD" ? -8 : succeeded ? 2 : 10;
       const tacticalProfile = analyzeCompletedMission(state.enemyState.tacticalProfile, mission);
-      const learnedFromMission = tacticalProfile.missionSamples > state.enemyState.tacticalProfile.missionSamples;
       return {
         ...state,
         status: succeeded && currentNode.type === "FINAL_STRIKE" ? "VICTORY" : state.status,
-        campaign: { ...state.campaign, nodes, completedNodeIds, currentNodeId: undefined },
+        campaign: { ...state.campaign, nodes, currentNodeId: undefined },
         resources: {
           ...state.resources,
           enemyAlert: Math.max(0, Math.min(100, state.resources.enemyAlert + alertDelta)),
           intelAccuracyBonus: Math.min(
             0.24,
             state.resources.intelAccuracyBonus
-              + (succeeded && currentNode.type === "RECON" ? 0.06 : 0)
-              + (succeeded && currentNode.type === "ELINT" ? 0.1 : 0),
+              + (succeeded && currentNode.type === "INTEL" ? 0.1 : 0),
           ),
         },
         enemyState: {
           ...state.enemyState,
           tacticalProfile,
-          adaptationLevel: learnedFromMission
-            ? Math.min(5, state.enemyState.adaptationLevel + 1)
-            : state.enemyState.adaptationLevel,
           radarCoverageModifier: succeeded && currentNode.type === "SEAD"
             ? Math.max(0.55, state.enemyState.radarCoverageModifier * 0.85)
             : state.enemyState.radarCoverageModifier,
@@ -141,7 +150,7 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
     case "ADD_WAYPOINT": {
       if (!isEditable(state)) return state;
       const waypoint = {
-        id: `wp-${mission.events.length + mission.route.waypoints.length}`,
+        id: `wp-${Math.round(mission.elapsedMs)}-${mission.route.waypoints.length}`,
         kind: "NAVIGATION" as const,
         position: action.position,
         status: "PENDING" as const,
@@ -152,7 +161,7 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         currentMission: {
           ...mission,
           route: addWaypoint(mission.route, waypoint),
-          events: [...mission.events, event],
+          events: appendEvents(mission, [event]),
         },
       };
     }
@@ -165,10 +174,7 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         currentMission: {
           ...mission,
           route,
-          events: [
-            ...mission.events,
-            createGameEvent(mission, "WAYPOINT_MOVED", { index: action.index }),
-          ],
+          events: appendEvents(mission, [createGameEvent(mission, "WAYPOINT_MOVED", { index: action.index })]),
         },
       };
     }
@@ -181,10 +187,7 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         currentMission: {
           ...mission,
           route,
-          events: [
-            ...mission.events,
-            createGameEvent(mission, "WAYPOINT_REMOVED", { index: action.index }),
-          ],
+          events: appendEvents(mission, [createGameEvent(mission, "WAYPOINT_REMOVED", { index: action.index })]),
         },
       };
     }
@@ -197,13 +200,10 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         currentMission: {
           ...mission,
           route,
-          events: [
-            ...mission.events,
-            createGameEvent(mission, "WAYPOINT_REORDERED", {
+          events: appendEvents(mission, [createGameEvent(mission, "WAYPOINT_REORDERED", {
               fromIndex: action.fromIndex,
               toIndex: action.toIndex,
-            }),
-          ],
+            })]),
         },
       };
     }
@@ -214,7 +214,7 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         currentMission: {
           ...mission,
           status: "RUNNING",
-          events: [...mission.events, createGameEvent(mission, "MISSION_STARTED")],
+          events: appendEvents(mission, [createGameEvent(mission, "MISSION_STARTED")]),
         },
       };
     }
@@ -225,7 +225,7 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         currentMission: {
           ...mission,
           status: "PAUSED",
-          events: [...mission.events, createGameEvent(mission, "MISSION_PAUSED")],
+          events: appendEvents(mission, [createGameEvent(mission, "MISSION_PAUSED")]),
         },
       };
     }
@@ -238,7 +238,7 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         currentMission: {
           ...mission,
           status: "RUNNING",
-          events: [...mission.events, createGameEvent(mission, "MISSION_RESUMED")],
+          events: appendEvents(mission, [createGameEvent(mission, "MISSION_RESUMED")]),
         },
       };
     }
@@ -248,12 +248,13 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
       const nextTimestamp = mission.elapsedMs + action.deltaSeconds * 1000;
       const autoAttack = canAttackTarget({ ...mission, aircraft: result.aircraft });
       const target = autoAttack ? { ...mission.target, destroyed: true } : mission.target;
+      const weather = advanceWeather(mission.weather, nextTimestamp);
       const radarResult = advanceRadarSensors(
         mission.seed,
         mission.radars,
         result.aircraft,
         mission.terrain,
-        mission.weather,
+        weather,
         nextTimestamp,
         action.deltaSeconds,
       );
@@ -322,17 +323,6 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         ),
         timestamp: nextTimestamp,
       }));
-      const beliefEvents = radarResult.contacts.length > 0
-        ? [{
-          ...createGameEvent(
-            mission,
-            "BELIEF_UPDATED",
-            { contactCount: radarResult.contacts.length, peak: getBeliefPeak(beliefMap) },
-            "BELIEF_SYSTEM",
-          ),
-          timestamp: nextTimestamp,
-        }]
-        : [];
       const awarenessEvents = awareness.stage !== mission.awareness.stage
         ? [{
           ...createGameEvent(
@@ -417,40 +407,37 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
             timestamp: nextTimestamp,
           }]
           : [];
-      const missionResult = terminalStatus === "SUCCESS" || terminalStatus === "FAILED"
-        ? [{ missionId: mission.id, outcome: terminalStatus === "SUCCESS" ? "SUCCESS" as const : "FAILED" as const }]
-        : [];
+      const tickEvents = [
+        ...reachedEvents,
+        ...contactEvents,
+        ...awarenessEvents,
+        ...commanderEvents,
+        ...modeEvents,
+        ...attackEvents,
+        ...threatEvents,
+        ...engagementEvents,
+        ...completionEvents,
+        ...resultEvents,
+      ];
       return {
         ...state,
         status: aircraftDestroyed ? "DEFEAT" : state.status,
-        missionHistory: [...state.missionHistory, ...missionResult],
         currentMission: {
           ...mission,
           status: terminalStatus,
           elapsedMs: nextTimestamp,
           aircraft,
+          flightPath: sampleFlightPath(mission, aircraft.position),
           route: result.route,
           target,
+          weather,
           radars: operatorResult.radars,
           radarContacts,
           beliefMap,
           awareness,
           engagement: engagementResult.state,
           commander: commanderResult.commander,
-          events: [
-            ...mission.events,
-            ...reachedEvents,
-            ...contactEvents,
-            ...beliefEvents,
-            ...awarenessEvents,
-            ...commanderEvents,
-            ...modeEvents,
-            ...attackEvents,
-            ...threatEvents,
-            ...engagementEvents,
-            ...completionEvents,
-            ...resultEvents,
-          ],
+          events: appendEvents(mission, tickEvents),
         },
       };
     }

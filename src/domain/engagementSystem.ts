@@ -9,7 +9,7 @@ export interface EngagementResult {
 }
 
 export function createEngagementState(): EngagementState {
-  return { stage: "UNDETECTED", trackProgress: 0, launches: 0 };
+  return { stage: "UNDETECTED", trackProgress: 0 };
 }
 
 function stageFromProgress(progress: number): ThreatStage {
@@ -79,7 +79,6 @@ export function advanceEngagement(
         stage: "MISSILE_INBOUND",
         trackProgress,
         missileTimeRemainingSeconds: gameConfig.engagement.missileFlightSeconds,
-        launches: current.launches + 1,
       },
       missileLaunched: true,
       missileDefeated: false,

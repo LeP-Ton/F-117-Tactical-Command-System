@@ -25,7 +25,6 @@ export function createRadarOperatorState() {
     utilityScores: { WIDE_SEARCH: 52, SECTOR_SEARCH: 18, FOCUSED_TRACK: 8 },
     commanderBias: { WIDE_SEARCH: 0, SECTOR_SEARCH: 0, FOCUSED_TRACK: 0 },
     decisionAccumulatorSeconds: 0,
-    modeChangedAt: 0,
   };
 }
 
@@ -88,8 +87,6 @@ export function advanceRadarOperators(
         mode,
         utilityScores: scores,
         decisionAccumulatorSeconds: accumulator,
-        modeChangedAt: mode === radar.operator.mode ? radar.operator.modeChangedAt : timestamp,
-        lastContactAt: contact?.timestamp ?? radar.operator.lastContactAt,
         focusBearingDegrees,
       },
     };

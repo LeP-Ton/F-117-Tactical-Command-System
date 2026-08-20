@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { RunState } from "../domain/types";
 import type { GameAction } from "../game/gameReducer";
+import { getAdaptationLevel } from "../domain/enemyAdaptation";
 
 interface CampaignMapProps {
   state: RunState;
@@ -9,12 +10,10 @@ interface CampaignMapProps {
 }
 
 const typeLabels = {
+  INTEL: "情报行动",
   STRIKE: "打击",
-  RECON: "侦察",
-  ELINT: "电子情报",
   SEAD: "防空压制",
   COMMAND_STRIKE: "指挥打击",
-  DEEP_STRIKE: "纵深打击",
   FINAL_STRIKE: "最终打击",
 } as const;
 
@@ -25,6 +24,7 @@ export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
     () => state.campaign.nodes.find((node) => node.id === selectedId) ?? firstAvailable,
     [firstAvailable, selectedId, state.campaign.nodes],
   );
+  const adaptationLevel = getAdaptationLevel(state.enemyState.tacticalProfile);
 
   return (
     <section className="campaign-screen">
@@ -35,7 +35,7 @@ export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
           <span>INTEL QUALITY <strong>+{(state.resources.intelAccuracyBonus * 100).toFixed(0)}%</strong></span>
           <span>RADAR NET <strong>{(state.enemyState.radarCoverageModifier * 100).toFixed(0)}%</strong></span>
           <span>CMD LINK <strong>{(state.enemyState.commanderCoordinationModifier * 100).toFixed(0)}%</strong></span>
-          <span>ADAPT <strong>LV.{state.enemyState.adaptationLevel}</strong></span>
+          <span>ADAPT <strong>LV.{adaptationLevel}</strong></span>
         </div>
       </div>
       <div className="campaign-content">

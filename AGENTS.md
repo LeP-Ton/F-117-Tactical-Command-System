@@ -18,15 +18,17 @@
 - 飞机基础速度为 `3.6 u/s`；运行中进入攻击半径后自动投弹并提高 Awareness，随后玩家必须进入撤离区；航线结束但条件未满足判定失败。
 - 普通玩家视图通过 THREAT WARNING 显示可行动的模糊威胁阶段和导弹倒计时；真实 Contact、Belief 与 AI 评分仍只在 AI DEBUG 中显示。
 - 音效使用原生 Web Audio API 合成并由领域事件驱动；锁定与导弹警报属于可清理循环音，暂停、脱锁、任务结束或组件卸载时必须停止，顶部提供静音与总音量控制。
-- Mission Generator 根据 Seed 生成 Terrain、Weather、Radar Network、Target 与 Intel Accuracy；相同 Seed 必须完整复现。
-- Campaign Generator 根据 Run Seed 生成分层 DAG（有向无环图）；节点结果解锁下一层并修改 Intel、Enemy Alert 或后续雷达覆盖。
+- Mission Generator 根据 Seed 分别生成静态 Terrain、动态 Weather Cell、Radar Network、Target 与 Intel Accuracy；天气的位置、范围、强度与类型由任务绝对时间确定性演化，相同 Seed 与时间必须完整复现。
+- 玩家在规划阶段获得带位置与尺度误差的 `T+30/60/90s` 天气预报；预报只提供有限情报，不能泄露未来真实天气状态。
+- Campaign 固定为三个顺序二选一阶段与 Final Strike；执行节点后同层另一选择失效，普通失败仍推进并提高 Enemy Alert。
 - Tactical Reward 与 Player Build 已完整移除；当前核心玩法差异来自动态航线、程序生成雷达/地形/天气、敌方 Belief 与 Commander 行为。
-- 持久战役效果包括：Recon/ELINT 提高后续 Intel Accuracy，SEAD 降低 Radar Coverage，Command Strike 降低 Commander Coordination，Enemy Alert 提高未来 Radar Coverage。
-- Enemy Adaptation 只分析已完成航点，形成地形利用、南北航路和直达倾向画像，并据此调整后续雷达部署；禁止读取未来计划航点。
+- 持久战役效果包括：Intel 行动提高后续 Intel Accuracy，SEAD 降低 Radar Coverage，Command Strike 降低 Commander Coordination，Enemy Alert 提高未来 Radar Coverage。
+- Enemy Adaptation 只分析按实际位移采样的已飞轨迹，形成地形利用、南北航路和直达倾向画像；雷达按空间距离选择反制部署对象，禁止读取未来计划航点。
 - Final Strike 根据已完成节点、Enemy Alert、适应等级和玩家画像动态增加后备、警戒与截击雷达，随后统一重新生成有限情报。
 - 正常战术视图只显示由 Intel Accuracy 决定的雷达估计位置、误差区与估计覆盖；真实雷达、敌方 Contact、Belief 和 AI 决策仅在 AI DEBUG 中显示。
-- Recon/ELINT 的情报加成会提高后续任务的雷达发现率，并缩小位置与覆盖估计误差。
+- Intel 行动的情报加成会提高后续任务的雷达发现率，并缩小位置与覆盖估计误差。
 - 战役只保留一个有效情报资源“情报质量”（代码字段 `intelAccuracyBonus`）；不再维护无用途的独立 Intel 点数。
+- 任务事件最多保留最近 200 条并按事件 ID 驱动音频；结构化事件与敌方内部评分只在 AI DEBUG 中显示。
 
 ## 运行方式
 - 安装依赖：`npm install`。

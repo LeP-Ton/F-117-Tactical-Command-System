@@ -10,6 +10,10 @@ export function createPlayerTacticalProfile(): PlayerTacticalProfile {
   };
 }
 
+export function getAdaptationLevel(profile: PlayerTacticalProfile): number {
+  return Math.min(5, profile.missionSamples);
+}
+
 function distance(first: Vector2, second: Vector2): number {
   return Math.hypot(first.x - second.x, first.y - second.y);
 }
@@ -18,19 +22,17 @@ function blend(previous: number, observed: number, previousSamples: number): num
   return (previous * previousSamples + observed) / (previousSamples + 1);
 }
 
-/** 任务结束后只分析已飞过的航点和已经发生的 Contact。 */
+/** 任务结束后只分析按位移采样的真实已飞轨迹，不读取未执行航点。 */
 export function analyzeCompletedMission(
   profile: PlayerTacticalProfile,
   mission: MissionSession,
 ): PlayerTacticalProfile {
-  const flownPoints = mission.route.waypoints
-    .filter((waypoint) => waypoint.status === "COMPLETED")
-    .map((waypoint) => waypoint.position);
+  const flownPoints = mission.flightPath;
   if (flownPoints.length < 2) return profile;
 
-  const terrainPoints = flownPoints.filter((point) => mission.terrain.some((terrain) =>
-    point.x >= terrain.x && point.x <= terrain.x + terrain.width
-      && point.y >= terrain.y && point.y <= terrain.y + terrain.height)).length;
+  const terrainPoints = flownPoints.filter((point) => mission.terrain.some((zone) =>
+    point.x >= zone.x && point.x <= zone.x + zone.width
+      && point.y >= zone.y && point.y <= zone.y + zone.height)).length;
   const terrainPreference = terrainPoints / flownPoints.length;
   const southernBias = flownPoints.reduce((sum, point) => sum + point.y / gameConfig.world.height, 0) / flownPoints.length;
   const flownDistance = flownPoints.slice(1).reduce(
@@ -66,6 +68,21 @@ function moveRadar(radar: RadarState, target: Vector2, strength: number): RadarS
   };
 }
 
+function moveNearestRadar(
+  radars: RadarState[],
+  target: Vector2,
+  strength: number,
+  usedRadarIds: Set<string>,
+): void {
+  const radar = radars
+    .filter((candidate) => !usedRadarIds.has(candidate.id))
+    .sort((first, second) => distance(first.position, target) - distance(second.position, target))[0];
+  if (!radar) return;
+  const index = radars.findIndex((candidate) => candidate.id === radar.id);
+  radars[index] = moveRadar(radar, target, strength);
+  usedRadarIds.add(radar.id);
+}
+
 /** 根据跨任务画像调整后续部署；只使用历史汇总值和新任务生成内容。 */
 export function applyEnemyCounterDeployment(
   mission: MissionSession,
@@ -78,26 +95,28 @@ export function applyEnemyCounterDeployment(
 
   const radars = [...mission.radars];
   const notes: string[] = [];
-  const strength = Math.min(0.42, 0.12 + enemyState.adaptationLevel * 0.06);
+  const strength = Math.min(0.42, 0.12 + getAdaptationLevel(profile) * 0.06);
+  const usedRadarIds = new Set<string>();
 
-  if (profile.terrainMaskingPreference >= 0.35 && mission.terrain[0]) {
-    const terrain = mission.terrain[0];
-    const exit = { x: terrain.x + terrain.width, y: terrain.y + terrain.height / 2 };
-    radars[0] = moveRadar(radars[0]!, exit, strength);
+  const primaryTerrain = mission.terrain[0];
+  if (profile.terrainMaskingPreference >= 0.35 && primaryTerrain) {
+    const exit = { x: primaryTerrain.x + primaryTerrain.width, y: primaryTerrain.y + primaryTerrain.height / 2 };
+    moveNearestRadar(radars, exit, strength, usedRadarIds);
     notes.push("山地出口增设搜索覆盖");
   }
 
-  if (Math.abs(profile.southernRouteBias - 0.5) >= 0.08 && radars[1]) {
+  if (Math.abs(profile.southernRouteBias - 0.5) >= 0.08) {
     const corridorY = profile.southernRouteBias * gameConfig.world.height;
-    radars[1] = moveRadar(radars[1], { x: gameConfig.world.width * 0.58, y: corridorY }, strength);
+    moveNearestRadar(radars, { x: gameConfig.world.width * 0.58, y: corridorY }, strength, usedRadarIds);
     notes.push(profile.southernRouteBias > 0.5 ? "南部航路搜索加强" : "北部航路搜索加强");
   }
 
-  if (profile.aggressiveRouting >= 0.72 && radars[2]) {
-    radars[2] = moveRadar(radars[2], {
+  if (profile.aggressiveRouting >= 0.72) {
+    const directAxis = {
       x: (mission.route.waypoints[0]!.position.x + mission.target.position.x) / 2,
       y: (mission.route.waypoints[0]!.position.y + mission.target.position.y) / 2,
-    }, strength);
+    };
+    moveNearestRadar(radars, directAxis, strength, usedRadarIds);
     notes.push("直达目标轴线增加拦截覆盖");
   }
 

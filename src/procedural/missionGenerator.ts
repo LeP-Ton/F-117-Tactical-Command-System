@@ -1,16 +1,17 @@
 import { SeededRandom } from "../core/SeededRandom";
 import { createCommanderState } from "../domain/airDefenseCommander";
 import { createRadarOperatorState } from "../domain/radarOperatorAI";
-import type { RadarState, TerrainZone, WeatherZone } from "../domain/types";
+import { generateWeatherForecast } from "../domain/weatherSystem";
+import type { RadarState, TerrainZone, WeatherCell } from "../domain/types";
 
 export interface GeneratedMissionContent {
   terrain: TerrainZone[];
-  weather: WeatherZone[];
+  weather: WeatherCell[];
+  weatherForecast: ReturnType<typeof generateWeatherForecast>;
   radars: RadarState[];
   targetPosition: { x: number; y: number };
   intelAccuracy: number;
   commander: ReturnType<typeof createCommanderState>;
-  generationInfo: { terrainCount: number; radarCount: number; weatherCount: number };
 }
 
 export function generateMissionContent(seed: string): GeneratedMissionContent {
@@ -25,18 +26,27 @@ export function generateMissionContent(seed: string): GeneratedMissionContent {
     y: random.range(210, 760),
     width: random.range(120, 230),
     height: random.range(90, 180),
-    maskingFactor: random.range(0.35, 0.58),
+    detectionFactor: random.range(0.35, 0.58),
   }));
-  const weather = Array.from({ length: weatherCount }, (_, index): WeatherZone => {
-    const kind = random.pick(["CLOUD", "STORM"] as const);
+  const weather = Array.from({ length: weatherCount }, (_, index): WeatherCell => {
+    const kind = random.pick(["CLOUD", "RAIN", "STORM", "FOG"] as const);
+    const x = random.range(120, 760);
+    const y = random.range(120, 760);
+    const width = random.range(140, 260);
+    const height = random.range(120, 230);
+    const baseIntensity = random.range(0.35, 0.85);
     return {
       id: `WEATHER-${index + 1}`,
       kind,
-      x: random.range(120, 760),
-      y: random.range(120, 760),
-      width: random.range(140, 260),
-      height: random.range(120, 230),
-      detectionFactor: kind === "STORM" ? random.range(0.5, 0.68) : random.range(0.72, 0.88),
+      initialKind: kind,
+      x, y, width, height,
+      detectionFactor: 1,
+      origin: { x, y },
+      baseSize: { width, height },
+      velocity: { x: random.range(-1.8, 1.8), y: random.range(-1.8, 1.8) },
+      baseIntensity,
+      phaseSeconds: random.range(0, 35),
+      evolutionPeriodSeconds: random.range(55, 95),
     };
   });
   const radars = Array.from({ length: radarCount }, (_, index): RadarState => ({
@@ -51,10 +61,10 @@ export function generateMissionContent(seed: string): GeneratedMissionContent {
   return {
     terrain,
     weather,
+    weatherForecast: generateWeatherForecast(seed, weather),
     radars,
     targetPosition: { x: random.range(400, 790), y: random.range(100, 390) },
     intelAccuracy: random.range(0.68, 0.94),
     commander: createCommanderState(),
-    generationInfo: { terrainCount, radarCount, weatherCount },
   };
 }

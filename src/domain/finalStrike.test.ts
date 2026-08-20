@@ -6,7 +6,6 @@ function context(overrides: Partial<FinalStrikeContext> = {}): FinalStrikeContex
   return {
     completedNodeTypes: [],
     enemyAlert: 0,
-    adaptationLevel: 0,
     tacticalProfile: createRun("FINAL-CONTEXT").enemyState.tacticalProfile,
     ...overrides,
   };
@@ -34,7 +33,6 @@ describe("Final Strike 动态防空体系", () => {
     const mission = createMission("FINAL-ESCALATION");
     const finalMission = applyFinalStrikeDefense(mission, context({
       enemyAlert: 30,
-      adaptationLevel: 3,
       tacticalProfile: {
         missionSamples: 3,
         terrainMaskingPreference: 0.5,
@@ -49,7 +47,10 @@ describe("Final Strike 动态防空体系", () => {
 
   it("相同任务历史会生成完全一致的最终体系", () => {
     const mission = createMission("FINAL-REPLAY");
-    const history = context({ enemyAlert: 25, adaptationLevel: 2 });
+    const history = context({
+      enemyAlert: 25,
+      tacticalProfile: { ...context().tacticalProfile, missionSamples: 2 },
+    });
 
     expect(applyFinalStrikeDefense(mission, history)).toEqual(applyFinalStrikeDefense(mission, history));
   });

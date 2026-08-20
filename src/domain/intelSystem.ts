@@ -32,7 +32,6 @@ export function generateRadarIntel(
       return {
         radarId: radar.id,
         level: "UNKNOWN",
-        confidence,
         positionErrorRadius: 0,
       };
     }
@@ -50,7 +49,6 @@ export function generateRadarIntel(
     return {
       radarId: radar.id,
       level,
-      confidence,
       estimatedPosition,
       positionErrorRadius,
       estimatedRange: level === "POSSIBLE"

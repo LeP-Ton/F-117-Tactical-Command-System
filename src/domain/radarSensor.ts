@@ -1,7 +1,7 @@
 import { gameConfig } from "../config/gameConfig";
 import { SeededRandom } from "../core/SeededRandom";
 import { calculateDetectionFactors } from "./detectionModel";
-import type { AircraftState, RadarContact, RadarState, TerrainZone, WeatherZone } from "./types";
+import type { AircraftState, RadarContact, RadarState, TerrainZone, WeatherCell } from "./types";
 
 interface RadarSimulationResult {
   radars: RadarState[];
@@ -13,7 +13,7 @@ export function advanceRadarSensors(
   radars: RadarState[],
   aircraft: AircraftState,
   terrain: TerrainZone[],
-  weather: WeatherZone[],
+  weather: WeatherCell[],
   timestamp: number,
   deltaSeconds: number,
 ): RadarSimulationResult {

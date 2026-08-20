@@ -15,7 +15,6 @@ describe("gameReducer", () => {
         radarCoverageModifier: 0.85,
         commanderCoordinationModifier: 0.75,
       },
-      missionHistory: [{ missionId: "earlier-mission", outcome: "SUCCESS" }],
       currentMission: {
         ...state.currentMission!,
         status: "PAUSED",
@@ -26,14 +25,12 @@ describe("gameReducer", () => {
     const campaignBeforeReset = state.campaign;
     const resourcesBeforeReset = state.resources;
     const enemyStateBeforeReset = state.enemyState;
-    const historyBeforeReset = state.missionHistory;
     state = gameReducer(state, { type: "RESET" });
 
     expect(state.campaign).toBe(campaignBeforeReset);
     expect(state.campaign.currentNodeId).toBe("C0-1");
     expect(state.resources).toBe(resourcesBeforeReset);
     expect(state.enemyState).toBe(enemyStateBeforeReset);
-    expect(state.missionHistory).toBe(historyBeforeReset);
     expect(state.currentMission?.id).toBe(`mission-${secondNode.missionSeed}`);
     expect(state.currentMission?.status).toBe("PLANNING");
     expect(state.currentMission?.elapsedMs).toBe(0);
@@ -64,6 +61,15 @@ describe("gameReducer", () => {
     expect(updated.seed).toBe("BOUNDARY");
     expect(updated.campaign).toEqual(state.campaign);
     expect(updated.currentMission).not.toBe(state.currentMission);
+  });
+
+  it("任务事件历史最多保留 200 条", () => {
+    let state = createRun("BOUNDED-EVENTS");
+    for (let index = 0; index < 230; index += 1) {
+      state = gameReducer(state, { type: "ADD_WAYPOINT", position: { x: 100 + index, y: 700 } });
+    }
+    expect(state.currentMission?.events).toHaveLength(200);
+    expect(state.currentMission?.events.at(-1)?.type).toBe("WAYPOINT_ADDED");
   });
 
   it("进入攻击范围会自动投弹、消耗武器并显著提高警戒", () => {
@@ -116,7 +122,6 @@ describe("gameReducer", () => {
     };
     state = gameReducer(state, { type: "TICK", deltaSeconds: 0.01 });
     expect(state.currentMission?.status).toBe("SUCCESS");
-    expect(state.missionHistory.at(-1)?.outcome).toBe("SUCCESS");
   });
 
   it("航线结束但目标未摧毁时记录失败", () => {
@@ -139,15 +144,15 @@ describe("gameReducer", () => {
     };
     state = gameReducer(state, { type: "TICK", deltaSeconds: 0.01 });
     expect(state.currentMission?.status).toBe("FAILED");
-    expect(state.missionHistory.at(-1)?.outcome).toBe("FAILED");
   });
 
-  it("返回战役地图会完成节点、发放 Recon 奖励并解锁下一层", () => {
+  it("返回战役地图会完成节点、发放情报奖励、关闭同层选择并解锁下一层", () => {
     let state = createRun("CAMPAIGN-SUCCESS");
     state = { ...state, currentMission: { ...state.currentMission!, status: "SUCCESS" } };
     state = gameReducer(state, { type: "RETURN_CAMPAIGN" });
-    expect(state.campaign.completedNodeIds).toContain("C0-0");
-    expect(state.resources.intelAccuracyBonus).toBeCloseTo(0.06);
+    expect(state.campaign.nodes.find((node) => node.id === "C0-0")?.status).toBe("COMPLETED");
+    expect(state.campaign.nodes.find((node) => node.id === "C0-1")?.status).toBe("EXPIRED");
+    expect(state.resources.intelAccuracyBonus).toBeCloseTo(0.1);
     expect(state.campaign.nodes.filter((node) => node.layer === 1).every((node) => node.status === "AVAILABLE")).toBe(true);
   });
 
@@ -158,13 +163,15 @@ describe("gameReducer", () => {
     expect(state.status).toBe("ACTIVE");
     expect(state.resources.enemyAlert).toBe(10);
     expect(state.campaign.nodes.find((node) => node.id === "C0-0")?.status).toBe("FAILED");
+    expect(state.campaign.nodes.find((node) => node.id === "C0-1")?.status).toBe("EXPIRED");
+    expect(state.campaign.nodes.filter((node) => node.layer === 1).every((node) => node.status === "AVAILABLE")).toBe(true);
   });
 
   it("SEAD 成功会永久降低后续任务雷达覆盖", () => {
     let state = createRun("SEAD-EFFECT");
     state = {
       ...state,
-      campaign: { ...state.campaign, currentNodeId: "C1-1" },
+      campaign: { ...state.campaign, currentNodeId: "C1-0" },
       currentMission: { ...state.currentMission!, status: "SUCCESS" },
     };
     state = gameReducer(state, { type: "RETURN_CAMPAIGN" });
@@ -175,22 +182,22 @@ describe("gameReducer", () => {
     expect(state.currentMission!.radars[0]!.range).toBeCloseTo(baseline * 0.85);
   });
 
-  it("Recon 与 ELINT 会提高后续任务情报精度", () => {
+  it("INTEL 会提高后续任务情报精度", () => {
     let state = createRun("INTEL-EFFECT");
     state = { ...state, currentMission: { ...state.currentMission!, status: "SUCCESS" } };
     state = gameReducer(state, { type: "RETURN_CAMPAIGN" });
-    expect(state.resources.intelAccuracyBonus).toBeCloseTo(0.06);
+    expect(state.resources.intelAccuracyBonus).toBeCloseTo(0.1);
     const nextNode = state.campaign.nodes.find((node) => node.status === "AVAILABLE")!;
     const baseline = createMission(nextNode.missionSeed).intelAccuracy;
     state = gameReducer(state, { type: "SELECT_CAMPAIGN_NODE", nodeId: nextNode.id });
-    expect(state.currentMission!.intelAccuracy).toBeCloseTo(Math.min(0.99, baseline + 0.06));
+    expect(state.currentMission!.intelAccuracy).toBeCloseTo(Math.min(0.99, baseline + 0.1));
   });
 
   it("Command Strike 会永久降低后续 Commander 协调效率", () => {
     let state = createRun("COMMAND-EFFECT");
     state = {
       ...state,
-      campaign: { ...state.campaign, currentNodeId: "C2-0" },
+      campaign: { ...state.campaign, currentNodeId: "C1-1" },
       currentMission: { ...state.currentMission!, status: "SUCCESS" },
     };
     state = gameReducer(state, { type: "RETURN_CAMPAIGN" });
@@ -217,6 +224,11 @@ describe("gameReducer", () => {
       currentMission: {
         ...mission,
         status: "SUCCESS",
+        flightPath: [
+          { x: 90, y: 850 },
+          { x: 350, y: 850 },
+          { x: 700, y: 820 },
+        ],
         route: {
           activeWaypointIndex: 2,
           waypoints: [
@@ -228,7 +240,6 @@ describe("gameReducer", () => {
       },
     };
     state = gameReducer(state, { type: "RETURN_CAMPAIGN" });
-    expect(state.enemyState.adaptationLevel).toBe(1);
     expect(state.enemyState.tacticalProfile.missionSamples).toBe(1);
     expect(state.enemyState.tacticalProfile.southernRouteBias).toBeGreaterThan(0.7);
 
@@ -245,11 +256,16 @@ describe("gameReducer", () => {
       ...state,
       campaign: {
         ...state.campaign,
-        completedNodeIds: [seadNode.id],
-        nodes: state.campaign.nodes.map((node) => node.id === finalNode.id ? { ...node, status: "AVAILABLE" } : node),
+        nodes: state.campaign.nodes.map((node) =>
+          node.id === finalNode.id
+            ? { ...node, status: "AVAILABLE" }
+            : node.id === seadNode.id ? { ...node, status: "COMPLETED" } : node),
       },
       resources: { ...state.resources, enemyAlert: 25 },
-      enemyState: { ...state.enemyState, adaptationLevel: 2 },
+      enemyState: {
+        ...state.enemyState,
+        tacticalProfile: { ...state.enemyState.tacticalProfile, missionSamples: 2 },
+      },
     };
 
     state = gameReducer(state, { type: "SELECT_CAMPAIGN_NODE", nodeId: finalNode.id });
@@ -272,7 +288,6 @@ describe("gameReducer", () => {
           stage: "MISSILE_INBOUND",
           trackProgress: 100,
           missileTimeRemainingSeconds: 0.01,
-          launches: 1,
         },
         route: {
           activeWaypointIndex: 1,

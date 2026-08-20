@@ -6,6 +6,7 @@ import { createInitialRoute, insertionPoint } from "./route";
 import { generateRadarIntel } from "./intelSystem";
 import { createPlayerTacticalProfile } from "./enemyAdaptation";
 import { createEngagementState } from "./engagementSystem";
+import { advanceWeather } from "./weatherSystem";
 import type { GameEvent, GameEventType, MissionSession, RunState } from "./types";
 
 export function createMission(seed: string): MissionSession {
@@ -20,9 +21,11 @@ export function createMission(seed: string): MissionSession {
       headingDegrees: 0,
       speed: gameConfig.aircraft.speed,
     },
+    flightPath: [{ ...insertionPoint }],
     route: createInitialRoute(),
     terrain: generated.terrain,
-    weather: generated.weather,
+    weather: advanceWeather(generated.weather, 0),
+    weatherForecast: generated.weatherForecast,
     radars: generated.radars,
     radarIntel: generateRadarIntel(`${seed}-M01`, generated.radars, generated.intelAccuracy),
     radarContacts: [],
@@ -38,7 +41,6 @@ export function createMission(seed: string): MissionSession {
     },
     extractionArea: { ...gameConfig.mission.extractionArea },
     intelAccuracy: generated.intelAccuracy,
-    generationInfo: generated.generationInfo,
     commanderCoordinationModifier: 1,
     adaptationNotes: [],
     finalStrikeNotes: [],
@@ -54,12 +56,10 @@ export function createRun(seed: string = gameConfig.initialSeed): RunState {
     campaign: { ...campaign, currentNodeId: firstNode.id },
     resources: { enemyAlert: 0, intelAccuracyBonus: 0 },
     enemyState: {
-      adaptationLevel: 0,
       radarCoverageModifier: 1,
       commanderCoordinationModifier: 1,
       tacticalProfile: createPlayerTacticalProfile(),
     },
-    missionHistory: [],
     currentMission: createMission(firstNode.missionSeed),
     status: "ACTIVE",
   };

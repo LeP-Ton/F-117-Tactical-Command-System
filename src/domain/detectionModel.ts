@@ -1,5 +1,5 @@
 import { gameConfig } from "../config/gameConfig";
-import type { AircraftState, RadarState, TerrainZone, WeatherZone } from "./types";
+import type { AircraftState, RadarState, TerrainZone, WeatherCell } from "./types";
 
 function normalizeAngle(angle: number): number {
   return ((angle % 360) + 360) % 360;
@@ -14,11 +14,11 @@ export function bearingDegrees(fromX: number, fromY: number, toX: number, toY: n
   return normalizeAngle((Math.atan2(toY - fromY, toX - fromX) * 180) / Math.PI + 90);
 }
 
-export function isInsideTerrain(aircraft: AircraftState, terrain: TerrainZone): boolean {
-  return aircraft.position.x >= terrain.x
-    && aircraft.position.x <= terrain.x + terrain.width
-    && aircraft.position.y >= terrain.y
-    && aircraft.position.y <= terrain.y + terrain.height;
+export function isInsideEnvironmentArea(aircraft: AircraftState, zone: TerrainZone | WeatherCell): boolean {
+  return aircraft.position.x >= zone.x
+    && aircraft.position.x <= zone.x + zone.width
+    && aircraft.position.y >= zone.y
+    && aircraft.position.y <= zone.y + zone.height;
 }
 
 export interface DetectionFactors {
@@ -34,8 +34,8 @@ export interface DetectionFactors {
 export function calculateDetectionFactors(
   radar: RadarState,
   aircraft: AircraftState,
-  terrainZones: TerrainZone[],
-  weatherZones: WeatherZone[] = [],
+  terrain: TerrainZone[],
+  weather: WeatherCell[],
 ): DetectionFactors {
   const distance = Math.hypot(
     aircraft.position.x - radar.position.x,
@@ -61,15 +61,12 @@ export function calculateDetectionFactors(
   const aspectDifference = angleDifference(aircraft.headingDegrees, aircraftToRadar);
   const sideExposure = Math.sin((aspectDifference * Math.PI) / 180) ** 2;
   const aspectFactor = 0.38 + sideExposure * 0.92;
-  const terrainFactor = terrainZones
-    .filter((terrain) => isInsideTerrain(aircraft, terrain))
-    .reduce((factor, terrain) => factor * terrain.maskingFactor, 1);
-  const weatherFactor = weatherZones
-    .filter((weather) => aircraft.position.x >= weather.x
-      && aircraft.position.x <= weather.x + weather.width
-      && aircraft.position.y >= weather.y
-      && aircraft.position.y <= weather.y + weather.height)
-    .reduce((factor, weather) => factor * weather.detectionFactor, 1);
+  const terrainFactor = terrain
+    .filter((zone) => isInsideEnvironmentArea(aircraft, zone))
+    .reduce((factor, zone) => factor * zone.detectionFactor, 1);
+  const weatherFactor = weather
+    .filter((zone) => isInsideEnvironmentArea(aircraft, zone))
+    .reduce((factor, zone) => factor * zone.detectionFactor, 1);
   const probability = Math.min(
     0.95,
     gameConfig.radar.baseDetectionProbability * distanceFactor * aspectFactor * terrainFactor * weatherFactor * beamFactor,

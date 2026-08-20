@@ -86,3 +86,61 @@
 - [ ] 确认三种风格都存在可利用弱点，没有单纯的最强或最弱选项。
 
 在上述验收条件满足前，当前中性 Commander 继续作为稳定基线。
+
+## 低价值与冗余设计清理计划
+
+### 判断标准
+
+- 玩家是否能感知并据此改变航线或 Campaign 选择。
+- 状态是否可以从唯一事实来源派生，是否存在双写和同步风险。
+- 复杂度是否只服务 DEBUG 展示，而没有改变正式玩法。
+- 同名或异名机制是否最终只执行同一种数值运算。
+
+### 已完成：第一批确定性清理
+
+- [x] 结构化事件只在 AI DEBUG 中显示，正常视图不再泄露 Belief、Commander 或 Operator 内部活动。
+- [x] 删除高频 `BELIEF_UPDATED` 事件。
+- [x] 任务事件限制为最近 200 条，音频改为按事件 ID 消费。
+- [x] 删除无消费方的 `missionHistory` 与永不产生的 `ABORTED`。
+- [x] 删除可从节点状态派生的 `completedNodeIds`。
+- [x] 删除可从数组长度派生的 `generationInfo`。
+- [x] 删除独立 `adaptationLevel`，改由有效轨迹样本数派生。
+- [x] 删除 `modeChangedAt`、`lastContactAt`、`lastDecisionAt` 与 `launches` 等不影响行为的只写字段。
+- [x] 删除正常界面的 `ARCHITECTURE STATUS / RUN ≠ MISSION` 开发说明。
+- [x] 修正旧 Intel 文案和 `7.2 u/s` 过时记忆。
+
+### 已完成：第二批消除伪选择
+
+- [x] 将 `RECON/ELINT` 合并为 `INTEL`。
+- [x] 将 `STRIKE/DEEP_STRIKE` 合并为 `STRIKE`。
+- [x] Campaign 改为三个顺序二选一阶段与 Final Strike。
+- [x] 执行节点后同层另一节点进入 `EXPIRED`，再解锁下一阶段。
+- [x] 普通任务失败仍推进并增加 Enemy Alert；飞机被摧毁仍立即结束 Run。
+
+### 已完成：第三批合并同构机制
+
+- [x] 撤销 Terrain 与 Weather 的统一领域模型：Terrain 保持静态，Weather Cell 独立保存移动、强度、尺度与类型演化参数。
+- [x] Weather 扩展为 Cloud、Rain、Storm、Fog，并按 Seed 与任务绝对时间动态改变位置、范围、强度和类型。
+- [x] 增加带 Seed 固定误差的 `T+30/60/90s` 天气预报、可信度和规划地图预测轮廓。
+- [x] 正常雷达情报只显示可信等级，不再同时展示精确可信度百分比。
+- [x] Enemy Adaptation 改为分析按实际位移采样的飞行轨迹，不再依赖航点密度。
+- [x] 敌方反制按目标位置选择最近且未使用的雷达，不再固定修改数组第 1/2/3 项。
+
+### 明确保留
+
+- [x] 保留 Radar Operator 三种扫描模式，它们会真实改变扫描线行为。
+- [x] 保留 Awareness 与 Engagement 两种时间尺度：前者驱动全局搜索，后者驱动火控与导弹。
+- [x] 保留 Contact → Belief → Commander 信息边界，后续 AI 仍禁止读取飞机真实位置。
+
+### 暂缓：Belief Map 简化实验
+
+- [ ] 实现仅用于对照测试的 `TrackEstimate`，包含位置、速度、置信度和失联年龄，不立即替换正式模型。
+- [ ] 使用固定 Seed 批量记录 Commander 搜索方位、Operator 模式序列、Contact 连续时间和任务胜负。
+- [ ] Track Estimate 与 24×24 网格在至少 95% 场景行为等价时，才允许替换正式 Belief Map。
+- [ ] 未达到 95% 时保留网格，并记录造成差异的场景，不通过调参强行制造等价。
+
+### 备选方案与排除依据
+
+- 删除全部 Commander/Belief/Operator：会破坏敌方只能消费不完美 Contact 的核心特色，排除。
+- 保留所有结构只调整数值：无法解决伪选择、重复状态、信息泄露和无界事件增长，排除。
+- 当前采用“先删确定无价值表示，再合并同构玩法，最后用对照实验决定 Belief”的渐进方案。

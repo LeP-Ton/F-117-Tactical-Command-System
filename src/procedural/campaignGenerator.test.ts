@@ -6,14 +6,15 @@ describe("Campaign Generator", () => {
     expect(generateCampaign("RUN-117")).toEqual(generateCampaign("RUN-117"));
   });
 
-  it("生成 6–9 个节点、至少三种类型和最终任务", () => {
+  it("生成三个二选一阶段与一个最终任务", () => {
     for (let index = 0; index < 10; index += 1) {
       const campaign = generateCampaign(`CAMPAIGN-${index}`);
-      expect(campaign.nodes.length).toBeGreaterThanOrEqual(6);
-      expect(campaign.nodes.length).toBeLessThanOrEqual(9);
+      expect(campaign.nodes).toHaveLength(7);
       expect(new Set(campaign.nodes.map((node) => node.type)).size).toBeGreaterThanOrEqual(3);
       expect(campaign.nodes.filter((node) => node.type === "FINAL_STRIKE")).toHaveLength(1);
       expect(campaign.nodes.filter((node) => node.status === "AVAILABLE")).toHaveLength(2);
+      expect(campaign.nodes.filter((node) => node.layer < 3).every((node) =>
+        campaign.nodes.filter((candidate) => candidate.layer === node.layer).length === 2)).toBe(true);
     }
   });
 

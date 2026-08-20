@@ -6,8 +6,8 @@ export interface Vector2 {
 export type RunStatus = "ACTIVE" | "VICTORY" | "DEFEAT";
 export type MissionStatus = "PLANNING" | "RUNNING" | "PAUSED" | "SUCCESS" | "FAILED";
 
-export type MissionNodeType = "STRIKE" | "RECON" | "ELINT" | "SEAD" | "COMMAND_STRIKE" | "DEEP_STRIKE" | "FINAL_STRIKE";
-export type CampaignNodeStatus = "AVAILABLE" | "LOCKED" | "COMPLETED" | "FAILED";
+export type MissionNodeType = "INTEL" | "STRIKE" | "SEAD" | "COMMAND_STRIKE" | "FINAL_STRIKE";
+export type CampaignNodeStatus = "AVAILABLE" | "LOCKED" | "COMPLETED" | "FAILED" | "EXPIRED";
 
 export interface CampaignNode {
   id: string;
@@ -32,7 +32,6 @@ export interface CampaignEdge {
 export interface CampaignState {
   seed: string;
   currentNodeId?: string;
-  completedNodeIds: string[];
   nodes: CampaignNode[];
   edges: CampaignEdge[];
 }
@@ -44,7 +43,6 @@ export interface RunResources {
 }
 
 export interface PersistentEnemyState {
-  adaptationLevel: number;
   radarCoverageModifier: number;
   commanderCoordinationModifier: number;
   tacticalProfile: PlayerTacticalProfile;
@@ -56,11 +54,6 @@ export interface PlayerTacticalProfile {
   terrainMaskingPreference: number;
   southernRouteBias: number;
   aggressiveRouting: number;
-}
-
-export interface MissionResult {
-  missionId: string;
-  outcome: "SUCCESS" | "FAILED" | "ABORTED";
 }
 
 export interface Waypoint {
@@ -88,17 +81,37 @@ export interface TerrainZone {
   y: number;
   width: number;
   height: number;
-  maskingFactor: number;
+  detectionFactor: number;
 }
 
-export interface WeatherZone {
+export type WeatherKind = "CLOUD" | "RAIN" | "STORM" | "FOG";
+
+/** 动态天气单元；当前位置由任务时间和 Seed 生成的演化参数确定。 */
+export interface WeatherCell {
   id: string;
-  kind: "CLOUD" | "STORM";
+  kind: WeatherKind;
+  initialKind: WeatherKind;
   x: number;
   y: number;
   width: number;
   height: number;
   detectionFactor: number;
+  origin: Vector2;
+  baseSize: { width: number; height: number };
+  velocity: Vector2;
+  baseIntensity: number;
+  phaseSeconds: number;
+  evolutionPeriodSeconds: number;
+}
+
+export interface WeatherForecast {
+  weatherId: string;
+  horizonSeconds: number;
+  kind: WeatherKind;
+  estimatedPosition: Vector2;
+  estimatedSize: { width: number; height: number };
+  intensityTrend: "增强" | "稳定" | "减弱";
+  confidence: "高" | "中" | "低";
 }
 
 export interface RadarState {
@@ -119,8 +132,6 @@ export interface RadarOperatorState {
   mode: RadarOperatorMode;
   utilityScores: RadarUtilityScores;
   decisionAccumulatorSeconds: number;
-  modeChangedAt: number;
-  lastContactAt?: number;
   focusBearingDegrees?: number;
   commanderBias: RadarUtilityScores;
 }
@@ -141,7 +152,6 @@ export type RadarIntelLevel = "CONFIRMED" | "PROBABLE" | "POSSIBLE" | "UNKNOWN";
 export interface RadarIntelReport {
   radarId: string;
   level: RadarIntelLevel;
-  confidence: number;
   estimatedPosition?: Vector2;
   positionErrorRadius: number;
   estimatedRange?: number;
@@ -179,7 +189,6 @@ export interface EngagementState {
   stage: ThreatStage;
   trackProgress: number;
   missileTimeRemainingSeconds?: number;
-  launches: number;
 }
 
 export type CommanderIntent = "MONITOR" | "COORDINATED_SEARCH" | "CONCENTRATE_SEARCH";
@@ -189,7 +198,6 @@ export interface CommanderState {
   intent: CommanderIntent;
   utilityScores: CommanderUtilityScores;
   decisionAccumulatorSeconds: number;
-  lastDecisionAt: number;
   targetPosition?: Vector2;
 }
 
@@ -220,7 +228,6 @@ export type GameEventType =
   | "ROUTE_COMPLETED"
   | "RADAR_CONTACT"
   | "RADAR_MODE_CHANGED"
-  | "BELIEF_UPDATED"
   | "AWARENESS_STAGE_CHANGED"
   | "COMMANDER_ORDER"
   | "ATTACK"
@@ -247,9 +254,12 @@ export interface MissionSession {
   status: MissionStatus;
   elapsedMs: number;
   aircraft: AircraftState;
+  /** 按最小位移采样的真实已飞轨迹，仅在任务结束后用于跨任务画像。 */
+  flightPath: Vector2[];
   route: RouteState;
   terrain: TerrainZone[];
-  weather: WeatherZone[];
+  weather: WeatherCell[];
+  weatherForecast: WeatherForecast[];
   radars: RadarState[];
   radarIntel: RadarIntelReport[];
   radarContacts: RadarContact[];
@@ -260,11 +270,6 @@ export interface MissionSession {
   target: MissionTarget;
   extractionArea: ExtractionArea;
   intelAccuracy: number;
-  generationInfo: {
-    terrainCount: number;
-    radarCount: number;
-    weatherCount: number;
-  };
   commanderCoordinationModifier: number;
   adaptationNotes: string[];
   finalStrikeNotes: string[];
@@ -276,7 +281,6 @@ export interface RunState {
   campaign: CampaignState;
   resources: RunResources;
   enemyState: PersistentEnemyState;
-  missionHistory: MissionResult[];
   currentMission?: MissionSession;
   status: RunStatus;
 }

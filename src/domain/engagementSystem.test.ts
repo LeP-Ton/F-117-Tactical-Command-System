@@ -62,7 +62,6 @@ describe("防空交战系统", () => {
       stage: "MISSILE_INBOUND",
       trackProgress: 40,
       missileTimeRemainingSeconds: 7,
-      launches: 1,
     }, [], 1, 1);
 
     expect(result.missileDefeated).toBe(true);
@@ -75,7 +74,6 @@ describe("防空交战系统", () => {
       stage: "MISSILE_INBOUND",
       trackProgress: 100,
       missileTimeRemainingSeconds: 0.1,
-      launches: 1,
     }, [], 0.2, 1);
 
     expect(result.aircraftHit).toBe(true);

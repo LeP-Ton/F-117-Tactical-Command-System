@@ -19,11 +19,13 @@ describe("Mission Generator", () => {
     const signatures = new Set<string>();
     for (let index = 0; index < 10; index += 1) {
       const generated = generateMissionContent(`BATCH-${index}`);
-      expect(generated.terrain.length).toBeGreaterThanOrEqual(2);
-      expect(generated.terrain.length).toBeLessThanOrEqual(4);
+      const terrain = generated.terrain;
+      const weather = generated.weather;
+      expect(terrain.length).toBeGreaterThanOrEqual(2);
+      expect(terrain.length).toBeLessThanOrEqual(4);
       expect(generated.radars.length).toBeGreaterThanOrEqual(3);
       expect(generated.radars.length).toBeLessThanOrEqual(5);
-      expect(generated.weather.length).toBeGreaterThanOrEqual(1);
+      expect(weather.length).toBeGreaterThanOrEqual(1);
       expect(generated.intelAccuracy).toBeGreaterThanOrEqual(0.68);
       expect(generated.intelAccuracy).toBeLessThanOrEqual(0.94);
       generated.radars.forEach((radar) => {

@@ -126,13 +126,16 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
         });
       }
 
+      const weatherColors = {
+        CLOUD: ["rgba(96, 130, 135, 0.16)", "rgba(118, 155, 158, 0.4)"],
+        RAIN: ["rgba(62, 105, 132, 0.2)", "rgba(82, 143, 176, 0.52)"],
+        STORM: ["rgba(91, 78, 126, 0.27)", "rgba(151, 126, 180, 0.62)"],
+        FOG: ["rgba(142, 154, 150, 0.17)", "rgba(178, 190, 184, 0.42)"],
+      } as const;
       mission.weather.forEach((weather) => {
-        context.fillStyle = weather.kind === "STORM"
-          ? "rgba(91, 105, 132, 0.24)"
-          : "rgba(96, 130, 135, 0.16)";
-        context.strokeStyle = weather.kind === "STORM"
-          ? "rgba(132, 142, 172, 0.55)"
-          : "rgba(118, 155, 158, 0.4)";
+        const [fill, stroke] = weatherColors[weather.kind];
+        context.fillStyle = fill;
+        context.strokeStyle = stroke;
         context.lineWidth = 1 / metrics.scale;
         context.setLineDash([7 / metrics.scale, 6 / metrics.scale]);
         context.fillRect(weather.x, weather.y, weather.width, weather.height);
@@ -141,6 +144,26 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
         context.fillStyle = "#819a9c";
         context.font = "12px monospace";
         context.fillText(weather.kind, weather.x + 9, weather.y + 19);
+      });
+
+      // 规划与暂停阶段显示有误差的未来轮廓，帮助玩家选择穿越天气窗口。
+      if (editable) mission.weatherForecast.forEach((forecast) => {
+        context.save();
+        context.setLineDash([3 / metrics.scale, 9 / metrics.scale]);
+        context.strokeStyle = forecast.confidence === "高"
+          ? "rgba(105, 180, 190, 0.46)"
+          : forecast.confidence === "中" ? "rgba(105, 180, 190, 0.3)" : "rgba(105, 180, 190, 0.18)";
+        context.lineWidth = 1 / metrics.scale;
+        context.strokeRect(
+          forecast.estimatedPosition.x,
+          forecast.estimatedPosition.y,
+          forecast.estimatedSize.width,
+          forecast.estimatedSize.height,
+        );
+        context.fillStyle = "rgba(117, 177, 181, 0.65)";
+        context.font = "9px monospace";
+        context.fillText(`T+${forecast.horizonSeconds} ${forecast.kind}`, forecast.estimatedPosition.x + 5, forecast.estimatedPosition.y + 12);
+        context.restore();
       });
 
       context.fillStyle = "rgba(63, 191, 154, 0.08)";
@@ -202,7 +225,7 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
         context.fillStyle = "#e4bd63";
         context.font = "12px monospace";
         context.fillText(
-          `${report.radarId}? ${report.level} ${(report.confidence * 100).toFixed(0)}%`,
+          `${report.radarId}? ${report.level}`,
           position.x + 12,
           position.y + 4,
         );

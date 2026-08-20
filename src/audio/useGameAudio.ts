@@ -6,7 +6,7 @@ export function useGameAudio(mission: MissionSession | undefined) {
   const [muted, setMutedState] = useState(false);
   const [volume, setVolumeState] = useState(0.35);
   const missionId = useRef(mission?.id);
-  const processedEventCount = useRef(mission?.events.length ?? 0);
+  const lastProcessedEventId = useRef(mission?.events.at(-1)?.id);
 
   useEffect(() => {
     const unlock = () => void gameAudio.unlock();
@@ -23,12 +23,19 @@ export function useGameAudio(mission: MissionSession | undefined) {
     if (!mission) return;
     if (missionId.current !== mission.id) {
       missionId.current = mission.id;
-      processedEventCount.current = mission.events.length;
+      lastProcessedEventId.current = mission.events.at(-1)?.id;
       gameAudio.syncMission(mission.status, mission.engagement.stage);
       return;
     }
-    mission.events.slice(processedEventCount.current).forEach((event) => gameAudio.playEvent(event));
-    processedEventCount.current = mission.events.length;
+    const previousIndex = lastProcessedEventId.current
+      ? mission.events.findIndex((event) => event.id === lastProcessedEventId.current)
+      : -1;
+    // 事件环形截断时旧 ID 可能已消失；只消费当前尾部，避免把保留历史重复播放。
+    const unprocessedEvents = previousIndex >= 0
+      ? mission.events.slice(previousIndex + 1)
+      : mission.events.slice(-1);
+    unprocessedEvents.forEach((event) => gameAudio.playEvent(event));
+    lastProcessedEventId.current = mission.events.at(-1)?.id;
   }, [mission?.events, mission?.id, mission?.status, mission?.engagement.stage]);
 
   useEffect(() => {

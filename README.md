@@ -29,15 +29,15 @@ npm run build
 6. 飞抵目标攻击半径后自动投放精确制导武器。
 7. 摧毁目标后进入东北撤离区完成任务；航线结束但未满足条件会失败。
 
-顶部 `RUN SEED` 可以输入任意字符串并生成任务。相同 Seed 会复现 Terrain、Weather、Radar Network、Target 与 Intel Accuracy。
+顶部 `RUN SEED` 可以输入任意字符串并生成任务。相同 Seed 会复现 Terrain、Weather 演化、Radar Network、Target 与 Intel Accuracy；相同任务时间对应相同天气状态。
 
-每个 Run 会生成 6–7 个分层 Campaign 节点。选择节点前可以预览雷达密度、天气、情报可信度和战略效果；完成任务后返回战役地图解锁下一层。
+每个 Run 包含三个顺序二选一阶段和一个 Final Strike。执行节点后同层另一选择会失效，再解锁下一阶段；普通任务失败仍会推进，但会显著提高 Enemy Alert。
 
 成功完成任务后直接返回 Campaign Map，不存在 Tactical Reward 或 Player Build 流程。
 
-Campaign 选择会持续重构后续防空体系：Recon/ELINT 提高情报精度，SEAD 缩小雷达覆盖，Command Strike 降低雷达协调，Enemy Alert 则扩大后续雷达覆盖。
+Campaign 选择会持续重构后续防空体系：Intel 行动提高情报精度，SEAD 缩小雷达覆盖，Command Strike 降低雷达协调，Enemy Alert 则扩大后续雷达覆盖。
 
-雷达扫描线经过飞机时会按距离、朝向、地形遮蔽与天气计算探测概率。默认视图中的黄色区域表示玩家对敌方雷达的有限情报；敌方获得的 Radar Contact 只在 AI DEBUG 中显示。
+雷达扫描线经过飞机时会按距离、朝向、地形遮蔽与动态天气计算探测概率。Cloud、Rain、Storm 与 Fog 会移动、改变范围和按周期演变类型；规划或暂停时可参考地图预测轮廓与 `WEATHER FORECAST` 的 `T+30/60/90s` 有误差预报。默认视图中的黄色区域表示玩家对敌方雷达的有限情报；敌方获得的 Radar Contact 只在 AI DEBUG 中显示。
 
 每台雷达会根据自己的 Contact 证据在广域搜索、扇区搜索和聚焦跟踪间切换。开启 AI DEBUG 后，右侧调试面板会显示当前模式与 W/S/F 效用评分。
 
@@ -49,7 +49,7 @@ Radar Contact 会累积任务内 Awareness（敌方警戒值）；Air Defense Co
 
 游戏使用 Web Audio API 合成 Contact、警戒升级、火控锁定、导弹来袭、脱锁、投弹、成功与失败音效。顶部 `SOUND ON/OFF` 和 `VOL` 可控制静音与总音量；浏览器会在首次点击或按键后启用音频。
 
-任务结束后，敌方会分析已经实际飞过的航点，形成地形利用、南北航路和直达倾向画像；后续任务可能针对山地出口、偏好航路或直达轴线调整雷达部署。
+任务结束后，敌方会分析按实际位移采样的已飞轨迹，形成地形利用、南北航路和直达倾向画像；后续任务会选择空间上最合适的雷达，针对山地出口、偏好航路或直达轴线调整部署。
 
 Final Strike 会根据 Campaign 历史动态组装最终防空：SEAD 决定后备雷达、Enemy Alert 决定警戒增援、Enemy Adaptation 决定历史航路截击部署，Command Strike 与情报任务则继续影响指挥链和有限情报。
 

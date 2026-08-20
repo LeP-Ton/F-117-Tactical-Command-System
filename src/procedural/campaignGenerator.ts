@@ -1,35 +1,27 @@
-import { SeededRandom } from "../core/SeededRandom";
 import type { CampaignEdge, CampaignNode, CampaignState, MissionNodeType } from "../domain/types";
 import { generateMissionContent } from "./missionGenerator";
 
-const middleTypes: readonly MissionNodeType[] = ["STRIKE", "ELINT", "SEAD", "DEEP_STRIKE"];
+const stageTypes: readonly (readonly MissionNodeType[])[] = [
+  ["INTEL", "STRIKE"],
+  ["SEAD", "COMMAND_STRIKE"],
+  ["INTEL", "STRIKE"],
+  ["FINAL_STRIKE"],
+];
 
 const effects: Record<MissionNodeType, string> = {
-  STRIKE: "敌方警戒变化，获得少量情报",
-  RECON: "获得 2 Intel，揭示后续态势",
-  ELINT: "获得 3 Intel，提高电子情报能力",
+  INTEL: "提高后续任务的雷达情报质量",
+  STRIKE: "直接推进战役，但不会削弱后续防空",
   SEAD: "压低 Enemy Alert，削弱未来防空",
   COMMAND_STRIKE: "破坏指挥链，降低后续雷达协调能力",
-  DEEP_STRIKE: "高风险推进至纵深目标",
   FINAL_STRIKE: "完成本次 Run 的最终打击",
 };
 
 export function generateCampaign(seed: string): CampaignState {
-  const random = new SeededRandom(`${seed}:CAMPAIGN-GRAPH`);
-  const layerCounts = [2, 2, random.integer(1, 2), 1];
   const nodes: CampaignNode[] = [];
-  layerCounts.forEach((count, layer) => {
-    for (let index = 0; index < count; index += 1) {
+  stageTypes.forEach((types, layer) => {
+    types.forEach((type, index) => {
+      const count = types.length;
       const id = `C${layer}-${index}`;
-      const type = layer === layerCounts.length - 1
-        ? "FINAL_STRIKE"
-        : layer === 0
-          ? index === 0 ? "RECON" : "STRIKE"
-          : layer === 1
-            ? index === 0 ? "ELINT" : "SEAD"
-            : layer === 2
-              ? index === 0 ? "COMMAND_STRIKE" : "DEEP_STRIKE"
-              : random.pick(middleTypes);
       const missionSeed = `${seed}:${id}`;
       const generated = generateMissionContent(missionSeed);
       nodes.push({
@@ -41,18 +33,20 @@ export function generateCampaign(seed: string): CampaignState {
         missionSeed,
         preview: {
           radarDensity: generated.radars.length,
-          weather: generated.weather.map((weather) => weather.kind).join(" + "),
+          weather: generated.weather
+            .map((cell) => cell.kind)
+            .join(" + "),
           intelAccuracy: generated.intelAccuracy,
           effect: effects[type],
         },
       });
-    }
+    });
   });
   const edges: CampaignEdge[] = [];
-  for (let layer = 0; layer < layerCounts.length - 1; layer += 1) {
+  for (let layer = 0; layer < stageTypes.length - 1; layer += 1) {
     const current = nodes.filter((node) => node.layer === layer);
     const next = nodes.filter((node) => node.layer === layer + 1);
     current.forEach((from) => next.forEach((to) => edges.push({ from: from.id, to: to.id })));
   }
-  return { seed: `${seed}-CAMPAIGN`, completedNodeIds: [], nodes, edges };
+  return { seed: `${seed}-CAMPAIGN`, nodes, edges };
 }

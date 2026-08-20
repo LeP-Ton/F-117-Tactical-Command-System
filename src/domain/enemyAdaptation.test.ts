@@ -3,10 +3,14 @@ import { createMission, createRun } from "./factories";
 import { analyzeCompletedMission, applyEnemyCounterDeployment, createPlayerTacticalProfile } from "./enemyAdaptation";
 
 describe("Enemy Adaptation", () => {
-  it("只分析已经完成的航点，不读取未来规划", () => {
+  it("只分析真实已飞轨迹，不读取未来规划", () => {
     const mission = createMission("ADAPT-HISTORY");
     const withRoute = {
       ...mission,
+      flightPath: [
+        { x: 90, y: 850 },
+        { x: 300, y: 800 },
+      ],
       route: {
         activeWaypointIndex: 2,
         waypoints: [
@@ -34,7 +38,6 @@ describe("Enemy Adaptation", () => {
     const mission = createMission("ADAPT-DEPLOYMENT");
     const enemyState = {
       ...createRun("ADAPT-RUN").enemyState,
-      adaptationLevel: 3,
       tacticalProfile: {
         missionSamples: 2,
         terrainMaskingPreference: 0.8,

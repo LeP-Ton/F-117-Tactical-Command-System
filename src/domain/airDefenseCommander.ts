@@ -22,7 +22,6 @@ export function createCommanderState(): CommanderState {
     intent: "MONITOR",
     utilityScores: { MONITOR: 70, COORDINATED_SEARCH: 20, CONCENTRATE_SEARCH: 10 },
     decisionAccumulatorSeconds: 0,
-    lastDecisionAt: 0,
   };
 }
 
@@ -99,7 +98,6 @@ export function advanceCommander(
       intent,
       utilityScores: scores,
       decisionAccumulatorSeconds: accumulator,
-      lastDecisionAt: timestamp,
       targetPosition: hasBelief
         ? state.targetPosition
           ? {
