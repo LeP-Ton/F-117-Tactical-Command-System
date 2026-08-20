@@ -32,6 +32,7 @@ const eventLabels: Record<string, string> = {
   MISSILE_LAUNCHED: "导弹发射",
   MISSILE_DEFEATED: "导弹脱锁",
   AIRCRAFT_DESTROYED: "飞机损毁",
+  FUEL_EXHAUSTED: "燃油耗尽",
 };
 
 const modeLabels = {
@@ -159,6 +160,7 @@ export function App() {
               <div><dt>坐标 Y</dt><dd>{mission.aircraft.position.y.toFixed(1)}</dd></div>
               <div><dt>航向</dt><dd>{mission.aircraft.headingDegrees.toFixed(0)}°</dd></div>
               <div><dt>速度</dt><dd>{mission.aircraft.speed} u/s</dd></div>
+              <div><dt>剩余航程</dt><dd>{mission.aircraft.fuelRemaining.toFixed(0)} / {mission.aircraft.fuelCapacity} u</dd></div>
               <div><dt>当前目标</dt><dd>{activeWaypoint ? `WP-${mission.route.activeWaypointIndex}` : "—"}</dd></div>
               <div><dt>已知雷达情报</dt><dd>{visibleRadarIntel.length} 个</dd></div>
               <div><dt>未定位信号</dt><dd>{mission.radarIntel.length - visibleRadarIntel.length} 个</dd></div>
@@ -172,6 +174,14 @@ export function App() {
               <div><dt>任务结果</dt><dd>{mission.status === "SUCCESS" ? "成功" : mission.status === "FAILED" ? "失败" : "进行中"}</dd></div>
             </dl>
           </CollapsibleSection>
+          <section className={`panel-section fuel-section ${mission.aircraft.fuelRemaining / mission.aircraft.fuelCapacity <= 0.2 ? "fuel-critical" : ""}`}>
+            <div className="section-heading">
+              <span>FUEL RANGE</span>
+              <span>{(mission.aircraft.fuelRemaining / mission.aircraft.fuelCapacity * 100).toFixed(0)}%</span>
+            </div>
+            <div className="fuel-meter"><i style={{ width: `${mission.aircraft.fuelRemaining / mission.aircraft.fuelCapacity * 100}%` }} /></div>
+            <p className="threat-message">可用航程 {mission.aircraft.fuelRemaining.toFixed(0)} u // 满油航程等于地图两条边</p>
+          </section>
           <section className={`panel-section threat-section threat-${mission.engagement.stage.toLowerCase()}`}>
             <div className="section-heading"><span>THREAT WARNING</span><span>{threatLabels[mission.engagement.stage]}</span></div>
             <div className="threat-progress"><i style={{ width: `${mission.engagement.trackProgress}%` }} /></div>

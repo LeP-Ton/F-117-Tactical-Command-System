@@ -6,6 +6,7 @@ export interface AutopilotResult {
   route: RouteState;
   reachedWaypointIds: string[];
   routeCompleted: boolean;
+  distanceTraveled: number;
 }
 
 /**
@@ -21,6 +22,7 @@ export function advanceAutopilot(
   let activeWaypointIndex = route.activeWaypointIndex;
   const waypoints = route.waypoints.map((waypoint) => ({ ...waypoint }));
   const reachedWaypointIds: string[] = [];
+  let distanceTraveled = 0;
 
   while (remainingDistance > 0 && activeWaypointIndex < waypoints.length) {
     const target = waypoints[activeWaypointIndex];
@@ -33,6 +35,7 @@ export function advanceAutopilot(
     if (distance <= Math.max(gameConfig.aircraft.waypointArrivalRadius, remainingDistance)) {
       nextAircraft.position = { ...target.position };
       remainingDistance = Math.max(0, remainingDistance - distance);
+      distanceTraveled += distance;
       target.status = "COMPLETED";
       reachedWaypointIds.push(target.id);
       activeWaypointIndex += 1;
@@ -43,6 +46,7 @@ export function advanceAutopilot(
       x: nextAircraft.position.x + (dx / distance) * remainingDistance,
       y: nextAircraft.position.y + (dy / distance) * remainingDistance,
     };
+    distanceTraveled += remainingDistance;
     remainingDistance = 0;
   }
 
@@ -51,5 +55,6 @@ export function advanceAutopilot(
     route: { waypoints, activeWaypointIndex },
     reachedWaypointIds,
     routeCompleted: waypoints.length > 1 && activeWaypointIndex >= waypoints.length,
+    distanceTraveled,
   };
 }

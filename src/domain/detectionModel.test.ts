@@ -8,7 +8,9 @@ const radar: RadarState = {
   scanAccumulatorSeconds: 0, scanCount: 0,
   operator: createRadarOperatorState(),
 };
-const aircraft: AircraftState = { position: { x: 100, y: 0 }, headingDegrees: 0, speed: 70 };
+const aircraft: AircraftState = {
+  position: { x: 100, y: 0 }, headingDegrees: 0, speed: 70, fuelRemaining: 2000, fuelCapacity: 2000,
+};
 
 describe("雷达探测模型", () => {
   it("侧面对雷达的暴露高于机头朝向雷达", () => {

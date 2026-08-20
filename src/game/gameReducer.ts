@@ -244,15 +244,23 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
     }
     case "TICK": {
       if (mission.status !== "RUNNING") return state;
-      const result = advanceAutopilot(mission.aircraft, mission.route, action.deltaSeconds);
+      // 只允许飞机移动剩余燃油能够覆盖的距离，避免最后一帧透支航程。
+      const fuelLimitedSeconds = mission.aircraft.speed > 0
+        ? Math.min(action.deltaSeconds, mission.aircraft.fuelRemaining / mission.aircraft.speed)
+        : 0;
+      const result = advanceAutopilot(mission.aircraft, mission.route, fuelLimitedSeconds);
+      const aircraft = {
+        ...result.aircraft,
+        fuelRemaining: Math.max(0, mission.aircraft.fuelRemaining - result.distanceTraveled),
+      };
       const nextTimestamp = mission.elapsedMs + action.deltaSeconds * 1000;
-      const autoAttack = canAttackTarget({ ...mission, aircraft: result.aircraft });
+      const autoAttack = canAttackTarget({ ...mission, aircraft });
       const target = autoAttack ? { ...mission.target, destroyed: true } : mission.target;
       const weather = advanceWeather(mission.weather, nextTimestamp);
       const radarResult = advanceRadarSensors(
         mission.seed,
         mission.radars,
-        result.aircraft,
+        aircraft,
         mission.terrain,
         weather,
         nextTimestamp,
@@ -379,14 +387,14 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
           : []),
       ];
       const aircraftDestroyed = engagementResult.aircraftHit;
-      const aircraft = result.aircraft;
       const extracted = target.destroyed
         && isInsideExtraction(aircraft.position, mission.extractionArea);
+      const fuelExhausted = aircraft.fuelRemaining <= 0 && !extracted;
       const terminalStatus = aircraftDestroyed
         ? "FAILED"
         : extracted
           ? "SUCCESS"
-          : result.routeCompleted ? "FAILED" : mission.status;
+          : fuelExhausted || result.routeCompleted ? "FAILED" : mission.status;
       const resultEvents = aircraftDestroyed
         ? [{
           ...createGameEvent(mission, "MISSION_FAILED", { reason: "AIRCRAFT_DESTROYED" }, "AIR_DEFENSE_NETWORK"),
@@ -396,6 +404,11 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
           ? [
             { ...createGameEvent(mission, "EXTRACTION", {}, "F-117"), timestamp: nextTimestamp },
             { ...createGameEvent(mission, "MISSION_SUCCESS"), timestamp: nextTimestamp },
+          ]
+          : fuelExhausted
+          ? [
+            { ...createGameEvent(mission, "FUEL_EXHAUSTED", {}, "F-117"), timestamp: nextTimestamp },
+            { ...createGameEvent(mission, "MISSION_FAILED", { reason: "FUEL_EXHAUSTED" }, "F-117"), timestamp: nextTimestamp },
           ]
           : result.routeCompleted
           ? [{

@@ -72,6 +72,9 @@ export interface AircraftState {
   position: Vector2;
   headingDegrees: number;
   speed: number;
+  /** 剩余可飞行距离，单位与地图坐标一致。 */
+  fuelRemaining: number;
+  fuelCapacity: number;
 }
 
 export interface TerrainZone {
@@ -237,7 +240,8 @@ export type GameEventType =
   | "THREAT_STAGE_CHANGED"
   | "MISSILE_LAUNCHED"
   | "MISSILE_DEFEATED"
-  | "AIRCRAFT_DESTROYED";
+  | "AIRCRAFT_DESTROYED"
+  | "FUEL_EXHAUSTED";
 
 export interface GameEvent {
   id: string;

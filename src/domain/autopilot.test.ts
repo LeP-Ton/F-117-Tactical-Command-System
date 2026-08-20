@@ -6,6 +6,8 @@ const aircraft: AircraftState = {
   position: { x: 0, y: 0 },
   headingDegrees: 0,
   speed: 100,
+  fuelRemaining: 2000,
+  fuelCapacity: 2000,
 };
 
 const route: RouteState = {
@@ -23,6 +25,7 @@ describe("自动驾驶", () => {
     expect(result.reachedWaypointIds).toEqual(["a", "b"]);
     expect(result.aircraft.position).toEqual({ x: 60, y: 0 });
     expect(result.routeCompleted).toBe(true);
+    expect(result.distanceTraveled).toBe(60);
   });
 
   it("移动中更新位置和航向", () => {

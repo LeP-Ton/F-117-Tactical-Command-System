@@ -6,6 +6,8 @@ export const gameConfig = {
   },
   aircraft: {
     speed: 3.6,
+    /** 满油航程等于 1000×1000 地图两条边的总长度。 */
+    fuelCapacityDistance: 2000,
     waypointArrivalRadius: 5,
   },
   loop: {

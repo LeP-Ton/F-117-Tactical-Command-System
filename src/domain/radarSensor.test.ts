@@ -9,7 +9,9 @@ describe("Radar Sensor", () => {
     sweepAngleDegrees: 90, scanAccumulatorSeconds: 0.24, scanCount: 8,
     operator: createRadarOperatorState(),
   };
-  const aircraft: AircraftState = { position: { x: 50, y: 0 }, headingDegrees: 0, speed: 70 };
+  const aircraft: AircraftState = {
+    position: { x: 50, y: 0 }, headingDegrees: 0, speed: 70, fuelRemaining: 2000, fuelCapacity: 2000,
+  };
 
   it("相同任务状态产生可复现结果", () => {
     const first = advanceRadarSensors("SEED", [radar], aircraft, [], [], 1000, 0.02);

@@ -15,7 +15,7 @@
 - Air Defense Commander 只读取 Awareness、Belief Map 与雷达状态，通过可解释 Utility 评分、跨雷达 Contact 共享和 Operator 偏置协调雷达，不读取飞机真实位置或把目标位置作为定位回退；指挥链受损会延迟决策、缩短共享窗口并扩大搜索方位误差。
 - Awareness 是任务内敌方总体警戒值，由 Contact 累积、失联后缓慢衰减、投弹时显著提升；它只驱动 Commander 搜索强度，不取代玩家可见的跟踪、锁定与导弹进度。
 - 防空交战采用 Contact → 跟踪质量 → 火控锁定 → 导弹来袭链路；最强 Contact 保留本地火控能力，额外雷达证据通过指挥链形成联合跟踪，失去新证据可脱锁，导弹命中会立即摧毁飞机并令 Run DEFEAT。
-- 飞机基础速度为 `3.6 u/s`；运行中进入攻击半径后自动投弹并提高 Awareness，随后玩家必须进入撤离区；航线结束但条件未满足判定失败。
+- 飞机基础速度为 `3.6 u/s`，满油可飞行 `2000 u`（当前地图两条边之和）；燃油按真实累计飞行距离消耗，耗尽后停止并令当前任务失败。运行中进入攻击半径后自动投弹并提高 Awareness，随后玩家必须进入撤离区。
 - 普通玩家视图通过 THREAT WARNING 显示可行动的模糊威胁阶段和导弹倒计时；真实 Contact、Belief 与 AI 评分仍只在 AI DEBUG 中显示。
 - 音效使用原生 Web Audio API 合成并由领域事件驱动；锁定与导弹警报属于可清理循环音，暂停、脱锁、任务结束或组件卸载时必须停止，顶部提供静音与总音量控制。
 - Mission Generator 根据 Seed 分别生成静态 Terrain、动态 Weather Cell、Radar Network、Target 与 Intel Accuracy；天气的位置、范围、强度与类型由任务绝对时间确定性演化，相同 Seed 与时间必须完整复现。

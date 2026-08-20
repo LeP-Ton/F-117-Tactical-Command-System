@@ -100,6 +100,52 @@ describe("gameReducer", () => {
     expect(createRun("SLOW-FLIGHT").currentMission?.aircraft.speed).toBe(3.6);
   });
 
+  it("满油航程为地图两条边并按实际飞行距离消耗", () => {
+    let state = createRun("FUEL-RANGE");
+    const mission = state.currentMission!;
+    state = {
+      ...state,
+      currentMission: {
+        ...mission,
+        status: "RUNNING",
+        route: {
+          activeWaypointIndex: 1,
+          waypoints: [
+            mission.route.waypoints[0]!,
+            { id: "fuel-leg", kind: "NAVIGATION", status: "PENDING", position: { x: 500, y: 900 } },
+          ],
+        },
+      },
+    };
+    state = gameReducer(state, { type: "TICK", deltaSeconds: 10 });
+    expect(state.currentMission!.aircraft.fuelCapacity).toBe(2000);
+    expect(state.currentMission!.aircraft.fuelRemaining).toBeCloseTo(1964);
+  });
+
+  it("燃油耗尽时停止在剩余航程终点并判定任务失败", () => {
+    let state = createRun("FUEL-EXHAUSTED");
+    const mission = state.currentMission!;
+    state = {
+      ...state,
+      currentMission: {
+        ...mission,
+        status: "RUNNING",
+        aircraft: { ...mission.aircraft, fuelRemaining: 1 },
+        route: {
+          activeWaypointIndex: 1,
+          waypoints: [
+            mission.route.waypoints[0]!,
+            { id: "distant", kind: "NAVIGATION", status: "PENDING", position: { x: 500, y: 900 } },
+          ],
+        },
+      },
+    };
+    state = gameReducer(state, { type: "TICK", deltaSeconds: 1 });
+    expect(state.currentMission!.aircraft.fuelRemaining).toBe(0);
+    expect(state.currentMission!.status).toBe("FAILED");
+    expect(state.currentMission!.events.at(-1)?.data.reason).toBe("FUEL_EXHAUSTED");
+  });
+
   it("摧毁目标并进入撤离区后记录成功", () => {
     let state = createRun("SUCCESS");
     const mission = state.currentMission!;

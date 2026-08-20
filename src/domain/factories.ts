@@ -20,6 +20,8 @@ export function createMission(seed: string): MissionSession {
       position: { ...insertionPoint },
       headingDegrees: 0,
       speed: gameConfig.aircraft.speed,
+      fuelRemaining: gameConfig.aircraft.fuelCapacityDistance,
+      fuelCapacity: gameConfig.aircraft.fuelCapacityDistance,
     },
     flightPath: [{ ...insertionPoint }],
     route: createInitialRoute(),
