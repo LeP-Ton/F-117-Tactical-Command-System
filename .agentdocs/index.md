@@ -1,6 +1,7 @@
 # 项目文档索引
 
 ## 当前变更文档
+`workflow/20260820213439-sync-realtime-meters.md` - 会话-32：移除 Fuel、Threat 与 Awareness 高频仪表的宽度过渡，修复持续 Tick 时视觉进度滞后于数据；排查进度条暂停后突变或不增长时读取。
 `workflow/20260820212200-weather-flight-slowdown.md` - 会话-31：为 Cloud/Fog/Rain/Storm 增加 10%–30% 分级飞行减速，重叠取最强效果并保持按距离扣油；核对天气战术代价、有效速度或燃油关系时读取。
 `workflow/20260820204645-add-f117-fuel-range.md` - 会话-29：增加 2000 u 满油航程、按实际飞行距离扣油、耗尽失败与燃油遥测告警；核对航线成本、自动驾驶累计距离或任务失败原因时读取。
 `workflow/20260820174641-split-dynamic-weather-and-forecast.md` - 会话-25：重新拆分静态 Terrain 与动态 Weather Cell，增加四种天气的可复现时空演化及 T+30/60/90 有误差预报；核对天气 Tick、探测影响、预报 UI 或 Seed 复现时读取。
