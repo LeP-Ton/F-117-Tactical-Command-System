@@ -1,6 +1,8 @@
 # 项目文档索引
 
 ## 当前变更文档
+`workflow/20260821093646-show-failed-node-and-allow-retry.md` - 会话-63：失败后当前节点显示 FAILED 但仍可重新执行，同层备选保持 AVAILABLE、下一层锁定，并默认选中刚失败节点；核对失败状态展示或重试入口时读取。
+`workflow/20260821092211-allow-retry-after-aircraft-loss.md` - 会话-62：将飞机损失改为只结束当前 Mission，返回 Campaign 后可重试或改选，并兼容旧 FAILED+DEFEAT 状态；核对导弹命中结算或失败重玩时读取。本规则取代会话-51的“飞机损失终止 Run”。
 `workflow/20260821090609-style-contacts-by-radar-type.md` - 会话-60：让 Contact 估算圈按雷达类型使用浅金黄/浅橙/浅红并减半线宽，保持 CMD 强红色不变；核对 AI DEBUG Contact 来源辨识或视觉层级时读取。
 `workflow/20260821085204-require-success-to-advance-campaign.md` - 会话-57：统一 Mission 与 Campaign 成功口径，只有摧毁目标并撤离才推进；普通失败只增加 Enemy Alert 并保留当前层供重试或改选。核对失败结算或节点解锁规则时读取。
 `workflow/20260821082517-heal-stale-defeat-on-campaign-screen.md` - 会话-55：根据截图修复已停留 Campaign 页面时 C1-0 COMPLETED、C2 AVAILABLE 仍错显 Run 结束的问题，并在选择 C2 时自愈旧状态；排查热更新残留状态或按钮错误禁用时读取。
@@ -68,7 +70,7 @@
 - Commander 只读取 Awareness、Belief 与雷达状态，通过 Utility 偏置协调各 Radar Operator；投弹只提高警戒，不提供目标区定位，网络静默仍已移除。
 - 单 Mission 已形成 Plan → Infiltrate → Strike → High-alert Extraction → Result 闭环。
 - Mission 的静态地形、动态天气初始参数与演化、天气预报、雷达、目标和情报精度均由 Seed 确定生成；相同任务时间可复现相同真实天气。
-- Campaign 固定为三个顺序二选一阶段与 Final Strike；只有摧毁目标并成功撤离才推进并关闭同层选择，普通失败只增加 Enemy Alert 并保留当前层供重试或改选。
+- Campaign 固定为三个顺序二选一阶段与 Final Strike；只有摧毁目标并成功撤离才推进并关闭同层选择；所有失败都把当前节点标记为可重试的 `FAILED`、增加 Enemy Alert，同层备选保持 `AVAILABLE`，下一层保持锁定。
 - Tactical Reward 与 Player Build 已完整移除，成功任务直接返回 Campaign。
 - 当前 Roguelike 差异集中在程序生成地图、雷达网络、天气与 Campaign 防空构建。
 - Intel、SEAD、Command Strike 与 Enemy Alert 会分别修改后续任务的情报精度、雷达覆盖或 Commander 协调。
@@ -78,5 +80,5 @@
 - 飞机基础速度为 `3.6 u/s`，运行中进入目标攻击半径后自动投弹，无需玩家手动操作。
 - F-117 满油航程为 `2000 u`，按真实累计飞行距离消耗；燃油耗尽会停止飞机并令当前任务失败。
 - Weather Cell 会令飞机减速 10%–30%，多个天气重叠时只取最强效果；天气延长暴露时间但不额外增加单位距离油耗。
-- 连续 Contact 会累积跟踪并触发导弹；切断新证据可以脱锁，导弹命中立即摧毁飞机并结束 Run。
+- 连续 Contact 会累积跟踪并触发导弹；切断新证据可以脱锁，导弹命中会摧毁飞机并结束当前 Mission，但不会结束 Run。
 - 检索时先读取本索引，再按需读取具体 workflow 文档。

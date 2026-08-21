@@ -107,12 +107,21 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
       return createRun(action.seed.trim() || gameConfig.initialSeed);
     case "SELECT_CAMPAIGN_NODE": {
       const node = state.campaign.nodes.find((candidate) => candidate.id === action.nodeId);
-      if (!node || node.status !== "AVAILABLE") return state;
+      const retryFailedNode = node?.status === "FAILED";
+      if (!node || (node.status !== "AVAILABLE" && !retryFailedNode)) return state;
       return {
         ...state,
-        // AVAILABLE 节点来自已成功结算的 Campaign 时，选择节点同时清理旧版残留的 DEFEAT。
-        status: state.status === "DEFEAT" && mission.status === "SUCCESS" ? "ACTIVE" : state.status,
-        campaign: { ...state.campaign, currentNodeId: node.id },
+        // 任意 AVAILABLE 节点都代表 Campaign 仍可继续，选择时清理旧版残留的 DEFEAT。
+        status: "ACTIVE",
+        campaign: {
+          ...state.campaign,
+          currentNodeId: node.id,
+          nodes: retryFailedNode
+            ? state.campaign.nodes.map((candidate) => candidate.id === node.id
+              ? { ...candidate, status: "AVAILABLE" as const }
+              : candidate)
+            : state.campaign.nodes,
+        },
         currentMission: prepareCampaignMission(state, node),
       };
     }
@@ -121,8 +130,6 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
       const currentNode = state.campaign.nodes.find((node) => node.id === state.campaign.currentNodeId);
       if (!currentNode) return state;
       const succeeded = mission.status === "SUCCESS";
-      // 成功 Mission 不可能同时损失飞机；仅失败 Mission 才允许 DEFEAT 阻断后续层。
-      const runDefeated = !succeeded && state.status === "DEFEAT";
       const nextLayer = currentNode.layer + 1;
       const nodes = state.campaign.nodes.map((node) => {
         if (succeeded) {
@@ -134,25 +141,20 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
             return { ...node, status: "AVAILABLE" as const };
           }
         }
-        if (runDefeated) {
-          if (node.id === currentNode.id) return { ...node, status: "FAILED" as const };
-          if (node.layer === currentNode.layer && node.status === "AVAILABLE") {
-            return { ...node, status: "EXPIRED" as const };
-          }
-        }
-        // 普通失败不推进 Campaign：当前节点与同层备选均保持 AVAILABLE，可重试或改选。
+        if (node.id === currentNode.id) return { ...node, status: "FAILED" as const };
+        // 所有失败都不推进 Campaign：失败节点可重试，同层备选保持 AVAILABLE，下一层保持锁定。
         return node;
       });
       const alertDelta = succeeded && currentNode.type === "SEAD" ? -8 : succeeded ? 2 : 10;
       const tacticalProfile = analyzeCompletedMission(state.enemyState.tacticalProfile, mission);
-      // Mission 成功意味着飞机已安全撤离；非最终节点必须恢复 ACTIVE，不能继承陈旧的 DEFEAT。
+      // 除 Final Strike 成功外，结算后 Run 均保持 ACTIVE，失败任务可继续重试。
       const runStatus = succeeded
         ? currentNode.type === "FINAL_STRIKE" ? "VICTORY" as const : "ACTIVE" as const
-        : state.status;
+        : "ACTIVE" as const;
       return {
         ...state,
         status: runStatus,
-        campaign: { ...state.campaign, nodes, currentNodeId: undefined },
+        campaign: { ...state.campaign, nodes, currentNodeId: succeeded ? undefined : currentNode.id },
         resources: {
           ...state.resources,
           enemyAlert: Math.max(0, Math.min(100, state.resources.enemyAlert + alertDelta)),
@@ -466,7 +468,7 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
       ];
       return {
         ...state,
-        status: aircraftDestroyed ? "DEFEAT" : state.status,
+        status: state.status,
         currentMission: {
           ...mission,
           status: terminalStatus,

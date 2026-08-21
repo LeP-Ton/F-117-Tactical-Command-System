@@ -33,7 +33,7 @@ F-117 满油拥有 `2000 u` 可用航程，等于当前地图两条边的总长�
 
 顶部 `RUN SEED` 可以输入任意字符串并生成任务。相同 Seed 会复现 Terrain、Weather 演化、Radar Network、Target 与 Intel Accuracy；相同任务时间对应相同天气状态。
 
-每个 Run 包含三个顺序二选一阶段和一个 Final Strike。只有摧毁目标并成功撤离，当前节点才会完成、同层另一选择才会失效并解锁下一阶段；普通任务失败只会显著提高 Enemy Alert，当前层仍可重试或改选。
+每个 Run 包含三个顺序二选一阶段和一个 Final Strike。只有摧毁目标并成功撤离，当前节点才会完成、同层另一选择才会失效并解锁下一阶段；任务失败会把当前节点标记为可重试的 `FAILED` 并显著提高 Enemy Alert，同层另一任务仍可改选。
 
 成功完成任务后直接返回 Campaign Map，不存在 Tactical Reward 或 Player Build 流程。
 
@@ -49,7 +49,7 @@ Campaign 选择会持续重构后续防空体系：Intel 行动提高情报精�
 
 Radar Contact 会累积任务内 Awareness（敌方警戒值）；Air Defense Commander 根据 Awareness 与 Belief 选择持续监视、协同搜索或集中搜索，并通过 Utility 偏置协调各 Radar Operator。投弹只提高 Awareness，不会把目标区当成飞机位置。雷达静默与网络静默仍未启用。
 
-连续高质量 Contact 会依次形成疑似搜索、持续跟踪、火控锁定和导弹来袭。导弹飞行期间切断雷达新证据可使其脱锁；未能脱锁会直接摧毁飞机并结束本次 Run。
+连续高质量 Contact 会依次形成疑似搜索、持续跟踪、火控锁定和导弹来袭。导弹飞行期间切断雷达新证据可使其脱锁；未能脱锁会摧毁飞机并结束当前 Mission，返回 Campaign 后可以重试当前节点或改选同层任务。
 
 游戏使用 Web Audio API 合成 Contact、警戒升级、火控锁定、导弹来袭、脱锁、投弹、成功与失败音效。顶部 `SOUND ON/OFF` 和 `VOL` 可控制静音与总音量；浏览器会在首次点击或按键后启用音频。
 

@@ -238,10 +238,15 @@ describe("gameReducer", () => {
     state = gameReducer(state, { type: "RETURN_CAMPAIGN" });
     expect(state.status).toBe("ACTIVE");
     expect(state.resources.enemyAlert).toBe(10);
-    expect(state.campaign.nodes.filter((node) => node.layer === 0)
-      .every((node) => node.status === "AVAILABLE")).toBe(true);
+    expect(state.campaign.nodes.find((node) => node.id === "C0-0")?.status).toBe("FAILED");
+    expect(state.campaign.nodes.find((node) => node.id === "C0-1")?.status).toBe("AVAILABLE");
+    expect(state.campaign.currentNodeId).toBe("C0-0");
     expect(state.campaign.nodes.filter((node) => node.layer === 1)
       .every((node) => node.status === "LOCKED")).toBe(true);
+
+    state = gameReducer(state, { type: "SELECT_CAMPAIGN_NODE", nodeId: "C0-0" });
+    expect(state.currentMission?.status).toBe("PLANNING");
+    expect(state.campaign.nodes.find((node) => node.id === "C0-0")?.status).toBe("AVAILABLE");
   });
 
   it("SEAD 成功会永久降低后续任务雷达覆盖", () => {
@@ -306,6 +311,29 @@ describe("gameReducer", () => {
 
     expect(state.status).toBe("ACTIVE");
     expect(state.campaign.currentNodeId).toBe("C2-0");
+    expect(state.currentMission?.status).toBe("PLANNING");
+  });
+
+  it("旧版飞机损失状态允许重新执行 FAILED 节点", () => {
+    let state = createRun("LEGACY-AIRCRAFT-LOSS");
+    state = {
+      ...state,
+      status: "DEFEAT",
+      campaign: {
+        ...state.campaign,
+        currentNodeId: undefined,
+        nodes: state.campaign.nodes.map((node) => node.id === "C0-0"
+          ? { ...node, status: "FAILED" }
+          : node.id === "C0-1" ? { ...node, status: "EXPIRED" } : node),
+      },
+      currentMission: { ...state.currentMission!, status: "FAILED" },
+    };
+
+    state = gameReducer(state, { type: "SELECT_CAMPAIGN_NODE", nodeId: "C0-0" });
+
+    expect(state.status).toBe("ACTIVE");
+    expect(state.campaign.currentNodeId).toBe("C0-0");
+    expect(state.campaign.nodes.find((node) => node.id === "C0-0")?.status).toBe("AVAILABLE");
     expect(state.currentMission?.status).toBe("PLANNING");
   });
 
@@ -403,7 +431,7 @@ describe("gameReducer", () => {
     expect(state.currentMission!.radarIntel).toHaveLength(state.currentMission!.radars.length);
   });
 
-  it("导弹首次命中即摧毁飞机并使整个 Run 失败", () => {
+  it("导弹命中摧毁飞机但只结束当前任务，返回后允许重试", () => {
     let state = createRun("MISSILE-HIT");
     const mission = state.currentMission!;
     state = {
@@ -428,14 +456,16 @@ describe("gameReducer", () => {
 
     state = gameReducer(state, { type: "TICK", deltaSeconds: 0.02 });
 
-    expect(state.status).toBe("DEFEAT");
+    expect(state.status).toBe("ACTIVE");
     expect(state.currentMission!.status).toBe("FAILED");
     expect(state.currentMission!.events.some((event) => event.type === "AIRCRAFT_DESTROYED")).toBe(true);
     expect(state.currentMission!.events.at(-1)?.data.reason).toBe("AIRCRAFT_DESTROYED");
 
     state = gameReducer(state, { type: "RETURN_CAMPAIGN" });
+    expect(state.status).toBe("ACTIVE");
+    expect(state.campaign.nodes.find((node) => node.id === "C0-0")?.status).toBe("FAILED");
+    expect(state.campaign.nodes.find((node) => node.id === "C0-1")?.status).toBe("AVAILABLE");
     expect(state.campaign.nodes.filter((node) => node.layer === 1)
       .every((node) => node.status === "LOCKED")).toBe(true);
-    expect(state.campaign.nodes.some((node) => node.status === "AVAILABLE")).toBe(false);
   });
 });

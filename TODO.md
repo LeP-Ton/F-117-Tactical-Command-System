@@ -115,7 +115,7 @@
 - [x] 将 `STRIKE/DEEP_STRIKE` 合并为 `STRIKE`。
 - [x] Campaign 改为三个顺序二选一阶段与 Final Strike。
 - [x] 只有摧毁目标并成功撤离后，同层另一节点才进入 `EXPIRED`，再解锁下一阶段。
-- [x] 普通任务失败不推进 Campaign，只增加 Enemy Alert 并保留当前层供重试或改选；飞机被摧毁立即结束 Run。
+- [x] 所有任务失败都不推进 Campaign，当前节点显示为可重试的 `FAILED`，同层备选保持 `AVAILABLE`，并增加 Enemy Alert；飞机被摧毁只结束当前 Mission，不结束 Run。
 
 ### 已完成：第三批合并同构机制
 

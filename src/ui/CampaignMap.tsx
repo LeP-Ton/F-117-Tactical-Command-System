@@ -19,16 +19,18 @@ const typeLabels = {
 
 export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
   const firstAvailable = state.campaign.nodes.find((node) => node.status === "AVAILABLE");
-  const [selectedId, setSelectedId] = useState(firstAvailable?.id ?? state.campaign.nodes[0]?.id ?? "");
+  const [selectedId, setSelectedId] = useState(
+    state.campaign.currentNodeId ?? firstAvailable?.id ?? state.campaign.nodes[0]?.id ?? "",
+  );
   const selected = useMemo(
     () => state.campaign.nodes.find((node) => node.id === selectedId) ?? firstAvailable,
     [firstAvailable, selectedId, state.campaign.nodes],
   );
   const adaptationLevel = getAdaptationLevel(state.enemyState.tacticalProfile);
   const hasAvailableNode = state.campaign.nodes.some((node) => node.status === "AVAILABLE");
-  // 热更新可能保留旧版产生的矛盾状态；成功 Mission + 可用后续节点应视为可继续的 Run。
-  const canContinueRun = state.status === "ACTIVE"
-    || (state.status === "DEFEAT" && state.currentMission?.status === "SUCCESS" && hasAvailableNode);
+  const canRetryFailedNode = selected?.status === "FAILED" && state.status !== "VICTORY";
+  // FAILED 表示上次执行结果，同时也是合法重试入口；AVAILABLE 节点仍可改选。
+  const canContinueRun = state.status === "ACTIVE" || hasAvailableNode || canRetryFailedNode;
 
   return (
     <section className="campaign-screen">
@@ -88,7 +90,7 @@ export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
             </div>}
             <button
               className="primary-button"
-              disabled={selected.status !== "AVAILABLE" || !canContinueRun}
+              disabled={(selected.status !== "AVAILABLE" && !canRetryFailedNode) || !canContinueRun}
               onClick={() => {
                 dispatch({ type: "SELECT_CAMPAIGN_NODE", nodeId: selected.id });
                 onLaunch();
