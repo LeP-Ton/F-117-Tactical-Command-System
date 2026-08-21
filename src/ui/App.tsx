@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useGameController } from "../game/useGameController";
 import { ControlPanel } from "./ControlPanel";
 import { TacticalMap } from "./TacticalMap";
@@ -10,6 +10,21 @@ import { CollapsibleSection } from "./CollapsibleSection";
 import { getAdaptationLevel } from "../domain/enemyAdaptation";
 import { getWeatherSpeedFactor } from "../domain/weatherSystem";
 import { radarTypeProfiles } from "../domain/radarTypes";
+import { MapElementPanel } from "./MapElementPanel";
+import type { MapElementSelection } from "./mapSelection";
+
+const workspaceViewStorageKey = "f117-tactical-command-system:view:v1";
+
+function loadCampaignView(missionStatus: string | undefined): boolean {
+  try {
+    const savedView = localStorage.getItem(workspaceViewStorageKey);
+    if (savedView === "TACTICAL") return false;
+    if (savedView === "CAMPAIGN") return true;
+  } catch {
+    // 浏览器禁用存储时仍允许游戏正常启动。
+  }
+  return missionStatus === "PLANNING";
+}
 
 const eventLabels: Record<string, string> = {
   WAYPOINT_ADDED: "新增航点",
@@ -63,9 +78,18 @@ export function App() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [showBelief, setShowBelief] = useState(false);
   const [seedInput, setSeedInput] = useState(state.seed);
-  const [campaignView, setCampaignView] = useState(true);
+  const [campaignView, setCampaignView] = useState(() => loadCampaignView(state.currentMission?.status));
+  const [mapSelection, setMapSelection] = useState<MapElementSelection | null>(null);
   const mission = state.currentMission;
   const { muted, volume, setMuted, setVolume } = useGameAudio(mission);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(workspaceViewStorageKey, campaignView ? "CAMPAIGN" : "TACTICAL");
+    } catch {
+      // 视图偏好保存失败不影响任务进度自动保存。
+    }
+  }, [campaignView]);
 
   if (!mission) return <main className="fatal-state">任务会话初始化失败</main>;
 
@@ -143,6 +167,7 @@ export function App() {
             selectedIndex={selectedIndex}
             onSelect={setSelectedIndex}
             dispatch={dispatch}
+            mapSelection={mapSelection}
           />
           <div className="map-legend">
             <span><i className="legend-aircraft" />F-117</span>
@@ -152,9 +177,16 @@ export function App() {
           </div>
         </section>
         <aside className="telemetry-panel">
+          <MapElementPanel
+            mission={mission}
+            showBelief={showBelief}
+            selection={mapSelection}
+            onSelectionChange={setMapSelection}
+          />
           <CollapsibleSection title="FLIGHT TELEMETRY">
             <dl className="telemetry-grid">
               <div><dt>任务 Seed</dt><dd>{mission.seed}</dd></div>
+              <div><dt>任务存档</dt><dd>本地自动保存</dd></div>
               <div><dt>情报精度</dt><dd>{(mission.intelAccuracy * 100).toFixed(0)}%</dd></div>
               <div><dt>生成规模</dt><dd>T{terrainCount} / R{mission.radars.length} / W{weatherCount}</dd></div>
               {showBelief && <div><dt>指挥链效率</dt><dd>{(mission.commanderCoordinationModifier * 100).toFixed(0)}%</dd></div>}

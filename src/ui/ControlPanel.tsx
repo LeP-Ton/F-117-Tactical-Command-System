@@ -23,7 +23,7 @@ const statusLabels = {
 
 export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpenCampaign, onReturnCampaign }: ControlPanelProps) {
   const editable = mission.status === "PLANNING" || mission.status === "PAUSED";
-  const selectedEditable = selectedIndex !== null && canEditWaypoint(mission.route, selectedIndex);
+  const selectedEditable = editable && selectedIndex !== null && canEditWaypoint(mission.route, selectedIndex);
   const targetDistance = distanceBetween(mission.aircraft.position, mission.target.position);
 
   return (

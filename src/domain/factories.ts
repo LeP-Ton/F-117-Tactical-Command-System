@@ -77,6 +77,15 @@ export function createRun(seed: string = gameConfig.initialSeed): RunState {
 
 let eventSequence = 0;
 
+/** 恢复存档后同步事件序号，避免新事件与存档中的事件 ID 冲突。 */
+export function syncEventSequenceFromRun(state: RunState): void {
+  const maximum = state.currentMission?.events.reduce((current, event) => {
+    const sequence = Number(event.id.match(/-(\d+)$/)?.[1] ?? 0);
+    return Math.max(current, sequence);
+  }, 0) ?? 0;
+  eventSequence = Math.max(eventSequence, maximum);
+}
+
 export function createGameEvent(
   mission: MissionSession,
   type: GameEventType,

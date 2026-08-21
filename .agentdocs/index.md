@@ -1,6 +1,7 @@
 # 项目文档索引
 
 ## 当前变更文档
+`workflow/20260821095356-map-panel-progress-save-and-pages.md` - 会话-64：增加可点击定位的完整地图元素面板、飞行中航点按钮禁用、本地任务/战役自动存档与安全恢复，并配置 GitHub Pages 自动发布；核对地图图例交互、刷新恢复或在线部署时读取。
 `workflow/20260821093646-show-failed-node-and-allow-retry.md` - 会话-63：失败后当前节点显示 FAILED 但仍可重新执行，同层备选保持 AVAILABLE、下一层锁定，并默认选中刚失败节点；核对失败状态展示或重试入口时读取。
 `workflow/20260821092211-allow-retry-after-aircraft-loss.md` - 会话-62：将飞机损失改为只结束当前 Mission，返回 Campaign 后可重试或改选，并兼容旧 FAILED+DEFEAT 状态；核对导弹命中结算或失败重玩时读取。本规则取代会话-51的“飞机损失终止 Run”。
 `workflow/20260821090609-style-contacts-by-radar-type.md` - 会话-60：让 Contact 估算圈按雷达类型使用浅金黄/浅橙/浅红并减半线宽，保持 CMD 强红色不变；核对 AI DEBUG Contact 来源辨识或视觉层级时读取。
@@ -81,4 +82,7 @@
 - F-117 满油航程为 `2000 u`，按真实累计飞行距离消耗；燃油耗尽会停止飞机并令当前任务失败。
 - Weather Cell 会令飞机减速 10%–30%，多个天气重叠时只取最强效果；天气延长暴露时间但不额外增加单位距离油耗。
 - 连续 Contact 会累积跟踪并触发导弹；切断新证据可以脱锁，导弹命中会摧毁飞机并结束当前 Mission，但不会结束 Run。
+- Run、Campaign、Mission 与当前工作区视图保存在浏览器本地；运行中的存档刷新后以暂停状态恢复。
+- 右侧 `MAP ELEMENTS` 可说明并高亮地图元素，普通模式下雷达定位仍严格使用有限情报。
+- `main` 分支通过 GitHub Actions 自动发布 GitHub Pages 在线版本。
 - 检索时先读取本索引，再按需读取具体 workflow 文档。

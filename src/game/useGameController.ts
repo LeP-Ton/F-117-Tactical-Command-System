@@ -2,11 +2,27 @@ import { useEffect, useReducer, useRef } from "react";
 import { gameConfig } from "../config/gameConfig";
 import { createRun } from "../domain/factories";
 import { gameReducer } from "./gameReducer";
+import { loadRunProgress, saveRunProgress } from "./gamePersistence";
 
 export function useGameController() {
-  const [state, dispatch] = useReducer(gameReducer, undefined, () => createRun());
+  const [state, dispatch] = useReducer(gameReducer, undefined, () => loadRunProgress() ?? createRun());
   const lastFrame = useRef<number | null>(null);
+  const stateRef = useRef(state);
   const mission = state.currentMission;
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  useEffect(() => {
+    const saveBeforeUnload = () => saveRunProgress(stateRef.current);
+    const saveInterval = window.setInterval(() => saveRunProgress(stateRef.current), 1000);
+    window.addEventListener("beforeunload", saveBeforeUnload);
+    return () => {
+      window.clearInterval(saveInterval);
+      window.removeEventListener("beforeunload", saveBeforeUnload);
+    };
+  }, []);
 
   useEffect(() => {
     if (mission?.status !== "RUNNING") {

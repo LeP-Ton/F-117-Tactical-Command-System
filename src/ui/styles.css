@@ -94,6 +94,13 @@ button:disabled { opacity: 0.32; cursor: not-allowed; }
 .legend-radar { border: 1px solid #df7659; border-radius: 50%; }
 
 .telemetry-grid { margin: 15px 0 0; }
+.map-element-list { display: grid; gap: 6px; }
+.map-element-row { width: 100%; padding: 8px 9px; display: block; text-align: left; border-color: #1d4036; background: rgba(27, 64, 53, 0.12); }
+.map-element-row strong, .map-element-row span { display: block; }
+.map-element-row strong { color: #b7d2c9; font-size: 10px; font-weight: 500; }
+.map-element-row span { margin-top: 4px; color: #587f73; font-size: 8px; line-height: 1.45; }
+.map-element-row.selected { border-color: #d6a644; background: rgba(155, 108, 28, 0.18); box-shadow: inset 2px 0 #e7b650; }
+.map-element-row.selected strong { color: #f0c568; }
 .telemetry-grid div { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px dotted #1d3d33; }
 .telemetry-grid dt { color: #5e8176; font-size: 10px; }
 .telemetry-grid dd { margin: 0; color: #d4e6e0; font-size: 11px; }

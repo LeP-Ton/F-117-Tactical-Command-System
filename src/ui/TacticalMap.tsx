@@ -6,6 +6,7 @@ import type { MissionSession, RadarType, Vector2 } from "../domain/types";
 import type { GameAction } from "../game/gameReducer";
 import f117TopSilhouette from "../assets/f117-top-silhouette.png";
 import { radarTypeProfiles } from "../domain/radarTypes";
+import type { MapElementSelection } from "./mapSelection";
 
 interface TacticalMapProps {
   mission: MissionSession;
@@ -13,6 +14,7 @@ interface TacticalMapProps {
   selectedIndex: number | null;
   onSelect: (index: number | null) => void;
   dispatch: (action: GameAction) => void;
+  mapSelection: MapElementSelection | null;
 }
 
 interface CanvasMetrics {
@@ -74,7 +76,7 @@ function drawAircraft(
   context.restore();
 }
 
-export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, dispatch }: TacticalMapProps) {
+export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, dispatch, mapSelection }: TacticalMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const editable = mission.status === "PLANNING" || mission.status === "PAUSED";
@@ -322,6 +324,40 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
       });
 
       drawAircraft(context, aircraftImage, mission.aircraft.position, mission.aircraft.headingDegrees);
+
+      if (mapSelection) {
+        context.save();
+        context.strokeStyle = "rgba(255, 214, 104, 0.95)";
+        context.lineWidth = 3 / metrics.scale;
+        context.setLineDash([8 / metrics.scale, 5 / metrics.scale]);
+        context.shadowColor = "rgba(255, 196, 64, 0.75)";
+        context.shadowBlur = 14 / metrics.scale;
+        context.beginPath();
+        if (mapSelection.kind === "AIRCRAFT") {
+          context.arc(mission.aircraft.position.x, mission.aircraft.position.y, 34, 0, Math.PI * 2);
+        } else if (mapSelection.kind === "TARGET") {
+          context.arc(mission.target.position.x, mission.target.position.y, mission.target.attackRadius + 12, 0, Math.PI * 2);
+        } else if (mapSelection.kind === "EXTRACTION") {
+          const area = mission.extractionArea;
+          context.rect(area.x - 8, area.y - 8, area.width + 16, area.height + 16);
+        } else if (mapSelection.kind === "WAYPOINT") {
+          const waypoint = mission.route.waypoints.find((item) => item.id === mapSelection.id);
+          if (waypoint) context.arc(waypoint.position.x, waypoint.position.y, 22, 0, Math.PI * 2);
+        } else if (mapSelection.kind === "TERRAIN") {
+          const terrain = mission.terrain.find((item) => item.id === mapSelection.id);
+          if (terrain) context.rect(terrain.x - 8, terrain.y - 8, terrain.width + 16, terrain.height + 16);
+        } else if (mapSelection.kind === "WEATHER") {
+          const weather = mission.weather.find((item) => item.id === mapSelection.id);
+          if (weather) context.rect(weather.x - 8, weather.y - 8, weather.width + 16, weather.height + 16);
+        } else {
+          const radarPosition = showBelief
+            ? mission.radars.find((radar) => radar.id === mapSelection.id)?.position
+            : mission.radarIntel.find((radar) => radar.radarId === mapSelection.id)?.estimatedPosition;
+          if (radarPosition) context.arc(radarPosition.x, radarPosition.y, 24, 0, Math.PI * 2);
+        }
+        context.stroke();
+        context.restore();
+      }
       context.restore();
     };
 
@@ -333,7 +369,7 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
       aircraftImage.removeEventListener("load", render);
       observer.disconnect();
     };
-  }, [mission, selectedIndex, showBelief]);
+  }, [mission, selectedIndex, showBelief, mapSelection]);
 
   const findWaypointIndex = (position: Vector2): number => {
     const canvas = canvasRef.current;

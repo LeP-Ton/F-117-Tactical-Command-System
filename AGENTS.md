@@ -33,6 +33,9 @@
 - Intel 行动的情报加成会提高后续任务的雷达发现率，并缩小位置与覆盖估计误差。
 - 战役只保留一个有效情报资源“情报质量”（代码字段 `intelAccuracyBonus`）；不再维护无用途的独立 Intel 点数。
 - 任务事件最多保留最近 200 条并按事件 ID 驱动音频；结构化事件与敌方内部评分只在 AI DEBUG 中显示。
+- Run、Campaign 与当前 Mission 每秒自动保存到浏览器 `localStorage`；刷新时恢复完整状态，飞行中的 Mission 安全转为暂停，并恢复离开前的 Campaign/战术视图。
+- 右侧 `MAP ELEMENTS` 解释并定位飞机、目标、撤离区、航点、地形、动态天气和玩家已知雷达；普通视图不得借此泄露真实雷达位置。
+- `main` 分支通过 GitHub Actions 构建并部署到 GitHub Pages，Vite 使用相对资源基址兼容仓库子路径。
 
 ## 运行方式
 - 安装依赖：`npm install`。
