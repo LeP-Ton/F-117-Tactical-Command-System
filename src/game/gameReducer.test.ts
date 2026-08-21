@@ -232,15 +232,16 @@ describe("gameReducer", () => {
     expect(state.campaign.nodes.filter((node) => node.layer === 1).every((node) => node.status === "AVAILABLE")).toBe(true);
   });
 
-  it("失败不会结束 Run，但会提高 Enemy Alert", () => {
+  it("普通失败不推进 Campaign，保留当前层选择并提高 Enemy Alert", () => {
     let state = createRun("CAMPAIGN-FAILURE");
     state = { ...state, currentMission: { ...state.currentMission!, status: "FAILED" } };
     state = gameReducer(state, { type: "RETURN_CAMPAIGN" });
     expect(state.status).toBe("ACTIVE");
     expect(state.resources.enemyAlert).toBe(10);
-    expect(state.campaign.nodes.find((node) => node.id === "C0-0")?.status).toBe("FAILED");
-    expect(state.campaign.nodes.find((node) => node.id === "C0-1")?.status).toBe("EXPIRED");
-    expect(state.campaign.nodes.filter((node) => node.layer === 1).every((node) => node.status === "AVAILABLE")).toBe(true);
+    expect(state.campaign.nodes.filter((node) => node.layer === 0)
+      .every((node) => node.status === "AVAILABLE")).toBe(true);
+    expect(state.campaign.nodes.filter((node) => node.layer === 1)
+      .every((node) => node.status === "LOCKED")).toBe(true);
   });
 
   it("SEAD 成功会永久降低后续任务雷达覆盖", () => {

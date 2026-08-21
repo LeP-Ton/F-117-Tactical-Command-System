@@ -114,8 +114,8 @@
 - [x] 将 `RECON/ELINT` 合并为 `INTEL`。
 - [x] 将 `STRIKE/DEEP_STRIKE` 合并为 `STRIKE`。
 - [x] Campaign 改为三个顺序二选一阶段与 Final Strike。
-- [x] 执行节点后同层另一节点进入 `EXPIRED`，再解锁下一阶段。
-- [x] 普通任务失败仍推进并增加 Enemy Alert；飞机被摧毁仍立即结束 Run。
+- [x] 只有摧毁目标并成功撤离后，同层另一节点才进入 `EXPIRED`，再解锁下一阶段。
+- [x] 普通任务失败不推进 Campaign，只增加 Enemy Alert 并保留当前层供重试或改选；飞机被摧毁立即结束 Run。
 
 ### 已完成：第三批合并同构机制
 

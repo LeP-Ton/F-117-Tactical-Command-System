@@ -1,6 +1,7 @@
 # 项目文档索引
 
 ## 当前变更文档
+`workflow/20260821085204-require-success-to-advance-campaign.md` - 会话-57：统一 Mission 与 Campaign 成功口径，只有摧毁目标并撤离才推进；普通失败只增加 Enemy Alert 并保留当前层供重试或改选。核对失败结算或节点解锁规则时读取。
 `workflow/20260821082517-heal-stale-defeat-on-campaign-screen.md` - 会话-55：根据截图修复已停留 Campaign 页面时 C1-0 COMPLETED、C2 AVAILABLE 仍错显 Run 结束的问题，并在选择 C2 时自愈旧状态；排查热更新残留状态或按钮错误禁用时读取。
 `workflow/20260821081745-recover-active-run-after-sead-success.md` - 会话-54：修复 C1-0 SEAD 已完成后因陈旧 DEFEAT 导致 C2 错显“飞机损失”的问题；核对成功任务结算、Run 状态不变量或 C2 无法执行时读取。
 `workflow/20260821080659-stop-campaign-after-aircraft-loss.md` - 会话-51：修复飞机损失导致 Run DEFEAT 后仍按普通失败解锁下一层的问题；排查 Campaign 终止状态、后续节点误解锁或 SEAD 后显示 Run 结束时读取。
@@ -66,7 +67,7 @@
 - Commander 只读取 Awareness、Belief 与雷达状态，通过 Utility 偏置协调各 Radar Operator；投弹只提高警戒，不提供目标区定位，网络静默仍已移除。
 - 单 Mission 已形成 Plan → Infiltrate → Strike → High-alert Extraction → Result 闭环。
 - Mission 的静态地形、动态天气初始参数与演化、天气预报、雷达、目标和情报精度均由 Seed 确定生成；相同任务时间可复现相同真实天气。
-- Campaign 固定为三个顺序二选一阶段与 Final Strike；选择后同层节点失效，普通失败仍推进并增加 Enemy Alert。
+- Campaign 固定为三个顺序二选一阶段与 Final Strike；只有摧毁目标并成功撤离才推进并关闭同层选择，普通失败只增加 Enemy Alert 并保留当前层供重试或改选。
 - Tactical Reward 与 Player Build 已完整移除，成功任务直接返回 Campaign。
 - 当前 Roguelike 差异集中在程序生成地图、雷达网络、天气与 Campaign 防空构建。
 - Intel、SEAD、Command Strike 与 Enemy Alert 会分别修改后续任务的情报精度、雷达覆盖或 Commander 协调。

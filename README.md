@@ -33,7 +33,7 @@ F-117 满油拥有 `2000 u` 可用航程，等于当前地图两条边的总长�
 
 顶部 `RUN SEED` 可以输入任意字符串并生成任务。相同 Seed 会复现 Terrain、Weather 演化、Radar Network、Target 与 Intel Accuracy；相同任务时间对应相同天气状态。
 
-每个 Run 包含三个顺序二选一阶段和一个 Final Strike。执行节点后同层另一选择会失效，再解锁下一阶段；普通任务失败仍会推进，但会显著提高 Enemy Alert。
+每个 Run 包含三个顺序二选一阶段和一个 Final Strike。只有摧毁目标并成功撤离，当前节点才会完成、同层另一选择才会失效并解锁下一阶段；普通任务失败只会显著提高 Enemy Alert，当前层仍可重试或改选。
 
 成功完成任务后直接返回 Campaign Map，不存在 Tactical Reward 或 Player Build 流程。
 

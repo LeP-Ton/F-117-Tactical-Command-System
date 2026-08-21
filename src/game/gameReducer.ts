@@ -125,14 +125,22 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
       const runDefeated = !succeeded && state.status === "DEFEAT";
       const nextLayer = currentNode.layer + 1;
       const nodes = state.campaign.nodes.map((node) => {
-        if (node.id === currentNode.id) return { ...node, status: succeeded ? "COMPLETED" as const : "FAILED" as const };
-        if (node.layer === currentNode.layer && node.status === "AVAILABLE") {
-          return { ...node, status: "EXPIRED" as const };
+        if (succeeded) {
+          if (node.id === currentNode.id) return { ...node, status: "COMPLETED" as const };
+          if (node.layer === currentNode.layer && node.status === "AVAILABLE") {
+            return { ...node, status: "EXPIRED" as const };
+          }
+          if (node.layer === nextLayer && node.status === "LOCKED") {
+            return { ...node, status: "AVAILABLE" as const };
+          }
         }
-        // 普通任务失败仍推进战役；飞机已损失时 Run 终止，后续节点必须保持锁定。
-        if (!runDefeated && node.layer === nextLayer && node.status === "LOCKED") {
-          return { ...node, status: "AVAILABLE" as const };
+        if (runDefeated) {
+          if (node.id === currentNode.id) return { ...node, status: "FAILED" as const };
+          if (node.layer === currentNode.layer && node.status === "AVAILABLE") {
+            return { ...node, status: "EXPIRED" as const };
+          }
         }
+        // 普通失败不推进 Campaign：当前节点与同层备选均保持 AVAILABLE，可重试或改选。
         return node;
       });
       const alertDelta = succeeded && currentNode.type === "SEAD" ? -8 : succeeded ? 2 : 10;

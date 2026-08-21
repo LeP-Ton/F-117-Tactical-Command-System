@@ -24,7 +24,7 @@
 - 所有初始、适应性和 Final Strike 雷达部署最终统一执行撤离区净空约束：雷达中心不得进入撤离区周围 80 u，探测范围仍可覆盖撤离区。
 - 玩家在规划阶段获得带位置与尺度误差的 `T+30/60/90s` 天气预报；预报只提供有限情报，不能泄露未来真实天气状态。
 - Weather Cell 会降低飞机有效速度：Cloud 10%、Fog 15%、Rain 20%、Storm 30%；重叠时取最强减速，不进行连乘，燃油仍按实际飞行距离消耗。
-- Campaign 固定为三个顺序二选一阶段与 Final Strike；执行节点后同层另一选择失效，普通失败仍推进并提高 Enemy Alert。
+- Campaign 固定为三个顺序二选一阶段与 Final Strike；只有摧毁目标并成功撤离才完成节点、关闭同层选择并解锁下一阶段，普通失败只提高 Enemy Alert 并保留当前层供重试或改选。
 - Tactical Reward 与 Player Build 已完整移除；当前核心玩法差异来自动态航线、程序生成雷达/地形/天气、敌方 Belief 与 Commander 行为。
 - 持久战役效果包括：Intel 行动提高后续 Intel Accuracy，SEAD 降低 Radar Coverage，Command Strike 降低 Commander Coordination，Enemy Alert 提高未来 Radar Coverage。
 - Enemy Adaptation 只分析按实际位移采样的已飞轨迹，形成地形利用、南北航路和直达倾向画像；雷达按空间距离选择反制部署对象，禁止读取未来计划航点。
