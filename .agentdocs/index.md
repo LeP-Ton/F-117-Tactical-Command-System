@@ -1,6 +1,7 @@
 # 项目文档索引
 
 ## 当前变更文档
+`workflow/20260821090609-style-contacts-by-radar-type.md` - 会话-60：让 Contact 估算圈按雷达类型使用浅金黄/浅橙/浅红并减半线宽，保持 CMD 强红色不变；核对 AI DEBUG Contact 来源辨识或视觉层级时读取。
 `workflow/20260821085204-require-success-to-advance-campaign.md` - 会话-57：统一 Mission 与 Campaign 成功口径，只有摧毁目标并撤离才推进；普通失败只增加 Enemy Alert 并保留当前层供重试或改选。核对失败结算或节点解锁规则时读取。
 `workflow/20260821082517-heal-stale-defeat-on-campaign-screen.md` - 会话-55：根据截图修复已停留 Campaign 页面时 C1-0 COMPLETED、C2 AVAILABLE 仍错显 Run 结束的问题，并在选择 C2 时自愈旧状态；排查热更新残留状态或按钮错误禁用时读取。
 `workflow/20260821081745-recover-active-run-after-sead-success.md` - 会话-54：修复 C1-0 SEAD 已完成后因陈旧 DEFEAT 导致 C2 错显“飞机损失”的问题；核对成功任务结算、Run 状态不变量或 C2 无法执行时读取。

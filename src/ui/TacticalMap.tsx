@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 import { gameConfig } from "../config/gameConfig";
 import { getBeliefHeatmapOpacityScale, getBeliefPeak } from "../domain/beliefMap";
 import { canEditWaypoint } from "../domain/route";
-import type { MissionSession, Vector2 } from "../domain/types";
+import type { MissionSession, RadarType, Vector2 } from "../domain/types";
 import type { GameAction } from "../game/gameReducer";
 import f117TopSilhouette from "../assets/f117-top-silhouette.png";
 import { radarTypeProfiles } from "../domain/radarTypes";
@@ -22,6 +22,12 @@ interface CanvasMetrics {
   offsetX: number;
   offsetY: number;
 }
+
+const radarContactColors: Record<RadarType, { stroke: string; fill: string }> = {
+  EARLY_WARNING: { stroke: "rgba(224, 176, 72, 0.36)", fill: "rgba(224, 176, 72, 0.035)" },
+  ACQUISITION: { stroke: "rgba(224, 112, 78, 0.36)", fill: "rgba(224, 112, 78, 0.035)" },
+  FIRE_CONTROL: { stroke: "rgba(229, 74, 62, 0.4)", fill: "rgba(229, 74, 62, 0.04)" },
+};
 
 function getMetrics(canvas: HTMLCanvasElement): CanvasMetrics {
   const width = canvas.clientWidth;
@@ -257,12 +263,14 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
       });
 
       if (showBelief) mission.radarContacts.forEach((contact) => {
+        const radarType = mission.radars.find((radar) => radar.id === contact.radarId)?.type ?? "EARLY_WARNING";
+        const contactColor = radarContactColors[radarType];
         context.beginPath();
         context.arc(contact.estimatedPosition.x, contact.estimatedPosition.y, contact.errorRadius, 0, Math.PI * 2);
-        context.fillStyle = "rgba(242, 189, 74, 0.08)";
+        context.fillStyle = contactColor.fill;
         context.fill();
-        context.strokeStyle = "rgba(242, 189, 74, 0.65)";
-        context.lineWidth = 2 / metrics.scale;
+        context.strokeStyle = contactColor.stroke;
+        context.lineWidth = 1 / metrics.scale;
         context.stroke();
         context.beginPath();
         context.moveTo(contact.estimatedPosition.x - 8, contact.estimatedPosition.y);
