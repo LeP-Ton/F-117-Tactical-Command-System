@@ -263,6 +263,51 @@ describe("gameReducer", () => {
       ) + state.currentMission!.target.attackRadius <= radar.range - 20 + 0.000001)).toBe(true);
   });
 
+  it("C1-0 SEAD 已完成时清除陈旧 DEFEAT 并允许执行 C2", () => {
+    let state = createRun("SEAD-STALE-DEFEAT");
+    state = {
+      ...state,
+      status: "DEFEAT",
+      campaign: {
+        ...state.campaign,
+        currentNodeId: "C1-0",
+        nodes: state.campaign.nodes.map((node) => node.id === "C1-0"
+          ? { ...node, status: "AVAILABLE" }
+          : node),
+      },
+      currentMission: { ...state.currentMission!, status: "SUCCESS" },
+    };
+
+    state = gameReducer(state, { type: "RETURN_CAMPAIGN" });
+
+    expect(state.campaign.nodes.find((node) => node.id === "C1-0")?.status).toBe("COMPLETED");
+    expect(state.status).toBe("ACTIVE");
+    expect(state.campaign.nodes.filter((node) => node.layer === 2)
+      .every((node) => node.status === "AVAILABLE")).toBe(true);
+  });
+
+  it("已停留在 Campaign 的旧状态选择 C2 时自愈陈旧 DEFEAT", () => {
+    let state = createRun("SEAD-HOT-STATE");
+    state = {
+      ...state,
+      status: "DEFEAT",
+      campaign: {
+        ...state.campaign,
+        currentNodeId: undefined,
+        nodes: state.campaign.nodes.map((node) => node.id === "C1-0"
+          ? { ...node, status: "COMPLETED" }
+          : node.layer === 2 ? { ...node, status: "AVAILABLE" } : node),
+      },
+      currentMission: { ...state.currentMission!, status: "SUCCESS" },
+    };
+
+    state = gameReducer(state, { type: "SELECT_CAMPAIGN_NODE", nodeId: "C2-0" });
+
+    expect(state.status).toBe("ACTIVE");
+    expect(state.campaign.currentNodeId).toBe("C2-0");
+    expect(state.currentMission?.status).toBe("PLANNING");
+  });
+
   it("INTEL 会提高后续任务情报精度", () => {
     let state = createRun("INTEL-EFFECT");
     state = { ...state, currentMission: { ...state.currentMission!, status: "SUCCESS" } };
@@ -386,5 +431,10 @@ describe("gameReducer", () => {
     expect(state.currentMission!.status).toBe("FAILED");
     expect(state.currentMission!.events.some((event) => event.type === "AIRCRAFT_DESTROYED")).toBe(true);
     expect(state.currentMission!.events.at(-1)?.data.reason).toBe("AIRCRAFT_DESTROYED");
+
+    state = gameReducer(state, { type: "RETURN_CAMPAIGN" });
+    expect(state.campaign.nodes.filter((node) => node.layer === 1)
+      .every((node) => node.status === "LOCKED")).toBe(true);
+    expect(state.campaign.nodes.some((node) => node.status === "AVAILABLE")).toBe(false);
   });
 });

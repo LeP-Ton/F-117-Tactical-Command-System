@@ -73,6 +73,8 @@ export const gameConfig = {
     attackRadius: 58,
     attackAwarenessGain: 34,
     extractionArea: { x: 850, y: 30, width: 120, height: 120 },
+    /** 雷达中心与撤离区边界的最小部署间距；探测范围仍可覆盖撤离区。 */
+    extractionRadarClearance: 80,
   },
   initialSeed: "ZERO-RETURN-001",
 } as const;

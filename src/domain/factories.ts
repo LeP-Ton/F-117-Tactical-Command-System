@@ -8,6 +8,7 @@ import { createPlayerTacticalProfile } from "./enemyAdaptation";
 import { createEngagementState } from "./engagementSystem";
 import { advanceWeather } from "./weatherSystem";
 import { ensureTargetFireControlCoverage } from "./targetDefense";
+import { enforceExtractionRadarClearance } from "./radarDeployment";
 import type { GameEvent, GameEventType, MissionSession, RunState } from "./types";
 
 export function createMission(seed: string): MissionSession {
@@ -18,7 +19,11 @@ export function createMission(seed: string): MissionSession {
     attackRadius: gameConfig.mission.attackRadius,
     destroyed: false,
   };
-  const radars = ensureTargetFireControlCoverage(generated.radars, target);
+  const radars = ensureTargetFireControlCoverage(
+    enforceExtractionRadarClearance(generated.radars, gameConfig.mission.extractionArea),
+    target,
+    gameConfig.mission.extractionArea,
+  );
   return {
     id: `mission-${seed}`,
     seed: `${seed}-M01`,

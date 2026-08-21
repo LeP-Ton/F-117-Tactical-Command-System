@@ -13,6 +13,7 @@ import { applyFinalStrikeDefense } from "../domain/finalStrike";
 import { advanceEngagement } from "../domain/engagementSystem";
 import { advanceWeather, getWeatherSpeedFactor } from "../domain/weatherSystem";
 import { ensureTargetFireControlCoverage } from "../domain/targetDefense";
+import { enforceExtractionRadarClearance } from "../domain/radarDeployment";
 import {
   addWaypoint,
   moveWaypoint,
@@ -82,7 +83,11 @@ function prepareCampaignMission(state: RunState, node: CampaignNode): MissionSes
       tacticalProfile: state.enemyState.tacticalProfile,
     })
     : adaptedMission;
-  const radars = ensureTargetFireControlCoverage(finalMission.radars, finalMission.target);
+  const radars = ensureTargetFireControlCoverage(
+    enforceExtractionRadarClearance(finalMission.radars, finalMission.extractionArea),
+    finalMission.target,
+    finalMission.extractionArea,
+  );
 
   return {
     ...finalMission,
@@ -105,6 +110,8 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
       if (!node || node.status !== "AVAILABLE") return state;
       return {
         ...state,
+        // AVAILABLE 节点来自已成功结算的 Campaign 时，选择节点同时清理旧版残留的 DEFEAT。
+        status: state.status === "DEFEAT" && mission.status === "SUCCESS" ? "ACTIVE" : state.status,
         campaign: { ...state.campaign, currentNodeId: node.id },
         currentMission: prepareCampaignMission(state, node),
       };
@@ -114,20 +121,29 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
       const currentNode = state.campaign.nodes.find((node) => node.id === state.campaign.currentNodeId);
       if (!currentNode) return state;
       const succeeded = mission.status === "SUCCESS";
+      // 成功 Mission 不可能同时损失飞机；仅失败 Mission 才允许 DEFEAT 阻断后续层。
+      const runDefeated = !succeeded && state.status === "DEFEAT";
       const nextLayer = currentNode.layer + 1;
       const nodes = state.campaign.nodes.map((node) => {
         if (node.id === currentNode.id) return { ...node, status: succeeded ? "COMPLETED" as const : "FAILED" as const };
         if (node.layer === currentNode.layer && node.status === "AVAILABLE") {
           return { ...node, status: "EXPIRED" as const };
         }
-        if (node.layer === nextLayer && node.status === "LOCKED") return { ...node, status: "AVAILABLE" as const };
+        // 普通任务失败仍推进战役；飞机已损失时 Run 终止，后续节点必须保持锁定。
+        if (!runDefeated && node.layer === nextLayer && node.status === "LOCKED") {
+          return { ...node, status: "AVAILABLE" as const };
+        }
         return node;
       });
       const alertDelta = succeeded && currentNode.type === "SEAD" ? -8 : succeeded ? 2 : 10;
       const tacticalProfile = analyzeCompletedMission(state.enemyState.tacticalProfile, mission);
+      // Mission 成功意味着飞机已安全撤离；非最终节点必须恢复 ACTIVE，不能继承陈旧的 DEFEAT。
+      const runStatus = succeeded
+        ? currentNode.type === "FINAL_STRIKE" ? "VICTORY" as const : "ACTIVE" as const
+        : state.status;
       return {
         ...state,
-        status: succeeded && currentNode.type === "FINAL_STRIKE" ? "VICTORY" : state.status,
+        status: runStatus,
         campaign: { ...state.campaign, nodes, currentNodeId: undefined },
         resources: {
           ...state.resources,

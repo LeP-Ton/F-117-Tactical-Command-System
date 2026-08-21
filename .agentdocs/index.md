@@ -1,6 +1,10 @@
 # 项目文档索引
 
 ## 当前变更文档
+`workflow/20260821082517-heal-stale-defeat-on-campaign-screen.md` - 会话-55：根据截图修复已停留 Campaign 页面时 C1-0 COMPLETED、C2 AVAILABLE 仍错显 Run 结束的问题，并在选择 C2 时自愈旧状态；排查热更新残留状态或按钮错误禁用时读取。
+`workflow/20260821081745-recover-active-run-after-sead-success.md` - 会话-54：修复 C1-0 SEAD 已完成后因陈旧 DEFEAT 导致 C2 错显“飞机损失”的问题；核对成功任务结算、Run 状态不变量或 C2 无法执行时读取。
+`workflow/20260821080659-stop-campaign-after-aircraft-loss.md` - 会话-51：修复飞机损失导致 Run DEFEAT 后仍按普通失败解锁下一层的问题；排查 Campaign 终止状态、后续节点误解锁或 SEAD 后显示 Run 结束时读取。
+`workflow/20260821075929-enforce-extraction-radar-clearance.md` - 会话-49：禁止初始、适应性及 Final Strike 雷达中心进入撤离区周围 80 u，同时保留探测覆盖；核对撤离区公平性或雷达最终部署约束时读取。
 `workflow/20260821073449-fix-campaign-edge-alignment.md` - 会话-46：统一任务方块百分比定位与 SVG 连线的横纵缩放规则，修复大屏任务网络虚线脱节；排查 Campaign 响应式布局或节点连线对齐时读取。
 `workflow/20260820223709-ensure-target-fire-control-coverage.md` - 会话-43：保证至少一部 Fire Control 完整覆盖目标攻击区并保留 20 u 余量，且保护唯一目标区火控不被适应系统移位；核对目标防御、SEAD 后覆盖或雷达重部署时读取。
 `workflow/20260820214842-add-radar-types.md` - 会话-34：增加 Early Warning、Acquisition、Fire Control 三类真实雷达，差异接入覆盖、扫描、波束、Contact 精度和火控贡献；核对分层防空、雷达生成或类型平衡时读取。

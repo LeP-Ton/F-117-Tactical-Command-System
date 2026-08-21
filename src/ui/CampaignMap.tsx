@@ -25,6 +25,10 @@ export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
     [firstAvailable, selectedId, state.campaign.nodes],
   );
   const adaptationLevel = getAdaptationLevel(state.enemyState.tacticalProfile);
+  const hasAvailableNode = state.campaign.nodes.some((node) => node.status === "AVAILABLE");
+  // 热更新可能保留旧版产生的矛盾状态；成功 Mission + 可用后续节点应视为可继续的 Run。
+  const canContinueRun = state.status === "ACTIVE"
+    || (state.status === "DEFEAT" && state.currentMission?.status === "SUCCESS" && hasAvailableNode);
 
   return (
     <section className="campaign-screen">
@@ -84,13 +88,17 @@ export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
             </div>}
             <button
               className="primary-button"
-              disabled={selected.status !== "AVAILABLE" || state.status !== "ACTIVE"}
+              disabled={selected.status !== "AVAILABLE" || !canContinueRun}
               onClick={() => {
                 dispatch({ type: "SELECT_CAMPAIGN_NODE", nodeId: selected.id });
                 onLaunch();
               }}
             >
-              {state.status === "VICTORY" ? "RUN 已完成" : state.status === "DEFEAT" ? "飞机损失 // RUN 结束" : "执行任务"}
+              {state.status === "VICTORY"
+                ? "RUN 已完成"
+                : state.status === "DEFEAT" && !canContinueRun
+                  ? "飞机损失 // RUN 结束"
+                  : "执行任务"}
             </button>
           </>}
         </aside>
