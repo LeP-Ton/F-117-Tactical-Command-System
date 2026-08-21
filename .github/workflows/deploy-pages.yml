@@ -24,6 +24,9 @@ jobs:
           node-version: 20
           cache: npm
       - uses: actions/configure-pages@v5
+        with:
+          # 仓库首次部署时自动启用以 GitHub Actions 为来源的 Pages。
+          enablement: true
       - run: npm ci
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3

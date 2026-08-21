@@ -1,6 +1,7 @@
 # 项目文档索引
 
 ## 当前变更文档
+`workflow/20260821154914-enable-github-pages-on-first-deploy.md` - 会话-65：根据首次 Actions 失败日志，让工作流自动启用以 GitHub Actions 为来源的 Pages；排查 Pages 初次部署 404 或 `configure-pages` 失败时读取。
 `workflow/20260821095356-map-panel-progress-save-and-pages.md` - 会话-64：增加可点击定位的完整地图元素面板、飞行中航点按钮禁用、本地任务/战役自动存档与安全恢复，并配置 GitHub Pages 自动发布；核对地图图例交互、刷新恢复或在线部署时读取。
 `workflow/20260821093646-show-failed-node-and-allow-retry.md` - 会话-63：失败后当前节点显示 FAILED 但仍可重新执行，同层备选保持 AVAILABLE、下一层锁定，并默认选中刚失败节点；核对失败状态展示或重试入口时读取。
 `workflow/20260821092211-allow-retry-after-aircraft-loss.md` - 会话-62：将飞机损失改为只结束当前 Mission，返回 Campaign 后可重试或改选，并兼容旧 FAILED+DEFEAT 状态；核对导弹命中结算或失败重玩时读取。本规则取代会话-51的“飞机损失终止 Run”。
