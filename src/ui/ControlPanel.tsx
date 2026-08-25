@@ -103,7 +103,6 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
         </div>
         <div className="waypoint-list">
           {mission.route.waypoints.map((waypoint, index) => {
-            const canEdit = editable && canEditWaypoint(mission.route, index);
             return (
               <button
                 type="button"
@@ -118,7 +117,6 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
                 <span className={`waypoint-state state-${waypoint.status.toLowerCase()}`}>
                   {waypoint.status === "COMPLETED" ? "完成" : waypoint.status === "LOCKED" ? "锁定" : "待飞"}
                 </span>
-                {!canEdit && index !== 0 && <span className="lock-mark">◆</span>}
               </button>
             );
           })}
@@ -148,6 +146,25 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
           </button>
         </div>
         <p className="hint">点击地图添加航点，拖动航点调整位置。飞行中需先暂停才能重规划。</p>
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        className="weather-planning-section"
+        title="WEATHER FORECAST"
+        meta={`${mission.weather.length} CELLS`}
+        defaultExpanded={false}
+      >
+        <ol className="weather-forecast-list">
+          {mission.weatherForecast.map((forecast) => (
+            <li key={`${forecast.weatherId}-${forecast.horizonSeconds}`}>
+              <strong>{forecast.weatherId} / T+{forecast.horizonSeconds}s</strong>
+              <span>{forecast.kind} · {forecast.intensityTrend} · 可信度{forecast.confidence}</span>
+              <small>
+                预计区域 {forecast.estimatedPosition.x.toFixed(0)},{forecast.estimatedPosition.y.toFixed(0)} · {forecast.estimatedSize.width.toFixed(0)}×{forecast.estimatedSize.height.toFixed(0)}
+              </small>
+            </li>
+          ))}
+        </ol>
       </CollapsibleSection>
     </aside>
   );

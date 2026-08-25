@@ -175,45 +175,6 @@ export function App() {
           </div>
         </section>
         <aside className="telemetry-panel">
-          <MapElementPanel
-            mission={mission}
-            showBelief={showBelief}
-            selection={mapSelection}
-            onSelectionChange={setMapSelection}
-          />
-          <CollapsibleSection title="FLIGHT TELEMETRY">
-            <dl className="telemetry-grid">
-              <div><dt>任务代码</dt><dd>{mission.seed}</dd></div>
-              <div><dt>情报精度</dt><dd>{(mission.intelAccuracy * 100).toFixed(0)}%</dd></div>
-              {showBelief && <div><dt>指挥链效率</dt><dd>{(mission.commanderCoordinationModifier * 100).toFixed(0)}%</dd></div>}
-              <div><dt>飞行时间</dt><dd>{(mission.elapsedMs / 1000).toFixed(1)} s</dd></div>
-              <div><dt>坐标 X</dt><dd>{mission.aircraft.position.x.toFixed(1)}</dd></div>
-              <div><dt>坐标 Y</dt><dd>{mission.aircraft.position.y.toFixed(1)}</dd></div>
-              <div><dt>航向</dt><dd>{mission.aircraft.headingDegrees.toFixed(0)}°</dd></div>
-              <div><dt>速度</dt><dd>{mission.aircraft.speed.toFixed(2)} u/s</dd></div>
-              <div><dt>气象速度损失</dt><dd>{weatherSpeedFactor < 1 ? `${((1 - weatherSpeedFactor) * 100).toFixed(0)}%` : "无"}</dd></div>
-              <div><dt>剩余油料航程</dt><dd>{mission.aircraft.fuelRemaining.toFixed(0)} / {mission.aircraft.fuelCapacity} u</dd></div>
-              <div><dt>当前目标</dt><dd>{activeWaypoint ? `WP-${mission.route.activeWaypointIndex}` : "—"}</dd></div>
-              <div><dt>已知雷达情报</dt><dd>{visibleRadarIntel.length} 个</dd></div>
-              <div><dt>未定位信号</dt><dd>{mission.radarIntel.length - visibleRadarIntel.length} 个</dd></div>
-              <div><dt>敌方反制指数</dt><dd>{adaptationLevel}</dd></div>
-              {showBelief && <div><dt>雷达数量</dt><dd>{mission.radars.length}</dd></div>}
-              {showBelief && <div><dt>有效 Contact</dt><dd>{mission.radarContacts.length}</dd></div>}
-              {showBelief && <div><dt>Belief 峰值</dt><dd>{(beliefPeak.probability * 100).toFixed(1)}% / {beliefPeak.isValid ? "有效" : "失联"}</dd></div>}
-              {showBelief && <div><dt>推测位置</dt><dd>{beliefPeak.position ? `${beliefPeak.position.x.toFixed(0)}, ${beliefPeak.position.y.toFixed(0)}` : "未知"}</dd></div>}
-              {showBelief && <div><dt>敌方警戒</dt><dd>{mission.awareness.value.toFixed(1)} / {awarenessLabels[mission.awareness.stage]}</dd></div>}
-              <div><dt>目标状态</dt><dd>{mission.target.destroyed ? "已摧毁" : "有效"}</dd></div>
-              <div><dt>任务结果</dt><dd>{mission.status === "SUCCESS" ? "成功" : mission.status === "FAILED" ? "失败" : "进行中"}</dd></div>
-            </dl>
-          </CollapsibleSection>
-          <section className={`panel-section fuel-section ${mission.aircraft.fuelRemaining / mission.aircraft.fuelCapacity <= 0.2 ? "fuel-critical" : ""}`}>
-            <div className="section-heading">
-              <span>FUEL RANGE</span>
-              <span>{(mission.aircraft.fuelRemaining / mission.aircraft.fuelCapacity * 100).toFixed(0)}%</span>
-            </div>
-            <div className="fuel-meter"><i style={{ width: `${mission.aircraft.fuelRemaining / mission.aircraft.fuelCapacity * 100}%` }} /></div>
-            <p className="threat-message">可用航程 {mission.aircraft.fuelRemaining.toFixed(0)} u</p>
-          </section>
           <section className={`panel-section threat-section threat-${mission.engagement.stage.toLowerCase()}`}>
             <div className="section-heading"><span>THREAT WARNING</span><span>{threatLabels[mission.engagement.stage]}</span></div>
             <div className="threat-progress"><i style={{ width: `${mission.engagement.trackProgress}%` }} /></div>
@@ -223,65 +184,94 @@ export function App() {
               <p className="threat-message">辐射威胁 {mission.engagement.trackProgress.toFixed(0)}%</p>
             )}
           </section>
-          <CollapsibleSection title="WEATHER FORECAST" meta={`${mission.weather.length} CELLS`}>
-            <ol className="weather-forecast-list">
-              {mission.weatherForecast.map((forecast) => (
-                <li key={`${forecast.weatherId}-${forecast.horizonSeconds}`}>
-                  <strong>{forecast.weatherId} / T+{forecast.horizonSeconds}s</strong>
-                  <span>{forecast.kind} · {forecast.intensityTrend} · 可信度{forecast.confidence}</span>
-                  <small>
-                    预计区域 {forecast.estimatedPosition.x.toFixed(0)},{forecast.estimatedPosition.y.toFixed(0)} · {forecast.estimatedSize.width.toFixed(0)}×{forecast.estimatedSize.height.toFixed(0)}
-                  </small>
-                </li>
-              ))}
-            </ol>
+          <section className={`panel-section fuel-section ${mission.aircraft.fuelRemaining / mission.aircraft.fuelCapacity <= 0.2 ? "fuel-critical" : ""}`}>
+            <div className="section-heading">
+              <span>FUEL RANGE</span>
+              <span>{(mission.aircraft.fuelRemaining / mission.aircraft.fuelCapacity * 100).toFixed(0)}%</span>
+            </div>
+            <div className="fuel-meter"><i style={{ width: `${mission.aircraft.fuelRemaining / mission.aircraft.fuelCapacity * 100}%` }} /></div>
+            <p className="threat-message">可用航程 {mission.aircraft.fuelRemaining.toFixed(0)} u</p>
+          </section>
+          <CollapsibleSection title="FLIGHT STATUS">
+            <dl className="telemetry-grid">
+              <div><dt>飞行时间</dt><dd>{(mission.elapsedMs / 1000).toFixed(1)} s</dd></div>
+              <div><dt>坐标</dt><dd>{mission.aircraft.position.x.toFixed(1)}, {mission.aircraft.position.y.toFixed(1)}</dd></div>
+              <div><dt>航向</dt><dd>{mission.aircraft.headingDegrees.toFixed(0)}°</dd></div>
+              <div><dt>速度</dt><dd>{mission.aircraft.speed.toFixed(2)} u/s</dd></div>
+              <div><dt>气象速度损失</dt><dd>{weatherSpeedFactor < 1 ? `${((1 - weatherSpeedFactor) * 100).toFixed(0)}%` : "无"}</dd></div>
+              <div><dt>当前航点</dt><dd>{activeWaypoint ? `WP-${mission.route.activeWaypointIndex}` : "—"}</dd></div>
+            </dl>
           </CollapsibleSection>
-          {mission.adaptationNotes.length > 0 && <CollapsibleSection title="COUNTER DEPLOYMENT" meta={mission.adaptationNotes.length}>
+          <CollapsibleSection title="MISSION INTEL" defaultExpanded={false}>
+            <dl className="telemetry-grid">
+              <div><dt>情报精度</dt><dd>{(mission.intelAccuracy * 100).toFixed(0)}%</dd></div>
+              <div><dt>已知雷达情报</dt><dd>{visibleRadarIntel.length} 个</dd></div>
+              <div><dt>未定位信号</dt><dd>{mission.radarIntel.length - visibleRadarIntel.length} 个</dd></div>
+              <div><dt>敌方反制指数</dt><dd>{adaptationLevel}</dd></div>
+            </dl>
+          </CollapsibleSection>
+          <MapElementPanel
+            mission={mission}
+            showBelief={showBelief}
+            selection={mapSelection}
+            onSelectionChange={setMapSelection}
+          />
+          {mission.adaptationNotes.length > 0 && <CollapsibleSection title="COUNTER DEPLOYMENT" meta={mission.adaptationNotes.length} defaultExpanded={false}>
             <ol className="event-list briefing-list">
               {mission.adaptationNotes.map((note) => <li key={note}><span>{note}</span></li>)}
             </ol>
           </CollapsibleSection>}
-          {mission.finalStrikeNotes.length > 0 && <CollapsibleSection title="FINAL DEFENSE BRIEFING" meta={mission.radars.length}>
+          {mission.finalStrikeNotes.length > 0 && <CollapsibleSection title="FINAL DEFENSE BRIEFING" meta={mission.radars.length} defaultExpanded={false}>
             <ol className="event-list briefing-list">
               {mission.finalStrikeNotes.map((note) => <li key={note}><span>{note}</span></li>)}
             </ol>
           </CollapsibleSection>}
-          {showBelief && <CollapsibleSection className="event-section" title="结构化事件" meta={mission.events.length}>
-            <ol className="event-list">
-              {recentEvents.length === 0 && <li className="empty-event">等待操作事件…</li>}
-              {recentEvents.map((event) => (
-                <li key={event.id}>
-                  <time>{(event.timestamp / 1000).toFixed(1).padStart(5, "0")}</time>
-                  <span>{eventLabels[event.type] ?? event.type}</span>
-                </li>
-              ))}
-            </ol>
-          </CollapsibleSection>}
-          {showBelief && <CollapsibleSection className="commander-section" title="AIR DEFENSE COMMANDER" meta={`ALERT ${mission.awareness.value.toFixed(0)}%`}>
-            <div className="commander-intent">{intentLabels[mission.commander.intent]}</div>
-            <div className="score-grid commander-scores">
-              <span>M {mission.commander.utilityScores.MONITOR.toFixed(0)}</span>
-              <span>C {mission.commander.utilityScores.COORDINATED_SEARCH.toFixed(0)}</span>
-              <span>F {mission.commander.utilityScores.CONCENTRATE_SEARCH.toFixed(0)}</span>
-            </div>
-            <div className="awareness-meter"><i style={{ width: `${mission.awareness.value}%` }} /></div>
-          </CollapsibleSection>}
-          {showBelief && <CollapsibleSection className="operator-section" title="RADAR OPERATOR AI" meta="UTILITY">
-            {mission.radars.map((radar) => (
-              <div className="operator-card" key={radar.id}>
-                <div className="operator-title">
-                  <strong>{radar.id}</strong>
-                  <span className={`mode-${radar.operator.mode.toLowerCase()}`}>
-                    {radarTypeProfiles[radar.type].label} / {modeLabels[radar.operator.mode]}
-                  </span>
-                </div>
-                <div className="score-grid">
-                  <span>W {radar.operator.utilityScores.WIDE_SEARCH.toFixed(0)}</span>
-                  <span>S {radar.operator.utilityScores.SECTOR_SEARCH.toFixed(0)}</span>
-                  <span>F {radar.operator.utilityScores.FOCUSED_TRACK.toFixed(0)}</span>
-                </div>
+          {showBelief && <CollapsibleSection className="debug-group" title="AI DEBUG" meta="INTERNAL" defaultExpanded={false}>
+            <CollapsibleSection className="event-section" title="结构化事件" meta={mission.events.length}>
+              <ol className="event-list">
+                {recentEvents.length === 0 && <li className="empty-event">等待操作事件…</li>}
+                {recentEvents.map((event) => (
+                  <li key={event.id}>
+                    <time>{(event.timestamp / 1000).toFixed(1).padStart(5, "0")}</time>
+                    <span>{eventLabels[event.type] ?? event.type}</span>
+                  </li>
+                ))}
+              </ol>
+            </CollapsibleSection>
+            <CollapsibleSection className="commander-section" title="AIR DEFENSE COMMANDER" meta={`ALERT ${mission.awareness.value.toFixed(0)}%`}>
+              <dl className="telemetry-grid debug-telemetry-grid">
+                <div><dt>指挥链效率</dt><dd>{(mission.commanderCoordinationModifier * 100).toFixed(0)}%</dd></div>
+                <div><dt>雷达数量</dt><dd>{mission.radars.length}</dd></div>
+                <div><dt>有效 Contact</dt><dd>{mission.radarContacts.length}</dd></div>
+                <div><dt>Belief 峰值</dt><dd>{(beliefPeak.probability * 100).toFixed(1)}% / {beliefPeak.isValid ? "有效" : "失联"}</dd></div>
+                <div><dt>推测位置</dt><dd>{beliefPeak.position ? `${beliefPeak.position.x.toFixed(0)}, ${beliefPeak.position.y.toFixed(0)}` : "未知"}</dd></div>
+                <div><dt>敌方警戒</dt><dd>{mission.awareness.value.toFixed(1)} / {awarenessLabels[mission.awareness.stage]}</dd></div>
+              </dl>
+              <div className="commander-intent">{intentLabels[mission.commander.intent]}</div>
+              <div className="score-grid commander-scores">
+                <span>M {mission.commander.utilityScores.MONITOR.toFixed(0)}</span>
+                <span>C {mission.commander.utilityScores.COORDINATED_SEARCH.toFixed(0)}</span>
+                <span>F {mission.commander.utilityScores.CONCENTRATE_SEARCH.toFixed(0)}</span>
               </div>
-            ))}
+              <div className="awareness-meter"><i style={{ width: `${mission.awareness.value}%` }} /></div>
+            </CollapsibleSection>
+            <CollapsibleSection className="operator-section" title="RADAR OPERATOR AI" meta="UTILITY">
+              {mission.radars.map((radar) => (
+                <div className="operator-card" key={radar.id}>
+                  <div className="operator-title">
+                    <strong>{radar.id}</strong>
+                    <span className={`mode-${radar.operator.mode.toLowerCase()}`}>
+                      {radarTypeProfiles[radar.type].label} / {modeLabels[radar.operator.mode]}
+                    </span>
+                  </div>
+                  <div className="score-grid">
+                    <span>W {radar.operator.utilityScores.WIDE_SEARCH.toFixed(0)}</span>
+                    <span>S {radar.operator.utilityScores.SECTOR_SEARCH.toFixed(0)}</span>
+                    <span>F {radar.operator.utilityScores.FOCUSED_TRACK.toFixed(0)}</span>
+                  </div>
+                </div>
+              ))}
+            </CollapsibleSection>
           </CollapsibleSection>}
         </aside>
       </div>}

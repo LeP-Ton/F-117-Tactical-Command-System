@@ -70,7 +70,6 @@ button:disabled { opacity: 0.32; cursor: not-allowed; }
 .waypoint-coordinate { color: #a5beb6; font-size: 10px; }
 .waypoint-state { color: #5f8d7e; font-size: 9px; }
 .state-completed { color: #50675f; }
-.lock-mark { grid-column: 3; color: #665b3a; font-size: 7px; }
 .route-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 12px; }
 .danger-button { color: #c78672; border-color: #70483d; }
 .objective-state { color: #e5b556; font-size: 11px; line-height: 1.5; }
@@ -99,6 +98,12 @@ button:disabled { opacity: 0.32; cursor: not-allowed; }
 
 .telemetry-grid { margin: 15px 0 0; }
 .map-element-list { display: grid; gap: 6px; }
+.map-element-group.panel-section { padding: 10px 0; border-bottom-color: #142f27; }
+.map-element-group:last-child { padding-bottom: 0; border-bottom: 0; }
+.map-element-group .collapsible-heading { font-size: 10px; }
+.map-element-group .collapsible-content { margin-top: 8px; }
+.debug-group > .collapsible-content > .panel-section { padding: 14px 0; }
+.debug-group > .collapsible-content > .panel-section:last-child { padding-bottom: 0; border-bottom: 0; }
 .map-element-row { width: 100%; padding: 8px 9px; display: block; text-align: left; border-color: #1d4036; background: rgba(27, 64, 53, 0.12); }
 .map-element-row strong, .map-element-row span { display: block; }
 .map-element-row strong { color: #b7d2c9; font-size: 10px; font-weight: 500; }

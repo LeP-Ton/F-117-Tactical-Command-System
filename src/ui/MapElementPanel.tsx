@@ -39,40 +39,57 @@ export function MapElementPanel({ mission, showBelief, selection, onSelectionCha
 
   return (
     <CollapsibleSection className="map-elements-section" title="MAP ELEMENTS">
-      <div className="map-element-list">
-        <button className={buttonClass({ kind: "AIRCRAFT" })} onClick={() => select({ kind: "AIRCRAFT" })}>
-          <strong>F-117</strong><span>己方机位 · 航向与位置实时更新</span>
-        </button>
-        <button className={buttonClass({ kind: "TARGET" })} onClick={() => select({ kind: "TARGET" })}>
-          <strong>{mission.target.id}</strong><span>指定目标 · 武器释放圈 {mission.target.attackRadius} u</span>
-        </button>
-        <button className={buttonClass({ kind: "EXTRACTION" })} onClick={() => select({ kind: "EXTRACTION" })}>
-          <strong>EXTRACTION</strong><span>指定撤离空域</span>
-        </button>
-        {mission.route.waypoints.map((waypoint, index) => (
-          <button key={waypoint.id} className={buttonClass({ kind: "WAYPOINT", id: waypoint.id })} onClick={() => select({ kind: "WAYPOINT", id: waypoint.id })}>
-            <strong>{index === 0 ? "INS" : `WP-${String(index).padStart(2, "0")}`} · 航点</strong>
-            <span>{waypoint.status} · 导航控制点</span>
+      <CollapsibleSection className="map-element-group" title="任务目标" meta="3" defaultExpanded={false}>
+        <div className="map-element-list">
+          <button className={buttonClass({ kind: "AIRCRAFT" })} onClick={() => select({ kind: "AIRCRAFT" })}>
+            <strong>F-117</strong><span>己方机位 · 航向与位置实时更新</span>
           </button>
-        ))}
-        {mission.terrain.map((terrain) => (
-          <button key={terrain.id} className={buttonClass({ kind: "TERRAIN", id: terrain.id })} onClick={() => select({ kind: "TERRAIN", id: terrain.id })}>
-            <strong>{terrain.id} · 山地</strong>
-            <span>雷达遮蔽 {((1 - terrain.detectionFactor) * 100).toFixed(0)}% · 地形掩护区</span>
+          <button className={buttonClass({ kind: "TARGET" })} onClick={() => select({ kind: "TARGET" })}>
+            <strong>{mission.target.id}</strong><span>指定目标 · 武器释放圈 {mission.target.attackRadius} u</span>
           </button>
-        ))}
-        {mission.weather.map((weather) => (
-          <button key={weather.id} className={buttonClass({ kind: "WEATHER", id: weather.id })} onClick={() => select({ kind: "WEATHER", id: weather.id })}>
-            <strong>{weather.id} · {weatherLabels[weather.kind]}</strong>
-            <span>信号衰减 {((1 - weather.detectionFactor) * 100).toFixed(0)}% · 动态气象单元</span>
+          <button className={buttonClass({ kind: "EXTRACTION" })} onClick={() => select({ kind: "EXTRACTION" })}>
+            <strong>EXTRACTION</strong><span>指定撤离空域</span>
           </button>
-        ))}
-        {radarItems.map((radar) => (
-          <button key={radar.id} className={buttonClass({ kind: "RADAR", id: radar.id })} onClick={() => select({ kind: "RADAR", id: radar.id })}>
-            <strong>{radar.title}</strong><span>{radar.detail}</span>
-          </button>
-        ))}
-      </div>
+        </div>
+      </CollapsibleSection>
+
+      <CollapsibleSection className="map-element-group" title="航线" meta={mission.route.waypoints.length} defaultExpanded={false}>
+        <div className="map-element-list">
+          {mission.route.waypoints.map((waypoint, index) => (
+            <button key={waypoint.id} className={buttonClass({ kind: "WAYPOINT", id: waypoint.id })} onClick={() => select({ kind: "WAYPOINT", id: waypoint.id })}>
+              <strong>{index === 0 ? "INS" : `WP-${String(index).padStart(2, "0")}`} · 航点</strong>
+              <span>{waypoint.status} · 导航控制点</span>
+            </button>
+          ))}
+        </div>
+      </CollapsibleSection>
+
+      <CollapsibleSection className="map-element-group" title="环境" meta={mission.terrain.length + mission.weather.length} defaultExpanded={false}>
+        <div className="map-element-list">
+          {mission.terrain.map((terrain) => (
+            <button key={terrain.id} className={buttonClass({ kind: "TERRAIN", id: terrain.id })} onClick={() => select({ kind: "TERRAIN", id: terrain.id })}>
+              <strong>{terrain.id} · 山地</strong>
+              <span>雷达遮蔽 {((1 - terrain.detectionFactor) * 100).toFixed(0)}% · 地形掩护区</span>
+            </button>
+          ))}
+          {mission.weather.map((weather) => (
+            <button key={weather.id} className={buttonClass({ kind: "WEATHER", id: weather.id })} onClick={() => select({ kind: "WEATHER", id: weather.id })}>
+              <strong>{weather.id} · {weatherLabels[weather.kind]}</strong>
+              <span>信号衰减 {((1 - weather.detectionFactor) * 100).toFixed(0)}% · 动态气象单元</span>
+            </button>
+          ))}
+        </div>
+      </CollapsibleSection>
+
+      <CollapsibleSection className="map-element-group" title="雷达" meta={radarItems.length} defaultExpanded={false}>
+        <div className="map-element-list">
+          {radarItems.map((radar) => (
+            <button key={radar.id} className={buttonClass({ kind: "RADAR", id: radar.id })} onClick={() => select({ kind: "RADAR", id: radar.id })}>
+              <strong>{radar.title}</strong><span>{radar.detail}</span>
+            </button>
+          ))}
+        </div>
+      </CollapsibleSection>
     </CollapsibleSection>
   );
 }

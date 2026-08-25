@@ -30,6 +30,8 @@ describe("ControlPanel 航点操作", () => {
     expect(screen.getByRole("button", { name: "上移" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "下移" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "删除" })).toBeDisabled();
+    expect(screen.queryByText("◆")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /WEATHER FORECAST/ })).toHaveAttribute("aria-expanded", "false");
   });
 
   it("暂停后允许删除选中的可编辑航点", () => {
