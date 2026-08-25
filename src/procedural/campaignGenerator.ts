@@ -9,11 +9,11 @@ const stageTypes: readonly (readonly MissionNodeType[])[] = [
 ];
 
 const effects: Record<MissionNodeType, string> = {
-  INTEL: "提高后续任务的雷达情报质量",
-  STRIKE: "直接推进战役，但不会削弱后续防空",
-  SEAD: "压低 Enemy Alert，削弱未来防空",
-  COMMAND_STRIKE: "破坏指挥链，降低后续雷达协调能力",
-  FINAL_STRIKE: "完成本次 Run 的最终打击",
+  INTEL: "获取敌防空网电子情报，提升后续目标识别质量",
+  STRIKE: "打击战役目标，不改变敌防空网当前战备状态",
+  SEAD: "压制敌防空节点，削弱后续雷达覆盖",
+  COMMAND_STRIKE: "打击敌指挥链，削弱后续协同搜索能力",
+  FINAL_STRIKE: "对最终目标实施纵深精确打击",
 };
 
 export function generateCampaign(seed: string): CampaignState {

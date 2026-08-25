@@ -97,8 +97,6 @@ export function App() {
   const recentEvents = mission.events.slice(-5).reverse();
   const beliefPeak = getBeliefPeak(mission.beliefMap, mission.elapsedMs);
   const visibleRadarIntel = mission.radarIntel.filter((report) => report.level !== "UNKNOWN");
-  const terrainCount = mission.terrain.length;
-  const weatherCount = mission.weather.length;
   const adaptationLevel = getAdaptationLevel(state.enemyState.tacticalProfile);
   const weatherSpeedFactor = getWeatherSpeedFactor(mission.aircraft.position, mission.weather);
 
@@ -135,9 +133,9 @@ export function App() {
             setSelectedIndex(null);
             setCampaignView(true);
           }}>
-            <label htmlFor="run-seed">RUN SEED</label>
+            <label htmlFor="run-seed">OPERATION CODE</label>
             <input id="run-seed" value={seedInput} onChange={(event) => setSeedInput(event.target.value)} />
-            <button type="submit">生成任务</button>
+            <button type="submit">初始化战役</button>
           </form>
         </div>
       </header>
@@ -185,22 +183,20 @@ export function App() {
           />
           <CollapsibleSection title="FLIGHT TELEMETRY">
             <dl className="telemetry-grid">
-              <div><dt>任务 Seed</dt><dd>{mission.seed}</dd></div>
-              <div><dt>任务存档</dt><dd>本地自动保存</dd></div>
+              <div><dt>任务代码</dt><dd>{mission.seed}</dd></div>
               <div><dt>情报精度</dt><dd>{(mission.intelAccuracy * 100).toFixed(0)}%</dd></div>
-              <div><dt>生成规模</dt><dd>T{terrainCount} / R{mission.radars.length} / W{weatherCount}</dd></div>
               {showBelief && <div><dt>指挥链效率</dt><dd>{(mission.commanderCoordinationModifier * 100).toFixed(0)}%</dd></div>}
               <div><dt>飞行时间</dt><dd>{(mission.elapsedMs / 1000).toFixed(1)} s</dd></div>
               <div><dt>坐标 X</dt><dd>{mission.aircraft.position.x.toFixed(1)}</dd></div>
               <div><dt>坐标 Y</dt><dd>{mission.aircraft.position.y.toFixed(1)}</dd></div>
               <div><dt>航向</dt><dd>{mission.aircraft.headingDegrees.toFixed(0)}°</dd></div>
               <div><dt>速度</dt><dd>{mission.aircraft.speed.toFixed(2)} u/s</dd></div>
-              <div><dt>天气减速</dt><dd>{weatherSpeedFactor < 1 ? `${((1 - weatherSpeedFactor) * 100).toFixed(0)}%` : "无"}</dd></div>
-              <div><dt>剩余航程</dt><dd>{mission.aircraft.fuelRemaining.toFixed(0)} / {mission.aircraft.fuelCapacity} u</dd></div>
+              <div><dt>气象速度损失</dt><dd>{weatherSpeedFactor < 1 ? `${((1 - weatherSpeedFactor) * 100).toFixed(0)}%` : "无"}</dd></div>
+              <div><dt>剩余油料航程</dt><dd>{mission.aircraft.fuelRemaining.toFixed(0)} / {mission.aircraft.fuelCapacity} u</dd></div>
               <div><dt>当前目标</dt><dd>{activeWaypoint ? `WP-${mission.route.activeWaypointIndex}` : "—"}</dd></div>
               <div><dt>已知雷达情报</dt><dd>{visibleRadarIntel.length} 个</dd></div>
               <div><dt>未定位信号</dt><dd>{mission.radarIntel.length - visibleRadarIntel.length} 个</dd></div>
-              <div><dt>敌方适应</dt><dd>LV.{adaptationLevel}</dd></div>
+              <div><dt>敌方反制指数</dt><dd>{adaptationLevel}</dd></div>
               {showBelief && <div><dt>雷达数量</dt><dd>{mission.radars.length}</dd></div>}
               {showBelief && <div><dt>有效 Contact</dt><dd>{mission.radarContacts.length}</dd></div>}
               {showBelief && <div><dt>Belief 峰值</dt><dd>{(beliefPeak.probability * 100).toFixed(1)}% / {beliefPeak.isValid ? "有效" : "失联"}</dd></div>}
@@ -216,15 +212,15 @@ export function App() {
               <span>{(mission.aircraft.fuelRemaining / mission.aircraft.fuelCapacity * 100).toFixed(0)}%</span>
             </div>
             <div className="fuel-meter"><i style={{ width: `${mission.aircraft.fuelRemaining / mission.aircraft.fuelCapacity * 100}%` }} /></div>
-            <p className="threat-message">可用航程 {mission.aircraft.fuelRemaining.toFixed(0)} u // 满油航程等于地图两条边</p>
+            <p className="threat-message">可用航程 {mission.aircraft.fuelRemaining.toFixed(0)} u</p>
           </section>
           <section className={`panel-section threat-section threat-${mission.engagement.stage.toLowerCase()}`}>
             <div className="section-heading"><span>THREAT WARNING</span><span>{threatLabels[mission.engagement.stage]}</span></div>
             <div className="threat-progress"><i style={{ width: `${mission.engagement.trackProgress}%` }} /></div>
             {mission.engagement.stage === "MISSILE_INBOUND" ? (
-              <p className="threat-message">撞击倒计时 {mission.engagement.missileTimeRemainingSeconds?.toFixed(1)} s // 立即改变航向并切断照射</p>
+              <p className="threat-message">撞击倒计时 {mission.engagement.missileTimeRemainingSeconds?.toFixed(1)} s // 规避机动 · 脱离照射</p>
             ) : (
-              <p className="threat-message">辐射威胁 {mission.engagement.trackProgress.toFixed(0)}% // 失去新 Contact 后会逐步下降</p>
+              <p className="threat-message">辐射威胁 {mission.engagement.trackProgress.toFixed(0)}%</p>
             )}
           </section>
           <CollapsibleSection title="WEATHER FORECAST" meta={`${mission.weather.length} CELLS`}>
@@ -241,12 +237,12 @@ export function App() {
             </ol>
           </CollapsibleSection>
           {mission.adaptationNotes.length > 0 && <CollapsibleSection title="COUNTER DEPLOYMENT" meta={mission.adaptationNotes.length}>
-            <ol className="event-list">
+            <ol className="event-list briefing-list">
               {mission.adaptationNotes.map((note) => <li key={note}><span>{note}</span></li>)}
             </ol>
           </CollapsibleSection>}
           {mission.finalStrikeNotes.length > 0 && <CollapsibleSection title="FINAL DEFENSE BRIEFING" meta={mission.radars.length}>
-            <ol className="event-list">
+            <ol className="event-list briefing-list">
               {mission.finalStrikeNotes.map((note) => <li key={note}><span>{note}</span></li>)}
             </ol>
           </CollapsibleSection>}

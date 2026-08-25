@@ -56,3 +56,33 @@ export function reorderWaypoint(route: RouteState, fromIndex: number, toIndex: n
   waypoints.splice(toIndex, 0, waypoint);
   return { ...route, waypoints };
 }
+
+/** 计算完整规划航线的折线长度。 */
+export function getPlannedRouteDistance(route: RouteState): number {
+  return route.waypoints.slice(1).reduce((total, waypoint, index) => {
+    const previous = route.waypoints[index];
+    return previous ? total + Math.hypot(
+      waypoint.position.x - previous.position.x,
+      waypoint.position.y - previous.position.y,
+    ) : total;
+  }, 0);
+}
+
+/** 从飞机当前位置出发，沿尚未执行的航点计算剩余航程。 */
+export function getRemainingRouteDistance(route: RouteState, aircraftPosition: Vector2): number {
+  const activeWaypoint = route.waypoints[route.activeWaypointIndex];
+  if (!activeWaypoint) return 0;
+  let distance = Math.hypot(
+    activeWaypoint.position.x - aircraftPosition.x,
+    activeWaypoint.position.y - aircraftPosition.y,
+  );
+  for (let index = route.activeWaypointIndex + 1; index < route.waypoints.length; index += 1) {
+    const previous = route.waypoints[index - 1];
+    const waypoint = route.waypoints[index];
+    if (previous && waypoint) distance += Math.hypot(
+      waypoint.position.x - previous.position.x,
+      waypoint.position.y - previous.position.y,
+    );
+  }
+  return distance;
+}

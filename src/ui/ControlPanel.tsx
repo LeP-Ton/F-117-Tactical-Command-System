@@ -1,5 +1,5 @@
-import { canEditWaypoint } from "../domain/route";
-import { distanceBetween } from "../domain/missionRules";
+import { canEditWaypoint, getPlannedRouteDistance, getRemainingRouteDistance } from "../domain/route";
+import { distanceBetween, distanceToExtraction } from "../domain/missionRules";
 import type { MissionSession } from "../domain/types";
 import type { GameAction } from "../game/gameReducer";
 import { CollapsibleSection } from "./CollapsibleSection";
@@ -15,16 +15,27 @@ interface ControlPanelProps {
 
 const statusLabels = {
   PLANNING: "航线规划",
-  RUNNING: "自动执行",
-  PAUSED: "暂停重规划",
+  RUNNING: "任务执行",
+  PAUSED: "航线修订",
   SUCCESS: "任务成功",
   FAILED: "任务失败",
+} as const;
+
+const statusMessages = {
+  PLANNING: "等待航线确认",
+  RUNNING: "航电系统在线",
+  PAUSED: "航线编辑授权",
+  SUCCESS: "任务目标达成",
+  FAILED: "任务终止",
 } as const;
 
 export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpenCampaign, onReturnCampaign }: ControlPanelProps) {
   const editable = mission.status === "PLANNING" || mission.status === "PAUSED";
   const selectedEditable = editable && selectedIndex !== null && canEditWaypoint(mission.route, selectedIndex);
   const targetDistance = distanceBetween(mission.aircraft.position, mission.target.position);
+  const extractionDistance = distanceToExtraction(mission.aircraft.position, mission.extractionArea);
+  const plannedRouteDistance = getPlannedRouteDistance(mission.route);
+  const remainingRouteDistance = getRemainingRouteDistance(mission.route, mission.aircraft.position);
 
   return (
     <aside className="control-panel">
@@ -33,7 +44,7 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
         <h2>{statusLabels[mission.status]}</h2>
         <div className="status-line">
           <span className={`status-dot status-${mission.status.toLowerCase()}`} />
-          {mission.status === "RUNNING" ? "航电系统在线" : "等待指令"}
+          {statusMessages[mission.status]}
         </div>
         <div className="button-row">
           {mission.status === "PLANNING" && (
@@ -45,12 +56,12 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
               disabled={mission.route.waypoints.length < 2}
               onClick={() => dispatch({ type: "START" })}
             >
-              开始执行
+              确认航线
             </button>
           )}
           {mission.status === "RUNNING" && (
             <button className="primary-button" onClick={() => dispatch({ type: "PAUSE" })}>
-              暂停 / 重规划
+              暂停 / 修订航线
             </button>
           )}
           {mission.status === "PAUSED" && (
@@ -59,7 +70,7 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
             </button>
           )}
           <button className="secondary-button" onClick={() => dispatch({ type: "RESET" })}>
-            重置任务
+            重置航线
           </button>
           {(mission.status === "SUCCESS" || mission.status === "FAILED") && (
             <button className="primary-button" onClick={() => {
@@ -71,15 +82,14 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
       </section>
 
       <section className="panel-section objective-section">
-        <div className="section-heading"><span>MISSION OBJECTIVE</span><span>{mission.target.id}</span></div>
+        <div className="section-heading"><span>TARGET DESIGNATION</span><span>{mission.target.id}</span></div>
         <div className={`objective-state ${mission.target.destroyed ? "destroyed" : ""}`}>
-          {mission.target.destroyed ? "目标已摧毁 // 前往撤离区" : "目标仍有效 // 自动攻击待命"}
+          {mission.target.destroyed ? "目标摧毁 // 转入撤离航段" : "目标有效"}
         </div>
         <div className="objective-meta">
-          <span>距离 {targetDistance.toFixed(0)} u</span>
-          <span>{mission.target.destroyed ? "弹药已投放" : "弹药待命"}</span>
+          <div><span>{mission.target.destroyed ? "撤离区距离" : "目标距离"}</span><strong>{(mission.target.destroyed ? extractionDistance : targetDistance).toFixed(0)} u</strong></div>
+          <div><span>武器状态</span><strong>{mission.target.destroyed ? "已投放" : "待命"}</strong></div>
         </div>
-        <p className="hint">进入目标半径 {mission.target.attackRadius} u 后自动投弹；攻击会显著提高敌方警戒。</p>
       </section>
 
       <CollapsibleSection
@@ -87,6 +97,10 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
         title="航点序列"
         meta={`${mission.route.waypoints.length - 1} NAV`}
       >
+        <div className="route-distance-summary">
+          <div><span>规划总航程</span><strong>{plannedRouteDistance.toFixed(0)} u</strong></div>
+          <div><span>剩余航程</span><strong>{remainingRouteDistance.toFixed(0)} u</strong></div>
+        </div>
         <div className="waypoint-list">
           {mission.route.waypoints.map((waypoint, index) => {
             const canEdit = editable && canEditWaypoint(mission.route, index);

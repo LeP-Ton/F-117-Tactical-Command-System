@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addWaypoint, createInitialRoute, moveWaypoint, removeWaypoint, reorderWaypoint } from "./route";
+import { addWaypoint, createInitialRoute, getPlannedRouteDistance, getRemainingRouteDistance, moveWaypoint, removeWaypoint, reorderWaypoint } from "./route";
 
 function routeWithWaypoints() {
   let route = createInitialRoute();
@@ -27,5 +27,19 @@ describe("航线编辑", () => {
   it("已飞过航点不可编辑", () => {
     const route = { ...routeWithWaypoints(), activeWaypointIndex: 2 };
     expect(removeWaypoint(route, 1)).toBe(route);
+  });
+
+  it("分别计算规划总航程和当前位置起算的剩余航程", () => {
+    const route = {
+      activeWaypointIndex: 1,
+      waypoints: [
+        { id: "insertion", kind: "INSERTION" as const, position: { x: 0, y: 0 }, status: "LOCKED" as const },
+        { id: "a", kind: "NAVIGATION" as const, position: { x: 3, y: 4 }, status: "PENDING" as const },
+        { id: "b", kind: "NAVIGATION" as const, position: { x: 3, y: 8 }, status: "PENDING" as const },
+      ],
+    };
+    expect(getPlannedRouteDistance(route)).toBe(9);
+    expect(getRemainingRouteDistance(route, { x: 0, y: 4 })).toBe(7);
+    expect(getRemainingRouteDistance({ ...route, activeWaypointIndex: 3 }, { x: 3, y: 8 })).toBe(0);
   });
 });

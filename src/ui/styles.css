@@ -75,7 +75,11 @@ button:disabled { opacity: 0.32; cursor: not-allowed; }
 .danger-button { color: #c78672; border-color: #70483d; }
 .objective-state { color: #e5b556; font-size: 11px; line-height: 1.5; }
 .objective-state.destroyed { color: #6fc7a9; }
-.objective-meta { display: flex; justify-content: space-between; margin: 10px 0; color: #668a7f; font-size: 9px; }
+.objective-meta, .route-distance-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+.objective-meta div, .route-distance-summary div { padding: 7px 8px; border: 1px solid #17372e; background: rgba(15, 42, 34, 0.24); }
+.objective-meta span, .objective-meta strong, .route-distance-summary span, .route-distance-summary strong { display: block; }
+.objective-meta span, .route-distance-summary span { color: #52776c; font-size: 8px; }
+.objective-meta strong, .route-distance-summary strong { margin-top: 4px; color: #b8d1c9; font-size: 10px; font-weight: 500; }
 .attack-button { width: 100%; color: #ef9a72; border-color: #a84e37; background: rgba(110, 38, 24, 0.22); }
 .hint { color: #4d7367; font-size: 10px; line-height: 1.6; }
 
@@ -107,7 +111,9 @@ button:disabled { opacity: 0.32; cursor: not-allowed; }
 .event-list { list-style: none; margin: 0; padding: 0; min-height: 145px; }
 .event-list li { display: grid; grid-template-columns: 50px 1fr; padding: 7px 0; color: #8db0a5; border-bottom: 1px solid #132b24; font-size: 10px; }
 .event-list time { color: #c29a48; }
-.empty-event { color: #47695e !important; }
+.briefing-list { min-height: 0; }
+.briefing-list li { display: block; }
+.event-list li.empty-event { display: block; color: #47695e !important; }
 .weather-forecast-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .weather-forecast-list li { padding: 8px; border: 1px solid #1c4038; background: rgba(50, 91, 86, 0.1); }
 .weather-forecast-list strong, .weather-forecast-list span, .weather-forecast-list small { display: block; }

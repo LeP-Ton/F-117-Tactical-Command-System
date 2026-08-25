@@ -17,6 +17,14 @@ const typeLabels = {
   FINAL_STRIKE: "最终打击",
 } as const;
 
+const missionBriefings = {
+  INTEL: "获取敌防空网电子情报，提升后续目标识别质量。",
+  STRIKE: "打击战役目标，不改变敌防空网当前战备状态。",
+  SEAD: "压制敌防空节点，削弱后续雷达覆盖。",
+  COMMAND_STRIKE: "打击敌指挥链，削弱后续协同搜索能力。",
+  FINAL_STRIKE: "对最终目标实施纵深精确打击。",
+} as const;
+
 export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
   const firstAvailable = state.campaign.nodes.find((node) => node.status === "AVAILABLE");
   const [selectedId, setSelectedId] = useState(
@@ -35,13 +43,13 @@ export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
   return (
     <section className="campaign-screen">
       <div className="campaign-header">
-        <div><span className="section-kicker">PROCEDURAL CAMPAIGN</span><h2>防空战役网络</h2></div>
+        <div><span className="section-kicker">AIR CAMPAIGN</span><h2>任务网络</h2></div>
         <div className="campaign-resources">
           <span>ENEMY ALERT <strong>{state.resources.enemyAlert}</strong></span>
           <span>INTEL QUALITY <strong>+{(state.resources.intelAccuracyBonus * 100).toFixed(0)}%</strong></span>
           <span>RADAR NET <strong>{(state.enemyState.radarCoverageModifier * 100).toFixed(0)}%</strong></span>
           <span>CMD LINK <strong>{(state.enemyState.commanderCoordinationModifier * 100).toFixed(0)}%</strong></span>
-          <span>ADAPT <strong>LV.{adaptationLevel}</strong></span>
+          <span>ADAPT INDEX <strong>{adaptationLevel}</strong></span>
         </div>
       </div>
       <div className="campaign-content">
@@ -75,13 +83,13 @@ export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
             <span className="section-kicker">MISSION PREVIEW</span>
             <h3>{typeLabels[selected.type]}</h3>
             <dl>
-              <div><dt>节点</dt><dd>{selected.id}</dd></div>
-              <div><dt>雷达密度</dt><dd>{selected.preview.radarDensity}</dd></div>
+              <div><dt>任务代号</dt><dd>{selected.id}</dd></div>
+              <div><dt>预估雷达数量</dt><dd>{selected.preview.radarDensity}</dd></div>
               <div><dt>天气</dt><dd>{selected.preview.weather}</dd></div>
               <div><dt>情报可信度</dt><dd>{(selected.preview.intelAccuracy * 100).toFixed(0)}%</dd></div>
             </dl>
-            <p>{selected.preview.effect}</p>
-            {selected.type === "FINAL_STRIKE" && <p>最终防空体系将在出击时根据本次 Run 的任务成果、Enemy Alert 与玩家历史动态组装。</p>}
+            <p>{missionBriefings[selected.type]}</p>
+            {selected.type === "FINAL_STRIKE" && <p>最终目标防空序列持续重构，部署态势将在出击时确认。</p>}
             {state.enemyState.tacticalProfile.missionSamples > 0 && <div className="campaign-build">
               <span className="section-kicker">ENEMY HISTORICAL ANALYSIS</span>
               <div>地形利用 {(state.enemyState.tacticalProfile.terrainMaskingPreference * 100).toFixed(0)}%</div>
@@ -97,9 +105,9 @@ export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
               }}
             >
               {state.status === "VICTORY"
-                ? "RUN 已完成"
+                ? "战役完成"
                 : state.status === "DEFEAT" && !canContinueRun
-                  ? "飞机损失 // RUN 结束"
+                  ? "战役终止 // 飞机损失"
                   : "执行任务"}
             </button>
           </>}

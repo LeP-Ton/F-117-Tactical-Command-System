@@ -1,6 +1,11 @@
 # 项目文档索引
 
 ## 当前变更文档
+`workflow/20260821231636-fix-empty-event-inner-grid.md` - 会话-73：修正会话-72 对空事件 Grid 层级的误判，将空事件条目自身改为整行块布局；排查“等待操作事件…”仍在 `50px` 内换行时读取。
+`workflow/20260821231225-fix-briefing-list-width.md` - 会话-72：拆分结构化事件两列布局与简报单列布局，修复反制部署、最终防御简报及空事件提示只占 `50px` 第一列的问题；排查侧栏列表异常换行或大块空白时读取。
+`workflow/20260821230030-redesign-objective-and-route-distance.md` - 会话-70：重构目标代号/状态/距离/武器信息层级，目标摧毁后显示撤离区最近边界距离，并增加规划总航程与当前剩余航程；核对目标模块或航线长度计算时读取。
+`workflow/20260821223622-adjust-mission-network-copy-and-restore-route-hint.md` - 会话-68：将 Campaign 标题与字段统一为“任务网络 / 任务代号 / 预估雷达数量”，并恢复航点编辑操作提示；核对任务网络术语或航点帮助文案时读取。
+`workflow/20260821173217-refine-immersive-military-copy.md` - 会话-67：按“解谜 + 动态规划军事模拟”定位全量精简玩家文案，删除机制说明、教程和生成元信息，将关键规划数据改写为军事态势语言；审查玩家界面措辞或沉浸边界时读取。
 `workflow/20260821154914-enable-github-pages-on-first-deploy.md` - 会话-65：根据首次 Actions 失败日志，让工作流自动启用以 GitHub Actions 为来源的 Pages；排查 Pages 初次部署 404 或 `configure-pages` 失败时读取。
 `workflow/20260821095356-map-panel-progress-save-and-pages.md` - 会话-64：增加可点击定位的完整地图元素面板、飞行中航点按钮禁用、本地任务/战役自动存档与安全恢复，并配置 GitHub Pages 自动发布；核对地图图例交互、刷新恢复或在线部署时读取。
 `workflow/20260821093646-show-failed-node-and-allow-retry.md` - 会话-63：失败后当前节点显示 FAILED 但仍可重新执行，同层备选保持 AVAILABLE、下一层锁定，并默认选中刚失败节点；核对失败状态展示或重试入口时读取。
@@ -62,6 +67,7 @@
 
 ## 关键记忆
 - 项目名称为 `F-117 Tactical Command System`，中文名为 `F-117 战术指挥系统`，包名为 `f117-tactical-command-system`。
+- 产品定位是解谜与动态规划导向的军事模拟；任务界面只呈现态势、情报、告警和指令，不直接解释幕后游戏机制、操作教程或程序生成信息。
 - 当前完成 Phase 0–12，采用 React、TypeScript、Vite 与 HTML Canvas。
 - `RunState` 与 `MissionSession` 分离，Canvas 不持有领域状态。
 - 只有 Radar Sensor 可读取飞机真实状态，后续 AI 只能消费带误差 Radar Contact。
