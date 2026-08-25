@@ -50,4 +50,5 @@
 - 根据根索引中记录的读取场景，按需读取 `.agentdocs/workflow/` 下的具体变更文档。
 - 不直接全量检索 `.agentdocs/workflow/`。
 - 每次代码变更均在 `.agentdocs/workflow/` 新建带时间前缀的 Markdown 变更文档，并在 `.agentdocs/index.md` 登记。
+- 尚未实施的设计提案、临时方案和废案统一记录在 `.agentdocs/proposals/`，并在索引的“设计提案与废案”区域登记；不得混入已落地的 `workflow/` 变更历史。
 - 影响项目整体或核心认知的变更，应同步更新本文件。
