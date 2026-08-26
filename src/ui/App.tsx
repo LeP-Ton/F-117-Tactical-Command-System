@@ -12,6 +12,7 @@ import { getWeatherSpeedFactor } from "../domain/weatherSystem";
 import { radarTypeProfiles } from "../domain/radarTypes";
 import { MapElementPanel } from "./MapElementPanel";
 import type { MapElementSelection } from "./mapSelection";
+import { getIntelAccessTier } from "../domain/intelAccess";
 
 const workspaceViewStorageKey = "f117-tactical-command-system:view:v1";
 
@@ -79,9 +80,17 @@ export function App() {
   const [showBelief, setShowBelief] = useState(false);
   const [seedInput, setSeedInput] = useState(state.seed);
   const [campaignView, setCampaignView] = useState(() => loadCampaignView(state.currentMission?.status));
+  const [intelligencePreview, setIntelligencePreview] = useState<typeof state.currentMission>();
   const [mapSelection, setMapSelection] = useState<MapElementSelection | null>(null);
   const mission = state.currentMission;
   const { muted, volume, setMuted, setVolume } = useGameAudio(mission);
+  const intelAccessTier = getIntelAccessTier(state.campaign);
+  const debugOverride = new URLSearchParams(window.location.search).get("ai-debug") === "1";
+  const canUseAiDebug = debugOverride || intelAccessTier >= 2;
+
+  useEffect(() => {
+    setShowBelief(intelAccessTier >= 2);
+  }, [mission?.id, intelAccessTier]);
 
   useEffect(() => {
     try {
@@ -140,8 +149,37 @@ export function App() {
         </div>
       </header>
 
-      {campaignView ? (
-        <CampaignMap state={state} dispatch={dispatch} onLaunch={() => setCampaignView(false)} />
+      {intelligencePreview ? <div className="workspace intelligence-workspace">
+        <aside className="control-panel">
+          <section className="panel-section">
+            <div className="section-kicker">CURRENT ESTIMATE</div>
+            <h2>任务情报</h2>
+            <p className="hint">只读情报研判 // 任务尚未授权执行</p>
+            <button className="primary-button" onClick={() => { setIntelligencePreview(undefined); setCampaignView(true); }}>返回任务网络</button>
+          </section>
+          <CollapsibleSection title="WEATHER FORECAST" meta={`${intelligencePreview.weather.length} CELLS`}>
+            <ol className="weather-forecast-list">
+              {intelligencePreview.weatherForecast.map((forecast) => <li key={`${forecast.weatherId}-${forecast.horizonSeconds}`}>
+                <strong>{forecast.weatherId} / T+{forecast.horizonSeconds}s</strong>
+                <span>{forecast.kind} · {forecast.intensityTrend} · 可信度{forecast.confidence}</span>
+                <small>预计区域 {forecast.estimatedPosition.x.toFixed(0)},{forecast.estimatedPosition.y.toFixed(0)} · {forecast.estimatedSize.width.toFixed(0)}×{forecast.estimatedSize.height.toFixed(0)}</small>
+              </li>)}
+            </ol>
+          </CollapsibleSection>
+        </aside>
+        <section className="map-stage">
+          <div className="map-label"><span>MISSION INTELLIGENCE</span><span>CURRENT ESTIMATE</span></div>
+          <TacticalMap mission={intelligencePreview} showBelief={intelAccessTier >= 2} selectedIndex={null} onSelect={() => undefined} dispatch={() => undefined} mapSelection={mapSelection} readOnly />
+          <div className="map-legend"><span><i className="legend-aircraft" />F-117</span><span><i className="legend-extraction" />撤离区</span><span><i className="legend-radar" />{intelAccessTier >= 2 ? "真实雷达 / 敌方 Contact" : "雷达情报 / 误差区"}</span></div>
+        </section>
+        <aside className="telemetry-panel">
+          <MapElementPanel mission={intelligencePreview} showBelief={intelAccessTier >= 2} selection={mapSelection} onSelectionChange={setMapSelection} defaultExpandedGroups />
+          {intelligencePreview.adaptationNotes.length > 0 && <CollapsibleSection title="COUNTER DEPLOYMENT" meta={intelligencePreview.adaptationNotes.length}>
+            <ol className="event-list briefing-list">{intelligencePreview.adaptationNotes.map((note) => <li key={note}><span>{note}</span></li>)}</ol>
+          </CollapsibleSection>}
+        </aside>
+      </div> : campaignView ? (
+        <CampaignMap state={state} dispatch={dispatch} onLaunch={() => setCampaignView(false)} onPreview={(preview) => { setIntelligencePreview(preview); setCampaignView(false); }} />
       ) : <div className="workspace">
         <ControlPanel
           mission={mission}
@@ -156,9 +194,9 @@ export function App() {
             <span>TACTICAL AREA // 1000 × 1000</span>
             <span>{showBelief ? "敌方内部状态" : "有限情报航线规划"}</span>
           </div>
-          <button className={`belief-toggle ${showBelief ? "active" : ""}`} onClick={() => setShowBelief((value) => !value)}>
-            AI DEBUG {showBelief ? "ON" : "OFF"}
-          </button>
+          {canUseAiDebug && <button className={`belief-toggle ${showBelief ? "active" : ""}`} onClick={() => setShowBelief((value) => !value)}>
+            TOTAL INTEL {showBelief ? "ON" : "OFF"}
+          </button>}
           <TacticalMap
             mission={mission}
             showBelief={showBelief}
@@ -226,7 +264,7 @@ export function App() {
               {mission.finalStrikeNotes.map((note) => <li key={note}><span>{note}</span></li>)}
             </ol>
           </CollapsibleSection>}
-          {showBelief && <CollapsibleSection className="debug-group" title="AI DEBUG" meta="INTERNAL" defaultExpanded={false}>
+          {showBelief && <CollapsibleSection className="debug-group" title="ENEMY SYSTEM STATE" meta="INTERNAL" defaultExpanded={false}>
             <CollapsibleSection className="event-section" title="结构化事件" meta={mission.events.length}>
               <ol className="event-list">
                 {recentEvents.length === 0 && <li className="empty-event">等待操作事件…</li>}

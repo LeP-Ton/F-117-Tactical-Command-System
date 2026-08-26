@@ -8,6 +8,7 @@ interface MapElementPanelProps {
   showBelief: boolean;
   selection: MapElementSelection | null;
   onSelectionChange: (selection: MapElementSelection | null) => void;
+  defaultExpandedGroups?: boolean;
 }
 
 const weatherLabels = {
@@ -17,7 +18,7 @@ const weatherLabels = {
   FOG: "雾区",
 } as const;
 
-export function MapElementPanel({ mission, showBelief, selection, onSelectionChange }: MapElementPanelProps) {
+export function MapElementPanel({ mission, showBelief, selection, onSelectionChange, defaultExpandedGroups = false }: MapElementPanelProps) {
   const select = (next: MapElementSelection) => {
     onSelectionChange(isSameMapSelection(selection, next) ? null : next);
   };
@@ -39,7 +40,7 @@ export function MapElementPanel({ mission, showBelief, selection, onSelectionCha
 
   return (
     <CollapsibleSection className="map-elements-section" title="MAP ELEMENTS">
-      <CollapsibleSection className="map-element-group" title="任务目标" meta="3" defaultExpanded={false}>
+      <CollapsibleSection className="map-element-group" title="任务目标" meta="3" defaultExpanded={defaultExpandedGroups}>
         <div className="map-element-list">
           <button className={buttonClass({ kind: "AIRCRAFT" })} onClick={() => select({ kind: "AIRCRAFT" })}>
             <strong>F-117</strong><span>己方机位 · 航向与位置实时更新</span>
@@ -53,7 +54,7 @@ export function MapElementPanel({ mission, showBelief, selection, onSelectionCha
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection className="map-element-group" title="航线" meta={mission.route.waypoints.length} defaultExpanded={false}>
+      <CollapsibleSection className="map-element-group" title="航线" meta={mission.route.waypoints.length} defaultExpanded={defaultExpandedGroups}>
         <div className="map-element-list">
           {mission.route.waypoints.map((waypoint, index) => (
             <button key={waypoint.id} className={buttonClass({ kind: "WAYPOINT", id: waypoint.id })} onClick={() => select({ kind: "WAYPOINT", id: waypoint.id })}>
@@ -64,7 +65,7 @@ export function MapElementPanel({ mission, showBelief, selection, onSelectionCha
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection className="map-element-group" title="环境" meta={mission.terrain.length + mission.weather.length} defaultExpanded={false}>
+      <CollapsibleSection className="map-element-group" title="环境" meta={mission.terrain.length + mission.weather.length} defaultExpanded={defaultExpandedGroups}>
         <div className="map-element-list">
           {mission.terrain.map((terrain) => (
             <button key={terrain.id} className={buttonClass({ kind: "TERRAIN", id: terrain.id })} onClick={() => select({ kind: "TERRAIN", id: terrain.id })}>
@@ -81,7 +82,7 @@ export function MapElementPanel({ mission, showBelief, selection, onSelectionCha
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection className="map-element-group" title="雷达" meta={radarItems.length} defaultExpanded={false}>
+      <CollapsibleSection className="map-element-group" title="雷达" meta={radarItems.length} defaultExpanded={defaultExpandedGroups}>
         <div className="map-element-list">
           {radarItems.map((radar) => (
             <button key={radar.id} className={buttonClass({ kind: "RADAR", id: radar.id })} onClick={() => select({ kind: "RADAR", id: radar.id })}>

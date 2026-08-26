@@ -27,4 +27,11 @@ describe("MapElementPanel 地图元素分类", () => {
     fireEvent.click(screen.getByRole("button", { name: /F-117/ }));
     expect(onSelectionChange).toHaveBeenCalledWith({ kind: "AIRCRAFT" });
   });
+
+  it("情报预览可让四类元素默认展开", () => {
+    const { container } = render(<MapElementPanel mission={createMission("MAP-PREVIEW")} showBelief={false} selection={null} onSelectionChange={vi.fn()} defaultExpandedGroups />);
+    const headings = container.querySelectorAll(".map-element-group > .collapsible-heading");
+    expect(headings).toHaveLength(4);
+    headings.forEach((heading) => expect(heading).toHaveAttribute("aria-expanded", "true"));
+  });
 });

@@ -8,6 +8,7 @@ import { advanceRadarOperators } from "../domain/radarOperatorAI";
 import { advanceRadarSensors } from "../domain/radarSensor";
 import { canAttackTarget, isInsideExtraction } from "../domain/missionRules";
 import { generateRadarIntel } from "../domain/intelSystem";
+import { getIntelAccessTier } from "../domain/intelAccess";
 import { analyzeCompletedMission, applyEnemyCounterDeployment } from "../domain/enemyAdaptation";
 import { applyFinalStrikeDefense } from "../domain/finalStrike";
 import { advanceEngagement } from "../domain/engagementSystem";
@@ -61,7 +62,7 @@ function isEditable(state: RunState): boolean {
  * 使用当前 Run 的持久状态准备指定节点任务。
  * 节点选择与任务重置必须共用这条路径，避免遗漏情报、防空削弱或敌方适应效果。
  */
-function prepareCampaignMission(state: RunState, node: CampaignNode): MissionSession {
+export function prepareCampaignMission(state: RunState, node: CampaignNode): MissionSession {
   const selectedMission = createMission(node.missionSeed);
   const alertCoverageMultiplier = 1 + state.resources.enemyAlert / 250;
   const adjustedRadars = selectedMission.radars.map((radar) => ({
@@ -89,10 +90,17 @@ function prepareCampaignMission(state: RunState, node: CampaignNode): MissionSes
     finalMission.extractionArea,
   );
 
+  const generatedIntel = generateRadarIntel(selectedMission.seed, radars, adjustedIntelAccuracy);
+  const radarIntel = getIntelAccessTier(state.campaign) >= 1
+    ? radars.map((radar) => {
+      const previous = generatedIntel.find((report) => report.radarId === radar.id);
+      return { radarId: radar.id, radarType: radar.type, level: "CONFIRMED" as const, estimatedPosition: { ...radar.position }, positionErrorRadius: 0, estimatedRange: previous?.estimatedRange };
+    })
+    : generatedIntel;
   return {
     ...finalMission,
     radars,
-    radarIntel: generateRadarIntel(selectedMission.seed, radars, adjustedIntelAccuracy),
+    radarIntel,
     intelAccuracy: adjustedIntelAccuracy,
     commanderCoordinationModifier: state.enemyState.commanderCoordinationModifier,
   };

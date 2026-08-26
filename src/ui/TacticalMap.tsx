@@ -15,6 +15,7 @@ interface TacticalMapProps {
   onSelect: (index: number | null) => void;
   dispatch: (action: GameAction) => void;
   mapSelection: MapElementSelection | null;
+  readOnly?: boolean;
 }
 
 interface CanvasMetrics {
@@ -76,7 +77,7 @@ function drawAircraft(
   context.restore();
 }
 
-export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, dispatch, mapSelection }: TacticalMapProps) {
+export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, dispatch, mapSelection, readOnly = false }: TacticalMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const editable = mission.status === "PLANNING" || mission.status === "PAUSED";
@@ -382,6 +383,7 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
   };
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLCanvasElement>) => {
+    if (readOnly) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();

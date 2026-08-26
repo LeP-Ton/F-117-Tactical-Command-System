@@ -1,12 +1,15 @@
 import { useMemo, useState } from "react";
-import type { RunState } from "../domain/types";
+import type { MissionSession, RunState } from "../domain/types";
 import type { GameAction } from "../game/gameReducer";
 import { getAdaptationLevel } from "../domain/enemyAdaptation";
+import { getIntelAccessTier } from "../domain/intelAccess";
+import { prepareCampaignMission } from "../game/gameReducer";
 
 interface CampaignMapProps {
   state: RunState;
   dispatch: (action: GameAction) => void;
   onLaunch: () => void;
+  onPreview: (mission: MissionSession) => void;
 }
 
 const typeLabels = {
@@ -25,7 +28,7 @@ const missionBriefings = {
   FINAL_STRIKE: "对最终目标实施纵深精确打击。",
 } as const;
 
-export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
+export function CampaignMap({ state, dispatch, onLaunch, onPreview }: CampaignMapProps) {
   const firstAvailable = state.campaign.nodes.find((node) => node.status === "AVAILABLE");
   const [selectedId, setSelectedId] = useState(
     state.campaign.currentNodeId ?? firstAvailable?.id ?? state.campaign.nodes[0]?.id ?? "",
@@ -35,6 +38,8 @@ export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
     [firstAvailable, selectedId, state.campaign.nodes],
   );
   const adaptationLevel = getAdaptationLevel(state.enemyState.tacticalProfile);
+  const intelAccessTier = getIntelAccessTier(state.campaign);
+  const previewMission = useMemo(() => selected ? prepareCampaignMission(state, selected) : undefined, [selected, state]);
   const hasAvailableNode = state.campaign.nodes.some((node) => node.status === "AVAILABLE");
   const canRetryFailedNode = selected?.status === "FAILED" && state.status !== "VICTORY";
   // FAILED 表示上次执行结果，同时也是合法重试入口；AVAILABLE 节点仍可改选。
@@ -47,6 +52,7 @@ export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
         <div className="campaign-resources">
           <span>ENEMY ALERT <strong>{state.resources.enemyAlert}</strong></span>
           <span>INTEL QUALITY <strong>+{(state.resources.intelAccuracyBonus * 100).toFixed(0)}%</strong></span>
+          <span>INTEL ACCESS <strong>{intelAccessTier}/2</strong></span>
           <span>RADAR NET <strong>{(state.enemyState.radarCoverageModifier * 100).toFixed(0)}%</strong></span>
           <span>CMD LINK <strong>{(state.enemyState.commanderCoordinationModifier * 100).toFixed(0)}%</strong></span>
           <span>ADAPT INDEX <strong>{adaptationLevel}</strong></span>
@@ -89,6 +95,7 @@ export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
               <div><dt>情报可信度</dt><dd>{(selected.preview.intelAccuracy * 100).toFixed(0)}%</dd></div>
             </dl>
             <p>{missionBriefings[selected.type]}</p>
+            <p>{intelAccessTier === 0 ? "LIMITED INTELLIGENCE" : intelAccessTier === 1 ? "RADAR IDENTIFICATION VERIFIED" : "TOTAL INTELLIGENCE ACCESS"}</p>
             {selected.type === "FINAL_STRIKE" && <p>最终目标防空序列持续重构，部署态势将在出击时确认。</p>}
             {state.enemyState.tacticalProfile.missionSamples > 0 && <div className="campaign-build">
               <span className="section-kicker">ENEMY HISTORICAL ANALYSIS</span>
@@ -98,8 +105,9 @@ export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
             </div>}
             <button
               className="primary-button"
-              disabled={(selected.status !== "AVAILABLE" && !canRetryFailedNode) || !canContinueRun}
+              disabled={selected.status !== "LOCKED" && ((selected.status !== "AVAILABLE" && !canRetryFailedNode) || !canContinueRun)}
               onClick={() => {
+                if (selected.status === "LOCKED") { if (previewMission) onPreview(previewMission); return; }
                 dispatch({ type: "SELECT_CAMPAIGN_NODE", nodeId: selected.id });
                 onLaunch();
               }}
@@ -108,7 +116,7 @@ export function CampaignMap({ state, dispatch, onLaunch }: CampaignMapProps) {
                 ? "战役完成"
                 : state.status === "DEFEAT" && !canContinueRun
                   ? "战役终止 // 飞机损失"
-                  : "执行任务"}
+                  : selected.status === "LOCKED" ? "查看情报" : "执行任务"}
             </button>
           </>}
         </aside>
