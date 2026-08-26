@@ -23,7 +23,7 @@ export function DebriefWorkspace({ debrief, mapSelection, onMapSelectionChange, 
     leftPanel={<aside className="control-panel">
       <section className="panel-section">
         <div className="section-kicker">MISSION DEBRIEF</div>
-        <h2>任务复盘</h2>
+        <h2>复盘任务</h2>
         <p className="hint">成功撤离快照 // {debrief.nodeId}</p>
         <dl className="telemetry-grid">
           <div><dt>任务时间</dt><dd>{(mission.elapsedMs / 1000).toFixed(1)} s</dd></div>
@@ -33,7 +33,7 @@ export function DebriefWorkspace({ debrief, mapSelection, onMapSelectionChange, 
         </dl>
         <div className="button-row">
           <button className="secondary-button" onClick={() => setPanoramic((value) => !value)}>{panoramic ? "切换任务视角" : "切换全景复盘"}</button>
-          <button className="primary-button" onClick={onClose}>返回任务网络</button>
+          <button className="primary-button return-network-button" onClick={onClose}>返回任务网络</button>
         </div>
       </section>
     </aside>}

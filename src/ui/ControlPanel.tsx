@@ -16,7 +16,7 @@ interface ControlPanelProps {
 }
 
 const statusLabels = {
-  PLANNING: "任务规划",
+  PLANNING: "规划任务",
   RUNNING: "任务执行",
   SUCCESS: "任务成功",
   FAILED: "任务失败",
@@ -49,7 +49,7 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
         </div>
         <div className="button-row">
           {mission.status === "PLANNING" && (
-            <button className="secondary-button" onClick={onOpenCampaign}>任务网络</button>
+            <button className="primary-button return-network-button" onClick={onOpenCampaign}>返回任务网络</button>
           )}
           {mission.status === "PLANNING" && (
             <button
@@ -64,10 +64,10 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
             重置航线
           </button>}
           {(mission.status === "SUCCESS" || mission.status === "FAILED") && (
-            mission.status === "SUCCESS" && onOpenDebrief ? <button className="secondary-button" onClick={onOpenDebrief}>任务复盘</button> : null
+            mission.status === "SUCCESS" && onOpenDebrief ? <button className="secondary-button" onClick={onOpenDebrief}>复盘任务</button> : null
           )}
           {(mission.status === "SUCCESS" || mission.status === "FAILED") && (
-            <button className="primary-button" onClick={() => {
+            <button className="primary-button return-network-button" onClick={() => {
               dispatch({ type: "RETURN_CAMPAIGN" });
               onReturnCampaign();
             }}>返回任务网络</button>

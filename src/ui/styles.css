@@ -53,6 +53,7 @@ button { border: 1px solid #31584b; color: #a9c9bf; background: #0b1b17; padding
 button:hover:not(:disabled) { border-color: #5aa68f; color: #e6f1ed; background: #102a23; }
 button:disabled { opacity: 0.32; cursor: not-allowed; }
 .primary-button { flex: 1 0 100%; border-color: #b88a35; color: #f1c466; background: rgba(98, 70, 22, 0.24); }
+.return-network-button { width: 100%; flex: 1 0 100%; }
 .secondary-button { flex: 1; }
 
 .section-heading { display: flex; justify-content: space-between; color: #70998c; font-size: 11px; letter-spacing: 0.08em; margin-bottom: 12px; }
@@ -139,11 +140,11 @@ button:disabled { opacity: 0.32; cursor: not-allowed; }
 .fuel-critical { border-color: rgba(218, 83, 56, 0.55); box-shadow: inset 0 0 18px rgba(218, 83, 56, 0.08); }
 .fuel-critical .section-heading, .fuel-critical .threat-message { color: #e5795f; }
 .commander-scores { color: #7fa79a; }
-.threat-section { border-color: rgba(216, 104, 67, 0.35); }
+.threat-section { border-bottom-color: #173329; }
 .threat-progress { height: 7px; margin: 10px 0; overflow: hidden; background: #10211c; border: 1px solid #27483e; }
 .threat-progress i { display: block; height: 100%; background: linear-gradient(90deg, #5fae91, #e0b64d, #e2523b); }
 .threat-message { margin: 0; color: #b69072; font-size: 10px; line-height: 1.5; }
-.threat-missile_inbound { border-color: #e2523b; box-shadow: inset 0 0 24px rgba(226, 82, 59, 0.1); }
+.threat-missile_inbound { border-bottom-color: #173329; box-shadow: inset 0 0 24px rgba(226, 82, 59, 0.1); }
 .threat-missile_inbound .section-heading, .threat-missile_inbound .threat-message { color: #ef7258; }
 .fatal-state { padding: 40px; color: #e08c72; }
 .campaign-screen { flex: 1 1 auto; height: auto; min-height: 0; padding: 24px; overflow: auto; overscroll-behavior: contain; background: radial-gradient(circle at 45% 45%, #10231d, #050b09 70%); }

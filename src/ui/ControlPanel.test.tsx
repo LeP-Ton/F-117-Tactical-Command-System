@@ -6,6 +6,22 @@ import { ControlPanel } from "./ControlPanel";
 afterEach(cleanup);
 
 describe("ControlPanel 航点操作", () => {
+  it("规划页面使用规划任务标题和统一返回按钮", () => {
+    const mission = createMission("PLANNING-PAGE-COPY");
+    render(
+      <ControlPanel
+        mission={mission}
+        selectedIndex={null}
+        onSelect={vi.fn()}
+        dispatch={vi.fn()}
+        onOpenCampaign={vi.fn()}
+        onReturnCampaign={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("heading", { name: "规划任务" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "返回任务网络" })).toHaveClass("primary-button", "return-network-button");
+  });
+
   it("飞机运行中禁用航点排序和删除按钮", () => {
     const mission = createMission("RUNNING-WAYPOINT-CONTROLS");
     mission.status = "RUNNING";

@@ -118,12 +118,12 @@ export function CampaignMap({ state, dispatch, onLaunch, onPreview, onDebrief }:
               }}
             >
               {selected.status === "COMPLETED"
-                ? selectedDebrief ? "任务复盘" : "任务已完成"
+                ? selectedDebrief ? "复盘任务" : "任务已完成"
                 : state.status === "VICTORY"
                 ? "任务网络完成"
                 : state.status === "DEFEAT" && !canContinueRun
                   ? "任务网络终止 // 飞机损失"
-                  : selected.status === "LOCKED" ? "查看情报" : "执行任务"}
+                  : selected.status === "LOCKED" ? "预览任务" : "规划任务"}
             </button>
           </>}
         </aside>

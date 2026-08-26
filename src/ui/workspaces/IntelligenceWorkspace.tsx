@@ -20,9 +20,9 @@ export function IntelligenceWorkspace({ mission, showBelief, mapSelection, onMap
     leftPanel={<aside className="control-panel">
       <section className="panel-section">
         <div className="section-kicker">CURRENT ESTIMATE</div>
-        <h2>任务情报</h2>
+        <h2>预览任务</h2>
         <p className="hint">只读情报研判 // 任务尚未授权执行</p>
-        <button className="primary-button" onClick={onClose}>返回任务网络</button>
+        <button className="primary-button return-network-button" onClick={onClose}>返回任务网络</button>
       </section>
       <WeatherForecastPanel mission={mission} />
     </aside>}

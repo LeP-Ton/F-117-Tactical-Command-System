@@ -4,6 +4,8 @@ import { createMission } from "../domain/factories";
 import { EnemyStateSummary, RadarOperatorList } from "./EnemySystemPanels";
 import { TacticalMapStage } from "./TacticalMapStage";
 import { WeatherForecastPanel } from "./WeatherForecastPanel";
+import { IntelligenceWorkspace } from "./workspaces/IntelligenceWorkspace";
+import { DebriefWorkspace } from "./workspaces/DebriefWorkspace";
 
 const originalGetContext = HTMLCanvasElement.prototype.getContext;
 beforeAll(() => Object.defineProperty(HTMLCanvasElement.prototype, "getContext", { configurable: true, value: vi.fn(() => null) }));
@@ -53,5 +55,16 @@ describe("战术工作区共享组件", () => {
     expect(screen.getAllByText(/^W /)).toHaveLength(mission.radars.length);
     expect(screen.getAllByText(/^S /)).toHaveLength(mission.radars.length);
     expect(screen.getAllByText(/^F /)).toHaveLength(mission.radars.length);
+  });
+
+  it("预览与复盘页面标题匹配入口文案且共用返回按钮样式", () => {
+    const mission = createMission("WORKSPACE-COPY");
+    const { rerender } = render(<IntelligenceWorkspace mission={mission} showBelief={false} mapSelection={null} onMapSelectionChange={vi.fn()} onClose={vi.fn()} />);
+    expect(screen.getByRole("heading", { name: "预览任务" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "返回任务网络" })).toHaveClass("primary-button", "return-network-button");
+
+    rerender(<DebriefWorkspace debrief={{ nodeId: "C0-0", completedAt: 0, intelAccessTier: 0, mission }} mapSelection={null} onMapSelectionChange={vi.fn()} onClose={vi.fn()} />);
+    expect(screen.getByRole("heading", { name: "复盘任务" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "返回任务网络" })).toHaveClass("primary-button", "return-network-button");
   });
 });
