@@ -3,6 +3,7 @@ import { distanceBetween, distanceToExtraction } from "../domain/missionRules";
 import type { MissionSession } from "../domain/types";
 import type { GameAction } from "../game/gameReducer";
 import { CollapsibleSection } from "./CollapsibleSection";
+import { WeatherForecastPanel } from "./WeatherForecastPanel";
 
 interface ControlPanelProps {
   mission: MissionSession;
@@ -59,8 +60,12 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
               确认航线
             </button>
           )}
-          {mission.status === "PLANNING" && <button className="secondary-button" onClick={() => dispatch({ type: "RESET" })}>重置航线</button>}
-          {mission.status === "SUCCESS" && onOpenDebrief && <button className="secondary-button" onClick={onOpenDebrief}>任务复盘</button>}
+          {mission.status === "PLANNING" && <button className="secondary-button" onClick={() => dispatch({ type: "RESET" })}>
+            重置航线
+          </button>}
+          {(mission.status === "SUCCESS" || mission.status === "FAILED") && (
+            mission.status === "SUCCESS" && onOpenDebrief ? <button className="secondary-button" onClick={onOpenDebrief}>任务复盘</button> : null
+          )}
           {(mission.status === "SUCCESS" || mission.status === "FAILED") && (
             <button className="primary-button" onClick={() => {
               dispatch({ type: "RETURN_CAMPAIGN" });
@@ -137,24 +142,7 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
         <p className="hint">点击地图添加航点，拖动航点调整位置。任务执行中仅可调整当前目标之后的航点。</p>
       </CollapsibleSection>
 
-      <CollapsibleSection
-        className="weather-planning-section"
-        title="WEATHER FORECAST"
-        meta={`${mission.weather.length} CELLS`}
-        defaultExpanded={false}
-      >
-        <ol className="weather-forecast-list">
-          {mission.weatherForecast.map((forecast) => (
-            <li key={`${forecast.weatherId}-${forecast.horizonSeconds}`}>
-              <strong>{forecast.weatherId} / T+{forecast.horizonSeconds}s</strong>
-              <span>{forecast.kind} · {forecast.intensityTrend} · 可信度{forecast.confidence}</span>
-              <small>
-                预计区域 {forecast.estimatedPosition.x.toFixed(0)},{forecast.estimatedPosition.y.toFixed(0)} · {forecast.estimatedSize.width.toFixed(0)}×{forecast.estimatedSize.height.toFixed(0)}
-              </small>
-            </li>
-          ))}
-        </ol>
-      </CollapsibleSection>
+      <WeatherForecastPanel mission={mission} defaultExpanded={false} />
     </aside>
   );
 }

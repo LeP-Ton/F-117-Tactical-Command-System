@@ -4,6 +4,7 @@
 `proposals/20260825225610-rejected-sigint-overlay.md` - 会话-80/81：已废弃的“有限情报动态 SIGINT Overlay”方案；重新讨论 AI DEBUG、直播观赏性或有限情报动态反馈时读取，不能视为已实施功能。
 
 ## 当前变更文档
+`workflow/20260826174932-share-tactical-workspace-components.md` - 会话-99：在保留任务执行、任务情报与任务复盘独立布局的前提下，抽取三栏工作区、地图舞台、天气预报、部署简报及敌方分析基础组件，并将三个页面迁出 App；排查战术 UI 组件职责或减少页面重复时读取。
 `workflow/20260826153450-realtime-route-and-mission-debrief.md` - 会话-95：移除任务暂停与执行中退出，允许实时编辑当前目标后的航点，并持久化成功撤离快照供任务视角/全景双视角复盘；核对任务执行权限、旧存档迁移或历史复盘时读取。
 `workflow/20260826073500-add-tiered-intel-preview.md` - 会话-85：增加两级 INTEL 可见权限、二级完整 AI DEBUG 奖励及锁定节点当前研判地图预览；核对情报成长、地图预览或调试解锁时读取。
 `workflow/20260825185403-optimize-tactical-sidebars.md` - 会话-76：移除航点菱形锁定标记，按规划/态势职责重组左右侧栏，将天气预报迁移到左侧，并为地图元素和 AI 调试建立分级折叠；排查战术界面信息密度或侧栏职责时读取。
