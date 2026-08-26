@@ -35,12 +35,15 @@ export function loadRunProgress(): RunState | undefined {
     if (!raw) return undefined;
     const payload = JSON.parse(raw) as Partial<SavedRun>;
     if (payload.version !== SAVE_VERSION || !isRunState(payload.state)) return undefined;
-    const restored = payload.state.currentMission?.status === "RUNNING"
-      ? {
-        ...payload.state,
-        currentMission: { ...payload.state.currentMission, status: "PAUSED" as const },
-      }
-      : payload.state;
+    const legacyStatus = (payload.state.currentMission as { status?: string } | undefined)?.status;
+    const restored: RunState = {
+      ...payload.state,
+      missionDebriefs: payload.state.missionDebriefs ?? {},
+      // 旧版暂停存档直接恢复执行；新版本刷新运行中任务也不再制造暂停状态。
+      currentMission: legacyStatus === "PAUSED"
+        ? { ...payload.state.currentMission!, status: "RUNNING" }
+        : payload.state.currentMission,
+    };
     syncEventSequenceFromRun(restored);
     return restored;
   } catch {

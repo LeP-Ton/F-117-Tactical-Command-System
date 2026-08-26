@@ -80,7 +80,8 @@ function drawAircraft(
 export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, dispatch, mapSelection, readOnly = false }: TacticalMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-  const editable = mission.status === "PLANNING" || mission.status === "PAUSED";
+  const editable = mission.status === "PLANNING" || mission.status === "RUNNING";
+  const editMode = mission.status === "RUNNING" ? "RUNNING" : "PLANNING";
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -156,7 +157,7 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
         context.fillText(weather.kind, weather.x + 9, weather.y + 19);
       });
 
-      // 规划与暂停阶段显示有误差的未来轮廓，帮助玩家选择穿越天气窗口。
+      // 规划及实时航线调整阶段显示有误差的未来轮廓。
       if (editable) mission.weatherForecast.forEach((forecast) => {
         context.save();
         context.setLineDash([3 / metrics.scale, 9 / metrics.scale]);
@@ -390,7 +391,7 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
     const hitIndex = findWaypointIndex({ x: event.clientX - rect.left, y: event.clientY - rect.top });
     if (hitIndex >= 0) {
       onSelect(hitIndex);
-      if (editable && canEditWaypoint(mission.route, hitIndex)) {
+      if (editable && canEditWaypoint(mission.route, hitIndex, editMode)) {
         setDraggingIndex(hitIndex);
         canvas.setPointerCapture(event.pointerId);
       }

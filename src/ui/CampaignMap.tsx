@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { MissionSession, RunState } from "../domain/types";
+import type { MissionDebrief, MissionSession, RunState } from "../domain/types";
 import type { GameAction } from "../game/gameReducer";
 import { getAdaptationLevel } from "../domain/enemyAdaptation";
 import { getIntelAccessTier } from "../domain/intelAccess";
@@ -10,6 +10,7 @@ interface CampaignMapProps {
   dispatch: (action: GameAction) => void;
   onLaunch: () => void;
   onPreview: (mission: MissionSession) => void;
+  onDebrief: (debrief: MissionDebrief) => void;
 }
 
 const typeLabels = {
@@ -28,7 +29,7 @@ const missionBriefings = {
   FINAL_STRIKE: "对最终目标实施纵深精确打击。",
 } as const;
 
-export function CampaignMap({ state, dispatch, onLaunch, onPreview }: CampaignMapProps) {
+export function CampaignMap({ state, dispatch, onLaunch, onPreview, onDebrief }: CampaignMapProps) {
   const firstAvailable = state.campaign.nodes.find((node) => node.status === "AVAILABLE");
   const [selectedId, setSelectedId] = useState(
     state.campaign.currentNodeId ?? firstAvailable?.id ?? state.campaign.nodes[0]?.id ?? "",
@@ -40,6 +41,7 @@ export function CampaignMap({ state, dispatch, onLaunch, onPreview }: CampaignMa
   const adaptationLevel = getAdaptationLevel(state.enemyState.tacticalProfile);
   const intelAccessTier = getIntelAccessTier(state.campaign);
   const previewMission = useMemo(() => selected ? prepareCampaignMission(state, selected) : undefined, [selected, state]);
+  const selectedDebrief = selected ? state.missionDebriefs[selected.id] : undefined;
   const hasAvailableNode = state.campaign.nodes.some((node) => node.status === "AVAILABLE");
   const canRetryFailedNode = selected?.status === "FAILED" && state.status !== "VICTORY";
   // FAILED 表示上次执行结果，同时也是合法重试入口；AVAILABLE 节点仍可改选。
@@ -105,14 +107,19 @@ export function CampaignMap({ state, dispatch, onLaunch, onPreview }: CampaignMa
             </div>}
             <button
               className="primary-button"
-              disabled={selected.status !== "LOCKED" && ((selected.status !== "AVAILABLE" && !canRetryFailedNode) || !canContinueRun)}
+              disabled={(selected.status === "COMPLETED" && !selectedDebrief)
+                || (selected.status !== "LOCKED" && selected.status !== "COMPLETED"
+                  && ((selected.status !== "AVAILABLE" && !canRetryFailedNode) || !canContinueRun))}
               onClick={() => {
                 if (selected.status === "LOCKED") { if (previewMission) onPreview(previewMission); return; }
+                if (selected.status === "COMPLETED") { if (selectedDebrief) onDebrief(selectedDebrief); return; }
                 dispatch({ type: "SELECT_CAMPAIGN_NODE", nodeId: selected.id });
                 onLaunch();
               }}
             >
-              {state.status === "VICTORY"
+              {selected.status === "COMPLETED"
+                ? selectedDebrief ? "任务复盘" : "任务已完成"
+                : state.status === "VICTORY"
                 ? "任务网络完成"
                 : state.status === "DEFEAT" && !canContinueRun
                   ? "任务网络终止 // 飞机损失"

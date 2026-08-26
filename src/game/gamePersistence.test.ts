@@ -26,14 +26,28 @@ describe("任务进度保存", () => {
     expect(restored?.currentMission?.aircraft.fuelRemaining).toBe(1450);
   });
 
-  it("刷新时把运行中的任务恢复为暂停，避免自动继续飞行", () => {
+  it("刷新时运行中的任务保持执行状态", () => {
     const state = createRun("SAVE-RUNNING");
     saveRunProgress({
       ...state,
       currentMission: { ...state.currentMission!, status: "RUNNING" },
     });
 
-    expect(loadRunProgress()?.currentMission?.status).toBe("PAUSED");
+    expect(loadRunProgress()?.currentMission?.status).toBe("RUNNING");
+  });
+
+  it("旧版暂停存档迁移为运行状态并补全复盘集合", () => {
+    const state = createRun("SAVE-LEGACY-PAUSED");
+    const legacyState = {
+      ...state,
+      missionDebriefs: undefined,
+      currentMission: { ...state.currentMission!, status: "PAUSED" },
+    };
+    window.localStorage.setItem(RUN_SAVE_KEY, JSON.stringify({ version: 1, savedAt: Date.now(), state: legacyState }));
+
+    const restored = loadRunProgress();
+    expect(restored?.currentMission?.status).toBe("RUNNING");
+    expect(restored?.missionDebriefs).toEqual({});
   });
 
   it("损坏或版本不兼容的存档不会阻断初始化", () => {

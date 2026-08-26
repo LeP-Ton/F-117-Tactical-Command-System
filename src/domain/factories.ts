@@ -70,6 +70,7 @@ export function createRun(seed: string = gameConfig.initialSeed): RunState {
       commanderCoordinationModifier: 1,
       tacticalProfile: createPlayerTacticalProfile(),
     },
+    missionDebriefs: {},
     currentMission: createMission(firstNode.missionSeed),
     status: "ACTIVE",
   };

@@ -13,10 +13,12 @@ import { radarTypeProfiles } from "../domain/radarTypes";
 import { MapElementPanel } from "./MapElementPanel";
 import type { MapElementSelection } from "./mapSelection";
 import { getIntelAccessTier } from "../domain/intelAccess";
+import type { MissionDebrief } from "../domain/types";
 
 const workspaceViewStorageKey = "f117-tactical-command-system:view:v1";
 
 function loadCampaignView(missionStatus: string | undefined): boolean {
+  if (missionStatus === "RUNNING") return false;
   try {
     const savedView = localStorage.getItem(workspaceViewStorageKey);
     if (savedView === "TACTICAL") return false;
@@ -74,6 +76,47 @@ const threatLabels = {
   MISSILE_INBOUND: "导弹来袭",
 } as const;
 
+interface DebriefWorkspaceProps {
+  debrief: MissionDebrief;
+  mapSelection: MapElementSelection | null;
+  onMapSelectionChange: (selection: MapElementSelection | null) => void;
+  onClose: () => void;
+}
+
+function DebriefWorkspace({ debrief, mapSelection, onMapSelectionChange, onClose }: DebriefWorkspaceProps) {
+  const [panoramic, setPanoramic] = useState(false);
+  const mission = debrief.mission;
+  const beliefPeak = getBeliefPeak(mission.beliefMap, mission.elapsedMs);
+  return <div className="workspace intelligence-workspace">
+    <aside className="control-panel"><section className="panel-section">
+      <div className="section-kicker">MISSION DEBRIEF</div><h2>任务复盘</h2>
+      <p className="hint">成功撤离快照 // {debrief.nodeId}</p>
+      <dl className="telemetry-grid">
+        <div><dt>任务时间</dt><dd>{(mission.elapsedMs / 1000).toFixed(1)} s</dd></div>
+        <div><dt>最终坐标</dt><dd>{mission.aircraft.position.x.toFixed(1)}, {mission.aircraft.position.y.toFixed(1)}</dd></div>
+        <div><dt>剩余燃油</dt><dd>{mission.aircraft.fuelRemaining.toFixed(0)} u</dd></div>
+        <div><dt>情报权限</dt><dd>{debrief.intelAccessTier}/2</dd></div>
+      </dl>
+      <div className="button-row"><button className="secondary-button" onClick={() => setPanoramic((value) => !value)}>{panoramic ? "切换任务视角" : "切换全景复盘"}</button><button className="primary-button" onClick={onClose}>返回任务网络</button></div>
+    </section></aside>
+    <section className="map-stage">
+      <div className="map-label"><span>MISSION DEBRIEF</span><span>{panoramic ? "全景复盘" : "任务视角"}</span></div>
+      <TacticalMap mission={mission} showBelief={panoramic} selectedIndex={null} onSelect={() => undefined} dispatch={() => undefined} mapSelection={mapSelection} readOnly />
+      <div className="map-legend"><span><i className="legend-aircraft" />F-117 最终位置</span><span><i className="legend-extraction" />撤离区</span><span><i className="legend-radar" />{panoramic ? "真实雷达 / 敌方 Contact" : "任务雷达情报"}</span></div>
+    </section>
+    <aside className="telemetry-panel">
+      <MapElementPanel mission={mission} showBelief={panoramic} selection={mapSelection} onSelectionChange={onMapSelectionChange} defaultExpandedGroups />
+      {panoramic && <CollapsibleSection className="debug-group" title="ENEMY SYSTEM ANALYSIS" meta="FROZEN">
+        <dl className="telemetry-grid debug-telemetry-grid">
+          <div><dt>敌方警戒</dt><dd>{mission.awareness.value.toFixed(1)}%</dd></div><div><dt>有效 Contact</dt><dd>{mission.radarContacts.length}</dd></div>
+          <div><dt>Belief 峰值</dt><dd>{(beliefPeak.probability * 100).toFixed(1)}%</dd></div><div><dt>Commander</dt><dd>{intentLabels[mission.commander.intent]}</dd></div>
+        </dl>
+        {mission.radars.map((radar) => <div className="operator-card" key={radar.id}><div className="operator-title"><strong>{radar.id}</strong><span>{radarTypeProfiles[radar.type].label} / {modeLabels[radar.operator.mode]}</span></div><div className="score-grid"><span>W {radar.operator.utilityScores.WIDE_SEARCH.toFixed(0)}</span><span>S {radar.operator.utilityScores.SECTOR_SEARCH.toFixed(0)}</span><span>F {radar.operator.utilityScores.FOCUSED_TRACK.toFixed(0)}</span></div></div>)}
+      </CollapsibleSection>}
+    </aside>
+  </div>;
+}
+
 export function App() {
   const { state, dispatch } = useGameController();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -81,16 +124,21 @@ export function App() {
   const [seedInput, setSeedInput] = useState(state.seed);
   const [campaignView, setCampaignView] = useState(() => loadCampaignView(state.currentMission?.status));
   const [intelligencePreview, setIntelligencePreview] = useState<typeof state.currentMission>();
+  const [activeDebrief, setActiveDebrief] = useState<MissionDebrief>();
   const [mapSelection, setMapSelection] = useState<MapElementSelection | null>(null);
   const mission = state.currentMission;
   const { muted, volume, setMuted, setVolume } = useGameAudio(mission);
   const intelAccessTier = getIntelAccessTier(state.campaign);
   const debugOverride = new URLSearchParams(window.location.search).get("ai-debug") === "1";
   const canUseAiDebug = debugOverride || intelAccessTier >= 2;
+  const currentNodeId = state.campaign.currentNodeId;
+  const currentDebrief = currentNodeId ? state.missionDebriefs[currentNodeId] : undefined;
 
   useEffect(() => {
     setShowBelief(intelAccessTier >= 2);
   }, [mission?.id, intelAccessTier]);
+
+  useEffect(() => { if (mission?.status === "RUNNING") setCampaignView(false); }, [mission?.status]);
 
   useEffect(() => {
     try {
@@ -140,6 +188,7 @@ export function App() {
             event.preventDefault();
             dispatch({ type: "NEW_RUN", seed: seedInput });
             setSelectedIndex(null);
+            setActiveDebrief(undefined);
             setCampaignView(true);
           }}>
             <label htmlFor="run-seed">OPERATION CODE</label>
@@ -149,7 +198,10 @@ export function App() {
         </div>
       </header>
 
-      {intelligencePreview ? <div className="workspace intelligence-workspace">
+      {activeDebrief ? <DebriefWorkspace debrief={activeDebrief} mapSelection={mapSelection} onMapSelectionChange={setMapSelection} onClose={() => {
+        if (mission.status === "SUCCESS" && state.campaign.currentNodeId === activeDebrief.nodeId) dispatch({ type: "RETURN_CAMPAIGN" });
+        setActiveDebrief(undefined); setCampaignView(true);
+      }} /> : intelligencePreview ? <div className="workspace intelligence-workspace">
         <aside className="control-panel">
           <section className="panel-section">
             <div className="section-kicker">CURRENT ESTIMATE</div>
@@ -179,7 +231,7 @@ export function App() {
           </CollapsibleSection>}
         </aside>
       </div> : campaignView ? (
-        <CampaignMap state={state} dispatch={dispatch} onLaunch={() => setCampaignView(false)} onPreview={(preview) => { setIntelligencePreview(preview); setCampaignView(false); }} />
+        <CampaignMap state={state} dispatch={dispatch} onLaunch={() => setCampaignView(false)} onPreview={(preview) => { setIntelligencePreview(preview); setCampaignView(false); }} onDebrief={(debrief) => { setActiveDebrief(debrief); setCampaignView(false); }} />
       ) : <div className="workspace">
         <ControlPanel
           mission={mission}
@@ -188,6 +240,7 @@ export function App() {
           dispatch={dispatch}
           onOpenCampaign={() => setCampaignView(true)}
           onReturnCampaign={() => setCampaignView(true)}
+          onOpenDebrief={currentDebrief ? () => setActiveDebrief(currentDebrief) : undefined}
         />
         <section className="map-stage">
           <div className="map-label">

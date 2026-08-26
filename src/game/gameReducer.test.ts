@@ -17,7 +17,7 @@ describe("gameReducer", () => {
       },
       currentMission: {
         ...state.currentMission!,
-        status: "PAUSED",
+        status: "PLANNING",
         elapsedMs: 12_000,
       },
     };
@@ -38,21 +38,21 @@ describe("gameReducer", () => {
     expect(state.currentMission?.events.map((event) => event.type)).toEqual(["MISSION_RESET"]);
   });
 
-  it("规划、开始、暂停、重规划并继续", () => {
+  it("任务执行中锁定当前目标航点但允许调整后续航点", () => {
     let state = createRun("TEST");
     state = gameReducer(state, { type: "ADD_WAYPOINT", position: { x: 200, y: 800 } });
+    state = gameReducer(state, { type: "ADD_WAYPOINT", position: { x: 400, y: 600 } });
     state = gameReducer(state, { type: "START" });
     expect(state.currentMission?.status).toBe("RUNNING");
 
-    state = gameReducer(state, { type: "PAUSE" });
-    const pausedPosition = state.currentMission?.aircraft.position;
-    state = gameReducer(state, { type: "TICK", deltaSeconds: 1 });
-    expect(state.currentMission?.aircraft.position).toEqual(pausedPosition);
-
     state = gameReducer(state, { type: "MOVE_WAYPOINT", index: 1, position: { x: 300, y: 700 } });
-    state = gameReducer(state, { type: "RESUME" });
-    expect(state.currentMission?.status).toBe("RUNNING");
-    expect(state.currentMission?.route.waypoints[1]?.position).toEqual({ x: 300, y: 700 });
+    expect(state.currentMission?.route.waypoints[1]?.position).toEqual({ x: 200, y: 800 });
+    state = gameReducer(state, { type: "MOVE_WAYPOINT", index: 2, position: { x: 300, y: 700 } });
+    expect(state.currentMission?.route.waypoints[2]?.position).toEqual({ x: 300, y: 700 });
+
+    const beforeReset = state.currentMission;
+    state = gameReducer(state, { type: "RESET" });
+    expect(state.currentMission).toBe(beforeReset);
   });
 
   it("任务更新不破坏 Run 与 Campaign 状态", () => {
@@ -198,6 +198,10 @@ describe("gameReducer", () => {
     };
     state = gameReducer(state, { type: "TICK", deltaSeconds: 0.01 });
     expect(state.currentMission?.status).toBe("SUCCESS");
+    const nodeId = state.campaign.currentNodeId!;
+    expect(state.missionDebriefs[nodeId]?.mission.status).toBe("SUCCESS");
+    expect(state.missionDebriefs[nodeId]?.mission.aircraft.position).toEqual(state.currentMission?.aircraft.position);
+    expect(state.missionDebriefs[nodeId]?.mission).not.toBe(state.currentMission);
   });
 
   it("航线结束但目标未摧毁时记录失败", () => {

@@ -11,12 +11,12 @@ interface ControlPanelProps {
   dispatch: (action: GameAction) => void;
   onOpenCampaign: () => void;
   onReturnCampaign: () => void;
+  onOpenDebrief?: () => void;
 }
 
 const statusLabels = {
   PLANNING: "任务规划",
   RUNNING: "任务执行",
-  PAUSED: "航线修订",
   SUCCESS: "任务成功",
   FAILED: "任务失败",
 } as const;
@@ -24,14 +24,14 @@ const statusLabels = {
 const statusMessages = {
   PLANNING: "等待航线确认",
   RUNNING: "航电系统在线",
-  PAUSED: "航线编辑授权",
   SUCCESS: "任务目标达成",
   FAILED: "任务终止",
 } as const;
 
-export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpenCampaign, onReturnCampaign }: ControlPanelProps) {
-  const editable = mission.status === "PLANNING" || mission.status === "PAUSED";
-  const selectedEditable = editable && selectedIndex !== null && canEditWaypoint(mission.route, selectedIndex);
+export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpenCampaign, onReturnCampaign, onOpenDebrief }: ControlPanelProps) {
+  const editable = mission.status === "PLANNING" || mission.status === "RUNNING";
+  const editMode = mission.status === "RUNNING" ? "RUNNING" : "PLANNING";
+  const selectedEditable = editable && selectedIndex !== null && canEditWaypoint(mission.route, selectedIndex, editMode);
   const targetDistance = distanceBetween(mission.aircraft.position, mission.target.position);
   const extractionDistance = distanceToExtraction(mission.aircraft.position, mission.extractionArea);
   const plannedRouteDistance = getPlannedRouteDistance(mission.route);
@@ -59,19 +59,8 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
               确认航线
             </button>
           )}
-          {mission.status === "RUNNING" && (
-            <button className="primary-button" onClick={() => dispatch({ type: "PAUSE" })}>
-              暂停 / 修订航线
-            </button>
-          )}
-          {mission.status === "PAUSED" && (
-            <button className="primary-button" onClick={() => dispatch({ type: "RESUME" })}>
-              继续执行
-            </button>
-          )}
-          <button className="secondary-button" onClick={() => dispatch({ type: "RESET" })}>
-            重置航线
-          </button>
+          {mission.status === "PLANNING" && <button className="secondary-button" onClick={() => dispatch({ type: "RESET" })}>重置航线</button>}
+          {mission.status === "SUCCESS" && onOpenDebrief && <button className="secondary-button" onClick={onOpenDebrief}>任务复盘</button>}
           {(mission.status === "SUCCESS" || mission.status === "FAILED") && (
             <button className="primary-button" onClick={() => {
               dispatch({ type: "RETURN_CAMPAIGN" });
@@ -123,7 +112,7 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
         </div>
         <div className="route-actions">
           <button
-            disabled={!selectedEditable || selectedIndex === mission.route.activeWaypointIndex}
+            disabled={!selectedEditable || selectedIndex === 1 || (selectedIndex !== null && !canEditWaypoint(mission.route, selectedIndex - 1, editMode))}
             onClick={() => selectedIndex !== null && dispatch({ type: "REORDER_WAYPOINT", fromIndex: selectedIndex, toIndex: selectedIndex - 1 })}
           >
             上移
@@ -145,7 +134,7 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
             删除
           </button>
         </div>
-        <p className="hint">点击地图添加航点，拖动航点调整位置。飞行中需先暂停才能重规划。</p>
+        <p className="hint">点击地图添加航点，拖动航点调整位置。任务执行中仅可调整当前目标之后的航点。</p>
       </CollapsibleSection>
 
       <CollapsibleSection

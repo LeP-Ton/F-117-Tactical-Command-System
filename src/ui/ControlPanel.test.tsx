@@ -34,13 +34,19 @@ describe("ControlPanel 航点操作", () => {
     expect(screen.getByRole("button", { name: /WEATHER FORECAST/ })).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("暂停后允许删除选中的可编辑航点", () => {
-    const mission = createMission("PAUSED-WAYPOINT-CONTROLS");
-    mission.status = "PAUSED";
+  it("执行中允许删除当前目标之后的航点", () => {
+    const mission = createMission("RUNNING-FUTURE-WAYPOINT-CONTROLS");
+    mission.status = "RUNNING";
     mission.route.waypoints.push({
-      id: "test-waypoint",
+      id: "current-waypoint",
       kind: "NAVIGATION",
       position: { x: 300, y: 700 },
+      status: "PENDING",
+    });
+    mission.route.waypoints.push({
+      id: "future-waypoint",
+      kind: "NAVIGATION",
+      position: { x: 500, y: 500 },
       status: "PENDING",
     });
     const dispatch = vi.fn();
@@ -48,7 +54,7 @@ describe("ControlPanel 航点操作", () => {
     render(
       <ControlPanel
         mission={mission}
-        selectedIndex={1}
+        selectedIndex={2}
         onSelect={vi.fn()}
         dispatch={dispatch}
         onOpenCampaign={vi.fn()}
@@ -57,6 +63,6 @@ describe("ControlPanel 航点操作", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "删除" }));
-    expect(dispatch).toHaveBeenCalledWith({ type: "REMOVE_WAYPOINT", index: 1 });
+    expect(dispatch).toHaveBeenCalledWith({ type: "REMOVE_WAYPOINT", index: 2 });
   });
 });

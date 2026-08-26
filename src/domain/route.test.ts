@@ -26,7 +26,15 @@ describe("航线编辑", () => {
 
   it("已飞过航点不可编辑", () => {
     const route = { ...routeWithWaypoints(), activeWaypointIndex: 2 };
-    expect(removeWaypoint(route, 1)).toBe(route);
+    expect(removeWaypoint(route, 1, "RUNNING")).toBe(route);
+  });
+
+  it("执行中当前目标锁定且只允许编辑其后航点", () => {
+    const route = routeWithWaypoints();
+    expect(moveWaypoint(route, 1, { x: 250, y: 250 }, "RUNNING")).toBe(route);
+    expect(moveWaypoint(route, 2, { x: 350, y: 350 }, "RUNNING").waypoints[2]?.position)
+      .toEqual({ x: 350, y: 350 });
+    expect(reorderWaypoint(route, 2, 1, "RUNNING")).toBe(route);
   });
 
   it("分别计算规划总航程和当前位置起算的剩余航程", () => {

@@ -24,17 +24,20 @@ export function clampToWorld(position: Vector2): Vector2 {
   };
 }
 
-export function canEditWaypoint(route: RouteState, index: number): boolean {
+export type WaypointEditMode = "PLANNING" | "RUNNING";
+
+export function canEditWaypoint(route: RouteState, index: number, mode: WaypointEditMode = "PLANNING"): boolean {
   const waypoint = route.waypoints[index];
-  return Boolean(waypoint && waypoint.kind !== "INSERTION" && index >= route.activeWaypointIndex);
+  const firstEditableIndex = mode === "RUNNING" ? route.activeWaypointIndex + 1 : 1;
+  return Boolean(waypoint && waypoint.kind !== "INSERTION" && index >= firstEditableIndex);
 }
 
 export function addWaypoint(route: RouteState, waypoint: Waypoint): RouteState {
   return { ...route, waypoints: [...route.waypoints, waypoint] };
 }
 
-export function moveWaypoint(route: RouteState, index: number, position: Vector2): RouteState {
-  if (!canEditWaypoint(route, index)) return route;
+export function moveWaypoint(route: RouteState, index: number, position: Vector2, mode: WaypointEditMode = "PLANNING"): RouteState {
+  if (!canEditWaypoint(route, index, mode)) return route;
   return {
     ...route,
     waypoints: route.waypoints.map((waypoint, waypointIndex) =>
@@ -43,13 +46,13 @@ export function moveWaypoint(route: RouteState, index: number, position: Vector2
   };
 }
 
-export function removeWaypoint(route: RouteState, index: number): RouteState {
-  if (!canEditWaypoint(route, index)) return route;
+export function removeWaypoint(route: RouteState, index: number, mode: WaypointEditMode = "PLANNING"): RouteState {
+  if (!canEditWaypoint(route, index, mode)) return route;
   return { ...route, waypoints: route.waypoints.filter((_, waypointIndex) => waypointIndex !== index) };
 }
 
-export function reorderWaypoint(route: RouteState, fromIndex: number, toIndex: number): RouteState {
-  if (!canEditWaypoint(route, fromIndex) || !canEditWaypoint(route, toIndex)) return route;
+export function reorderWaypoint(route: RouteState, fromIndex: number, toIndex: number, mode: WaypointEditMode = "PLANNING"): RouteState {
+  if (!canEditWaypoint(route, fromIndex, mode) || !canEditWaypoint(route, toIndex, mode)) return route;
   const waypoints = [...route.waypoints];
   const [waypoint] = waypoints.splice(fromIndex, 1);
   if (!waypoint) return route;

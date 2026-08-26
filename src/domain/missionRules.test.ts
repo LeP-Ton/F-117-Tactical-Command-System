@@ -5,8 +5,9 @@ import { canAttackTarget, distanceToExtraction, isInsideExtraction } from "./mis
 describe("Mission Rules", () => {
   it("只有进入攻击半径且目标仍有效时才能攻击", () => {
     const mission = createMission("ATTACK");
-    mission.status = "PAUSED";
+    mission.status = "PLANNING";
     expect(canAttackTarget(mission)).toBe(false);
+    mission.status = "RUNNING";
     mission.aircraft.position = { ...mission.target.position };
     expect(canAttackTarget(mission)).toBe(true);
     mission.target.destroyed = true;

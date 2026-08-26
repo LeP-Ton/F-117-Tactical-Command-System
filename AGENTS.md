@@ -20,12 +20,13 @@
 - 防空交战采用 Contact → 跟踪质量 → 火控锁定 → 导弹来袭链路；最强 Contact 保留本地火控能力，额外雷达证据通过指挥链形成联合跟踪，失去新证据可脱锁；导弹命中会摧毁飞机并令当前 Mission 失败，但玩家可返回当前 Campaign 层重试或改选。
 - 飞机基础速度为 `3.6 u/s`，满油可飞行 `2000 u`（当前地图两条边之和）；燃油按真实累计飞行距离消耗，耗尽后停止并令当前任务失败。运行中进入攻击半径后自动投弹并提高 Awareness，随后玩家必须进入撤离区。
 - 普通玩家视图通过 THREAT WARNING 显示可行动的模糊威胁阶段和导弹倒计时；真实 Contact、Belief 与 AI 评分仍只在 AI DEBUG 中显示。
-- 音效使用原生 Web Audio API 合成并由领域事件驱动；锁定与导弹警报属于可清理循环音，暂停、脱锁、任务结束或组件卸载时必须停止，顶部提供静音与总音量控制。
+- 音效使用原生 Web Audio API 合成并由领域事件驱动；锁定与导弹警报属于可清理循环音，脱锁、任务结束或组件卸载时必须停止，顶部提供静音与总音量控制。
 - Mission Generator 根据 Seed 分别生成静态 Terrain、动态 Weather Cell、Radar Network、Target 与 Intel Accuracy；天气的位置、范围、强度与类型由任务绝对时间确定性演化，相同 Seed 与时间必须完整复现。
 - 所有初始、适应性和 Final Strike 雷达部署最终统一执行撤离区净空约束：雷达中心不得进入撤离区周围 80 u，探测范围仍可覆盖撤离区。
 - 玩家在规划阶段获得带位置与尺度误差的 `T+30/60/90s` 天气预报；预报只提供有限情报，不能泄露未来真实天气状态。
 - Weather Cell 会降低飞机有效速度：Cloud 10%、Fog 15%、Rain 20%、Storm 30%；重叠时取最强减速，不进行连乘，燃油仍按实际飞行距离消耗。
 - Campaign 固定为三个顺序二选一阶段与 Final Strike；只有摧毁目标并成功撤离才完成节点、关闭同层选择并解锁下一阶段；包括飞机损失在内的所有失败都会把当前节点标记为可重试的 `FAILED`、提高 Enemy Alert，并保留同层备选供改选。
+- 任务开始后不可暂停、重置或返回任务网络；飞行中只允许实时编辑当前目标航点之后的路径。成功撤离会冻结任务地图快照，整个 Run 内可从已完成节点进行任务视角与全景敌方态势双视角复盘。
 - Tactical Reward 与 Player Build 已完整移除；当前核心玩法差异来自动态航线、程序生成雷达/地形/天气、敌方 Belief 与 Commander 行为。
 - 持久战役效果包括：Intel 行动提高后续 Intel Accuracy，SEAD 降低 Radar Coverage，Command Strike 降低 Commander Coordination，Enemy Alert 提高未来 Radar Coverage。
 - Enemy Adaptation 只分析按实际位移采样的已飞轨迹，形成地形利用、南北航路和直达倾向画像；雷达按空间距离选择反制部署对象，禁止读取未来计划航点。
@@ -35,7 +36,7 @@
 - 情报权限由已完成 INTEL 节点派生：一次后精确识别后续任务全部雷达位置与类型，两次后正式解锁默认开启且可关闭的 `TOTAL INTEL` 完整敌方态势；锁定节点可只读预览当前研判地图但不可执行。
 - 战役只保留一个有效情报资源“情报质量”（代码字段 `intelAccuracyBonus`）；不再维护无用途的独立 Intel 点数。
 - 任务事件最多保留最近 200 条并按事件 ID 驱动音频；结构化事件与敌方内部评分只在 AI DEBUG 中显示。
-- Run、Campaign 与当前 Mission 每秒自动保存到浏览器 `localStorage`；刷新时恢复完整状态，飞行中的 Mission 安全转为暂停，并恢复离开前的 Campaign/战术视图。
+- Run、Campaign、当前 Mission 与成功任务复盘每秒自动保存到浏览器 `localStorage`；刷新时恢复完整状态，飞行中的 Mission 保持执行并强制返回战术视图。
 - 右侧 `MAP ELEMENTS` 解释并定位飞机、目标、撤离区、航点、地形、动态天气和玩家已知雷达；普通视图不得借此泄露真实雷达位置。
 - `main` 分支通过 GitHub Actions 构建并部署到 GitHub Pages，Vite 使用相对资源基址兼容仓库子路径。
 

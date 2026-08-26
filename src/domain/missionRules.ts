@@ -6,7 +6,7 @@ export function distanceBetween(first: Vector2, second: Vector2): number {
 
 export function canAttackTarget(mission: MissionSession): boolean {
   return !mission.target.destroyed
-    && (mission.status === "RUNNING" || mission.status === "PAUSED")
+    && mission.status === "RUNNING"
     && distanceBetween(mission.aircraft.position, mission.target.position) <= mission.target.attackRadius;
 }
 

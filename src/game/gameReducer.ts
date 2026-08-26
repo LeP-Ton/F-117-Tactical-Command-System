@@ -48,14 +48,12 @@ export type GameAction =
   | { type: "REMOVE_WAYPOINT"; index: number }
   | { type: "REORDER_WAYPOINT"; fromIndex: number; toIndex: number }
   | { type: "START" }
-  | { type: "PAUSE" }
-  | { type: "RESUME" }
   | { type: "TICK"; deltaSeconds: number }
   | { type: "RESET" };
 
-function isEditable(state: RunState): boolean {
+function getEditMode(state: RunState): "PLANNING" | "RUNNING" | undefined {
   const status = state.currentMission?.status;
-  return status === "PLANNING" || status === "PAUSED";
+  return status === "PLANNING" || status === "RUNNING" ? status : undefined;
 }
 
 /**
@@ -185,7 +183,7 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
       };
     }
     case "ADD_WAYPOINT": {
-      if (!isEditable(state)) return state;
+      if (!getEditMode(state)) return state;
       const waypoint = {
         id: `wp-${Math.round(mission.elapsedMs)}-${mission.route.waypoints.length}`,
         kind: "NAVIGATION" as const,
@@ -203,8 +201,9 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
       };
     }
     case "MOVE_WAYPOINT": {
-      if (!isEditable(state)) return state;
-      const route = moveWaypoint(mission.route, action.index, action.position);
+      const editMode = getEditMode(state);
+      if (!editMode) return state;
+      const route = moveWaypoint(mission.route, action.index, action.position, editMode);
       if (route === mission.route) return state;
       return {
         ...state,
@@ -216,8 +215,9 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
       };
     }
     case "REMOVE_WAYPOINT": {
-      if (!isEditable(state)) return state;
-      const route = removeWaypoint(mission.route, action.index);
+      const editMode = getEditMode(state);
+      if (!editMode) return state;
+      const route = removeWaypoint(mission.route, action.index, editMode);
       if (route === mission.route) return state;
       return {
         ...state,
@@ -229,8 +229,9 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
       };
     }
     case "REORDER_WAYPOINT": {
-      if (!isEditable(state)) return state;
-      const route = reorderWaypoint(mission.route, action.fromIndex, action.toIndex);
+      const editMode = getEditMode(state);
+      if (!editMode) return state;
+      const route = reorderWaypoint(mission.route, action.fromIndex, action.toIndex, editMode);
       if (route === mission.route) return state;
       return {
         ...state,
@@ -252,30 +253,6 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
           ...mission,
           status: "RUNNING",
           events: appendEvents(mission, [createGameEvent(mission, "MISSION_STARTED")]),
-        },
-      };
-    }
-    case "PAUSE": {
-      if (mission.status !== "RUNNING") return state;
-      return {
-        ...state,
-        currentMission: {
-          ...mission,
-          status: "PAUSED",
-          events: appendEvents(mission, [createGameEvent(mission, "MISSION_PAUSED")]),
-        },
-      };
-    }
-    case "RESUME": {
-      if (mission.status !== "PAUSED" || mission.route.activeWaypointIndex >= mission.route.waypoints.length) {
-        return state;
-      }
-      return {
-        ...state,
-        currentMission: {
-          ...mission,
-          status: "RUNNING",
-          events: appendEvents(mission, [createGameEvent(mission, "MISSION_RESUMED")]),
         },
       };
     }
@@ -474,29 +451,46 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         ...completionEvents,
         ...resultEvents,
       ];
+      const nextMission: MissionSession = {
+        ...mission,
+        status: terminalStatus,
+        elapsedMs: nextTimestamp,
+        aircraft,
+        flightPath: sampleFlightPath(mission, aircraft.position),
+        route: result.route,
+        target,
+        weather,
+        radars: operatorResult.radars,
+        radarContacts,
+        beliefMap,
+        awareness,
+        engagement: engagementResult.state,
+        commander: commanderResult.commander,
+        events: appendEvents(mission, tickEvents),
+      };
+      const currentNodeId = state.campaign.currentNodeId;
+      const shouldCaptureDebrief = terminalStatus === "SUCCESS"
+        && Boolean(currentNodeId)
+        && !state.missionDebriefs[currentNodeId!];
       return {
         ...state,
         status: state.status,
-        currentMission: {
-          ...mission,
-          status: terminalStatus,
-          elapsedMs: nextTimestamp,
-          aircraft,
-          flightPath: sampleFlightPath(mission, aircraft.position),
-          route: result.route,
-          target,
-          weather,
-          radars: operatorResult.radars,
-          radarContacts,
-          beliefMap,
-          awareness,
-          engagement: engagementResult.state,
-          commander: commanderResult.commander,
-          events: appendEvents(mission, tickEvents),
-        },
+        currentMission: nextMission,
+        missionDebriefs: shouldCaptureDebrief
+          ? {
+            ...state.missionDebriefs,
+            [currentNodeId!]: {
+              nodeId: currentNodeId!,
+              completedAt: nextTimestamp,
+              intelAccessTier: getIntelAccessTier(state.campaign),
+              mission: structuredClone(nextMission),
+            },
+          }
+          : state.missionDebriefs,
       };
     }
     case "RESET": {
+      if (mission.status !== "PLANNING") return state;
       const currentNode = state.campaign.nodes.find((node) => node.id === state.campaign.currentNodeId);
       if (!currentNode) return state;
       const resetMission = prepareCampaignMission(state, currentNode);

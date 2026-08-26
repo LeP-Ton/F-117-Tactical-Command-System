@@ -4,7 +4,7 @@ export interface Vector2 {
 }
 
 export type RunStatus = "ACTIVE" | "VICTORY" | "DEFEAT";
-export type MissionStatus = "PLANNING" | "RUNNING" | "PAUSED" | "SUCCESS" | "FAILED";
+export type MissionStatus = "PLANNING" | "RUNNING" | "SUCCESS" | "FAILED";
 
 export type MissionNodeType = "INTEL" | "STRIKE" | "SEAD" | "COMMAND_STRIKE" | "FINAL_STRIKE";
 export type CampaignNodeStatus = "AVAILABLE" | "LOCKED" | "COMPLETED" | "FAILED" | "EXPIRED";
@@ -286,11 +286,20 @@ export interface MissionSession {
   events: GameEvent[];
 }
 
+/** 成功撤离瞬间冻结的任务地图，用于历史复盘，不参与后续任务计算。 */
+export interface MissionDebrief {
+  nodeId: string;
+  completedAt: number;
+  intelAccessTier: 0 | 1 | 2;
+  mission: MissionSession;
+}
+
 export interface RunState {
   seed: string;
   campaign: CampaignState;
   resources: RunResources;
   enemyState: PersistentEnemyState;
+  missionDebriefs: Record<string, MissionDebrief>;
   currentMission?: MissionSession;
   status: RunStatus;
 }
