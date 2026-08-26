@@ -14,7 +14,7 @@ interface ControlPanelProps {
 }
 
 const statusLabels = {
-  PLANNING: "航线规划",
+  PLANNING: "任务规划",
   RUNNING: "任务执行",
   PAUSED: "航线修订",
   SUCCESS: "任务成功",
@@ -48,7 +48,7 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
         </div>
         <div className="button-row">
           {mission.status === "PLANNING" && (
-            <button className="secondary-button" onClick={onOpenCampaign}>战役地图</button>
+            <button className="secondary-button" onClick={onOpenCampaign}>任务网络</button>
           )}
           {mission.status === "PLANNING" && (
             <button
@@ -76,7 +76,7 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
             <button className="primary-button" onClick={() => {
               dispatch({ type: "RETURN_CAMPAIGN" });
               onReturnCampaign();
-            }}>返回战役地图</button>
+            }}>返回任务网络</button>
           )}
         </div>
       </section>

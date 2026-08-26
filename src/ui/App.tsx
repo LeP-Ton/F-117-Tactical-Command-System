@@ -144,7 +144,7 @@ export function App() {
           }}>
             <label htmlFor="run-seed">OPERATION CODE</label>
             <input id="run-seed" value={seedInput} onChange={(event) => setSeedInput(event.target.value)} />
-            <button type="submit">初始化战役</button>
+            <button type="submit">初始化任务网络</button>
           </form>
         </div>
       </header>
@@ -192,7 +192,7 @@ export function App() {
         <section className="map-stage">
           <div className="map-label">
             <span>TACTICAL AREA // 1000 × 1000</span>
-            <span>{showBelief ? "敌方内部状态" : "有限情报航线规划"}</span>
+            <span>{showBelief ? "敌方内部状态" : "有限情报任务规划"}</span>
           </div>
           {canUseAiDebug && <button className={`belief-toggle ${showBelief ? "active" : ""}`} onClick={() => setShowBelief((value) => !value)}>
             TOTAL INTEL {showBelief ? "ON" : "OFF"}

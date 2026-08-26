@@ -10,7 +10,7 @@ const stageTypes: readonly (readonly MissionNodeType[])[] = [
 
 const effects: Record<MissionNodeType, string> = {
   INTEL: "获取敌防空网电子情报，提升后续目标识别质量",
-  STRIKE: "打击战役目标，不改变敌防空网当前战备状态",
+  STRIKE: "打击任务目标，不改变敌防空网当前战备状态",
   SEAD: "压制敌防空节点，削弱后续雷达覆盖",
   COMMAND_STRIKE: "打击敌指挥链，削弱后续协同搜索能力",
   FINAL_STRIKE: "对最终目标实施纵深精确打击",

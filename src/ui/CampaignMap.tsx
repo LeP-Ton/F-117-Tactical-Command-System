@@ -22,7 +22,7 @@ const typeLabels = {
 
 const missionBriefings = {
   INTEL: "获取敌防空网电子情报，提升后续目标识别质量。",
-  STRIKE: "打击战役目标，不改变敌防空网当前战备状态。",
+  STRIKE: "打击任务目标，不改变敌防空网当前战备状态。",
   SEAD: "压制敌防空节点，削弱后续雷达覆盖。",
   COMMAND_STRIKE: "打击敌指挥链，削弱后续协同搜索能力。",
   FINAL_STRIKE: "对最终目标实施纵深精确打击。",
@@ -48,7 +48,7 @@ export function CampaignMap({ state, dispatch, onLaunch, onPreview }: CampaignMa
   return (
     <section className="campaign-screen">
       <div className="campaign-header">
-        <div><span className="section-kicker">AIR CAMPAIGN</span><h2>任务网络</h2></div>
+        <div><span className="section-kicker">MISSION NETWORK</span><h2>任务网络</h2></div>
         <div className="campaign-resources">
           <span>ENEMY ALERT <strong>{state.resources.enemyAlert}</strong></span>
           <span>INTEL QUALITY <strong>+{(state.resources.intelAccuracyBonus * 100).toFixed(0)}%</strong></span>
@@ -63,7 +63,7 @@ export function CampaignMap({ state, dispatch, onLaunch, onPreview }: CampaignMa
           <svg
             viewBox="0 0 1000 600"
             preserveAspectRatio="none"
-            aria-label="战役节点连线"
+            aria-label="任务节点连线"
           >
             {state.campaign.edges.map((edge) => {
               const from = state.campaign.nodes.find((node) => node.id === edge.from)!;
@@ -113,9 +113,9 @@ export function CampaignMap({ state, dispatch, onLaunch, onPreview }: CampaignMa
               }}
             >
               {state.status === "VICTORY"
-                ? "战役完成"
+                ? "任务网络完成"
                 : state.status === "DEFEAT" && !canContinueRun
-                  ? "战役终止 // 飞机损失"
+                  ? "任务网络终止 // 飞机损失"
                   : selected.status === "LOCKED" ? "查看情报" : "执行任务"}
             </button>
           </>}
