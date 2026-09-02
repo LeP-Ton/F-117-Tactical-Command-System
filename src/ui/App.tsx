@@ -1,15 +1,16 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useGameController } from "../game/useGameController";
 import { CampaignMap } from "./CampaignMap";
 import { useGameAudio } from "../audio/useGameAudio";
 import f117SideSilhouette from "../assets/f117-side-silhouette.png";
-import { getAdaptationLevel } from "../domain/enemyAdaptation";
+import { getAdaptationAssessment } from "../domain/enemyAdaptation";
 import { getIntelAccessTier } from "../domain/intelAccess";
 import type { MissionDebrief } from "../domain/types";
 import type { MapElementSelection } from "./mapSelection";
 import { DebriefWorkspace } from "./workspaces/DebriefWorkspace";
 import { IntelligenceWorkspace } from "./workspaces/IntelligenceWorkspace";
 import { MissionWorkspace } from "./workspaces/MissionWorkspace";
+import { GameplayGuide } from "./GameplayGuide";
 
 const workspaceViewStorageKey = "f117-tactical-command-system:view:v1";
 
@@ -34,6 +35,8 @@ export function App() {
   const [intelligencePreview, setIntelligencePreview] = useState<typeof state.currentMission>();
   const [activeDebrief, setActiveDebrief] = useState<MissionDebrief>();
   const [mapSelection, setMapSelection] = useState<MapElementSelection | null>(null);
+  const [guideOpen, setGuideOpen] = useState(false);
+  const guideTriggerRef = useRef<HTMLButtonElement>(null);
   const mission = state.currentMission;
   const { muted, volume, setMuted, setVolume } = useGameAudio(mission);
   const intelAccessTier = getIntelAccessTier(state.campaign);
@@ -41,6 +44,7 @@ export function App() {
   const canUseAiDebug = debugOverride || intelAccessTier >= 2;
   const currentNodeId = state.campaign.currentNodeId;
   const currentDebrief = currentNodeId ? state.missionDebriefs[currentNodeId] : undefined;
+  const closeGuide = useCallback(() => setGuideOpen(false), []);
 
   useEffect(() => setShowBelief(intelAccessTier >= 2), [mission?.id, intelAccessTier]);
   useEffect(() => { if (mission?.status === "RUNNING") setCampaignView(false); }, [mission?.status]);
@@ -69,6 +73,7 @@ export function App() {
         <div><h1>F-117 TACTICAL COMMAND SYSTEM</h1><p>FROM USA AIR FORCE // VERSION 1.0</p></div>
       </div>
       <div className="topbar-controls">
+        <button ref={guideTriggerRef} type="button" className="guide-trigger" onClick={() => setGuideOpen(true)}>操作说明</button>
         <div className="audio-control">
           <button type="button" onClick={() => setMuted(!muted)}>{muted ? "SOUND OFF" : "SOUND ON"}</button>
           <label htmlFor="master-volume">VOL</label>
@@ -102,12 +107,13 @@ export function App() {
             showBelief={showBelief}
             canUseAiDebug={canUseAiDebug}
             onToggleBelief={() => setShowBelief((value) => !value)}
-            adaptationLevel={getAdaptationLevel(state.enemyState.tacticalProfile)}
+            adaptationStatus={getAdaptationAssessment(state.enemyState.tacticalProfile).status}
             mapSelection={mapSelection}
             onMapSelectionChange={setMapSelection}
             onOpenCampaign={() => setCampaignView(true)}
             onReturnCampaign={() => setCampaignView(true)}
             onOpenDebrief={currentDebrief ? () => setActiveDebrief(currentDebrief) : undefined}
           />}
+    <GameplayGuide open={guideOpen} onClose={closeGuide} triggerRef={guideTriggerRef} missionRunning={mission.status === "RUNNING"} />
   </main>;
 }

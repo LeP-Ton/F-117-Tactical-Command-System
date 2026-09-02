@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createMission, createRun } from "./factories";
-import { analyzeCompletedMission, applyEnemyCounterDeployment, createPlayerTacticalProfile } from "./enemyAdaptation";
+import { analyzeCompletedMission, applyEnemyCounterDeployment, createPlayerTacticalProfile, getAdaptationAssessment } from "./enemyAdaptation";
 
 describe("Enemy Adaptation", () => {
   it("只分析真实已飞轨迹，不读取未来规划", () => {
@@ -66,5 +66,28 @@ describe("Enemy Adaptation", () => {
 
     expect(result.radars).toEqual(mission.radars);
     expect(result.adaptationNotes).toEqual([]);
+  });
+
+  it("根据显著画像数量派生状态与反制强度", () => {
+    const initial = createPlayerTacticalProfile();
+    expect(getAdaptationAssessment(initial)).toMatchObject({ signalCount: 0, status: "LOW", deploymentStrength: 0 });
+    expect(getAdaptationAssessment({ ...initial, aggressiveRouting: 0.8 }))
+      .toMatchObject({ signalCount: 1, status: "ACTIVE", deploymentStrength: 0.22 });
+    expect(getAdaptationAssessment({ ...initial, aggressiveRouting: 0.8, southernRouteBias: 0.7 }))
+      .toMatchObject({ signalCount: 2, status: "HIGH", deploymentStrength: 0.32 });
+    expect(getAdaptationAssessment({ missionSamples: 2, aggressiveRouting: 0.8, southernRouteBias: 0.7, terrainMaskingPreference: 0.5 }))
+      .toMatchObject({ signalCount: 3, status: "HIGH", deploymentStrength: 0.42 });
+  });
+
+  it("支持半权重航迹并与旧存档整数权重进行加权平均", () => {
+    const mission = {
+      ...createMission("ADAPT-WEIGHTED"),
+      flightPath: [{ x: 90, y: 800 }, { x: 400, y: 800 }],
+    };
+    const legacy = { missionSamples: 1, terrainMaskingPreference: 0.3, southernRouteBias: 0.4, aggressiveRouting: 0.5 };
+    const profile = analyzeCompletedMission(legacy, mission, 0.5);
+
+    expect(profile.missionSamples).toBe(1.5);
+    expect(profile.southernRouteBias).toBeCloseTo((0.4 + 0.8 * 0.5) / 1.5);
   });
 });

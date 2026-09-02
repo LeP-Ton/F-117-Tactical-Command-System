@@ -19,7 +19,6 @@ export interface CampaignNode {
   preview: {
     radarDensity: number;
     weather: string;
-    intelAccuracy: number;
     effect: string;
   };
 }
@@ -38,18 +37,19 @@ export interface CampaignState {
 
 export interface RunResources {
   enemyAlert: number;
-  /** 跨任务积累的情报质量加成，直接影响后续雷达情报准确度。 */
-  intelAccuracyBonus: number;
 }
 
 export interface PersistentEnemyState {
   radarCoverageModifier: number;
+  /** STRIKE 造成的跨任务雷达扫描速率修正，1 为正常速率。 */
+  radarScanRateModifier: number;
   commanderCoordinationModifier: number;
   tacticalProfile: PlayerTacticalProfile;
 }
 
 /** 只由已经执行过的任务更新，不读取当前任务的未来航线。 */
 export interface PlayerTacticalProfile {
+  /** 已分析航迹的累计观察权重；成功为 1，失败为 0.5，旧存档整数值保持兼容。 */
   missionSamples: number;
   terrainMaskingPreference: number;
   southernRouteBias: number;
@@ -279,7 +279,8 @@ export interface MissionSession {
   commander: CommanderState;
   target: MissionTarget;
   extractionArea: ExtractionArea;
-  intelAccuracy: number;
+  /** 本任务实际使用的雷达扫描速率修正，同时驱动扫描动画与 Sensor 周期。 */
+  radarScanRateModifier: number;
   commanderCoordinationModifier: number;
   adaptationNotes: string[];
   finalStrikeNotes: string[];

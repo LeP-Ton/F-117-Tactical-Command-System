@@ -50,6 +50,52 @@ describe("任务进度保存", () => {
     expect(restored?.missionDebriefs).toEqual({});
   });
 
+  it("旧存档缺少扫描速率字段时补为正常速率", () => {
+    const state = createRun("SAVE-LEGACY-SCAN-RATE");
+    const legacyEnemyState = { ...state.enemyState } as Partial<typeof state.enemyState>;
+    const legacyMission = { ...state.currentMission! } as Partial<NonNullable<typeof state.currentMission>>;
+    delete legacyEnemyState.radarScanRateModifier;
+    delete legacyMission.radarScanRateModifier;
+    const legacyState = {
+      ...state,
+      campaign: {
+        ...state.campaign,
+        nodes: state.campaign.nodes.map((node) => node.id === "C0-1"
+          ? { ...node, status: "COMPLETED" as const }
+          : node),
+      },
+      enemyState: legacyEnemyState,
+      currentMission: legacyMission,
+    };
+    window.localStorage.setItem(RUN_SAVE_KEY, JSON.stringify({ version: 1, savedAt: Date.now(), state: legacyState }));
+
+    const restored = loadRunProgress();
+    expect(restored?.enemyState.radarScanRateModifier).toBeCloseTo(0.9);
+    expect(restored?.currentMission?.radarScanRateModifier).toBeCloseTo(0.9);
+  });
+
+  it("恢复旧存档时移除废弃的情报质量字段", () => {
+    const state = createRun("SAVE-LEGACY-INTEL-QUALITY");
+    const legacyState = {
+      ...state,
+      resources: { ...state.resources, intelAccuracyBonus: 0.2 },
+      campaign: {
+        ...state.campaign,
+        nodes: state.campaign.nodes.map((node) => ({
+          ...node,
+          preview: { ...node.preview, intelAccuracy: 0.88 },
+        })),
+      },
+      currentMission: { ...state.currentMission!, intelAccuracy: 0.98 },
+    };
+    window.localStorage.setItem(RUN_SAVE_KEY, JSON.stringify({ version: 1, savedAt: Date.now(), state: legacyState }));
+
+    const restored = loadRunProgress();
+    expect(restored?.resources).toEqual({ enemyAlert: 0 });
+    expect(restored?.currentMission).not.toHaveProperty("intelAccuracy");
+    restored?.campaign.nodes.forEach((node) => expect(node.preview).not.toHaveProperty("intelAccuracy"));
+  });
+
   it("损坏或版本不兼容的存档不会阻断初始化", () => {
     window.localStorage.setItem(RUN_SAVE_KEY, "{broken");
     expect(loadRunProgress()).toBeUndefined();

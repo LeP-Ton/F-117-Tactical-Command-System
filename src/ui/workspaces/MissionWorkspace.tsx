@@ -32,7 +32,7 @@ interface MissionWorkspaceProps {
   showBelief: boolean;
   canUseAiDebug: boolean;
   onToggleBelief: () => void;
-  adaptationLevel: number;
+  adaptationStatus: "LOW" | "ACTIVE" | "HIGH";
   mapSelection: MapElementSelection | null;
   onMapSelectionChange: (selection: MapElementSelection | null) => void;
   onOpenCampaign: () => void;
@@ -41,7 +41,7 @@ interface MissionWorkspaceProps {
 }
 
 export function MissionWorkspace(props: MissionWorkspaceProps) {
-  const { mission, selectedIndex, onSelect, dispatch, showBelief, canUseAiDebug, onToggleBelief, adaptationLevel, mapSelection, onMapSelectionChange } = props;
+  const { mission, selectedIndex, onSelect, dispatch, showBelief, canUseAiDebug, onToggleBelief, adaptationStatus, mapSelection, onMapSelectionChange } = props;
   const activeWaypoint = mission.route.waypoints[mission.route.activeWaypointIndex];
   const recentEvents = mission.events.slice(-5).reverse();
   const visibleRadarIntel = mission.radarIntel.filter((report) => report.level !== "UNKNOWN");
@@ -78,8 +78,9 @@ export function MissionWorkspace(props: MissionWorkspaceProps) {
         <div><dt>气象速度损失</dt><dd>{weatherSpeedFactor < 1 ? `${((1 - weatherSpeedFactor) * 100).toFixed(0)}%` : "无"}</dd></div><div><dt>当前航点</dt><dd>{activeWaypoint ? `WP-${mission.route.activeWaypointIndex}` : "—"}</dd></div>
       </dl></CollapsibleSection>
       <CollapsibleSection title="MISSION INTEL" defaultExpanded={false}><dl className="telemetry-grid">
-        <div><dt>情报精度</dt><dd>{(mission.intelAccuracy * 100).toFixed(0)}%</dd></div><div><dt>已知雷达情报</dt><dd>{visibleRadarIntel.length} 个</dd></div>
-        <div><dt>未定位信号</dt><dd>{mission.radarIntel.length - visibleRadarIntel.length} 个</dd></div><div><dt>敌方反制指数</dt><dd>{adaptationLevel}</dd></div>
+        <div><dt>已知雷达情报</dt><dd>{visibleRadarIntel.length} 个</dd></div>
+        <div><dt>未定位信号</dt><dd>{mission.radarIntel.length - visibleRadarIntel.length} 个</dd></div><div><dt>敌方适应状态</dt><dd>{adaptationStatus}</dd></div>
+        <div><dt>雷达扫描速率</dt><dd>{(mission.radarScanRateModifier * 100).toFixed(0)}%</dd></div>
       </dl></CollapsibleSection>
       <MapElementPanel mission={mission} showBelief={showBelief} selection={mapSelection} onSelectionChange={onMapSelectionChange} />
       <DeploymentBriefingPanel title="COUNTER DEPLOYMENT" notes={mission.adaptationNotes} />

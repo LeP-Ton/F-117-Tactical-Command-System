@@ -11,7 +11,6 @@ export interface GeneratedMissionContent {
   weatherForecast: ReturnType<typeof generateWeatherForecast>;
   radars: RadarState[];
   targetPosition: { x: number; y: number };
-  intelAccuracy: number;
   commander: ReturnType<typeof createCommanderState>;
 }
 
@@ -71,7 +70,6 @@ export function generateMissionContent(seed: string): GeneratedMissionContent {
     weatherForecast: generateWeatherForecast(seed, weather),
     radars,
     targetPosition: { x: random.range(400, 790), y: random.range(100, 390) },
-    intelAccuracy: random.range(0.68, 0.94),
     commander: createCommanderState(),
   };
 }

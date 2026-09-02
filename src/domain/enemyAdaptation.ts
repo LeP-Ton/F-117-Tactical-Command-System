@@ -10,25 +10,47 @@ export function createPlayerTacticalProfile(): PlayerTacticalProfile {
   };
 }
 
-export function getAdaptationLevel(profile: PlayerTacticalProfile): number {
-  return Math.min(5, profile.missionSamples);
+export interface AdaptationAssessment {
+  terrainMasking: boolean;
+  routeBias: boolean;
+  aggressiveRouting: boolean;
+  signalCount: number;
+  status: "LOW" | "ACTIVE" | "HIGH";
+  deploymentStrength: number;
+}
+
+/** 只有形成足够鲜明的实际航迹特征时，敌军才获得可执行的反制依据。 */
+export function getAdaptationAssessment(profile: PlayerTacticalProfile): AdaptationAssessment {
+  const terrainMasking = profile.terrainMaskingPreference >= 0.35;
+  const routeBias = Math.abs(profile.southernRouteBias - 0.5) >= 0.08;
+  const aggressiveRouting = profile.aggressiveRouting >= 0.72;
+  const signalCount = [terrainMasking, routeBias, aggressiveRouting].filter(Boolean).length;
+  return {
+    terrainMasking,
+    routeBias,
+    aggressiveRouting,
+    signalCount,
+    status: signalCount === 0 ? "LOW" : signalCount === 1 ? "ACTIVE" : "HIGH",
+    deploymentStrength: signalCount === 0 ? 0 : signalCount === 1 ? 0.22 : signalCount === 2 ? 0.32 : 0.42,
+  };
 }
 
 function distance(first: Vector2, second: Vector2): number {
   return Math.hypot(first.x - second.x, first.y - second.y);
 }
 
-function blend(previous: number, observed: number, previousSamples: number): number {
-  return (previous * previousSamples + observed) / (previousSamples + 1);
+function blend(previous: number, observed: number, previousWeight: number, observationWeight: number): number {
+  return (previous * previousWeight + observed * observationWeight) / (previousWeight + observationWeight);
 }
 
 /** 任务结束后只分析按位移采样的真实已飞轨迹，不读取未执行航点。 */
 export function analyzeCompletedMission(
   profile: PlayerTacticalProfile,
   mission: MissionSession,
+  observationWeight = 1,
 ): PlayerTacticalProfile {
   const flownPoints = mission.flightPath;
-  if (flownPoints.length < 2) return profile;
+  if (flownPoints.length < 2 || observationWeight <= 0) return profile;
 
   const terrainPoints = flownPoints.filter((point) => mission.terrain.some((zone) =>
     point.x >= zone.x && point.x <= zone.x + zone.width
@@ -42,12 +64,13 @@ export function analyzeCompletedMission(
   const directDistance = distance(flownPoints[0]!, flownPoints.at(-1)!);
   const aggressiveRouting = flownDistance === 0 ? 0 : Math.min(1, directDistance / flownDistance);
   const samples = profile.missionSamples;
+  const nextSamples = samples + observationWeight;
 
   return {
-    missionSamples: samples + 1,
-    terrainMaskingPreference: blend(profile.terrainMaskingPreference, terrainPreference, samples),
-    southernRouteBias: blend(profile.southernRouteBias, southernBias, samples),
-    aggressiveRouting: blend(profile.aggressiveRouting, aggressiveRouting, samples),
+    missionSamples: nextSamples,
+    terrainMaskingPreference: blend(profile.terrainMaskingPreference, terrainPreference, samples, observationWeight),
+    southernRouteBias: blend(profile.southernRouteBias, southernBias, samples, observationWeight),
+    aggressiveRouting: blend(profile.aggressiveRouting, aggressiveRouting, samples, observationWeight),
   };
 }
 
@@ -90,13 +113,14 @@ export function applyEnemyCounterDeployment(
   enemyState: PersistentEnemyState,
 ): MissionSession {
   const profile = enemyState.tacticalProfile;
-  if (profile.missionSamples === 0 || mission.radars.length === 0) {
+  const assessment = getAdaptationAssessment(profile);
+  if (profile.missionSamples === 0 || mission.radars.length === 0 || assessment.signalCount === 0) {
     return { ...mission, adaptationNotes: [] };
   }
 
   const radars = [...mission.radars];
   const notes: string[] = [];
-  const strength = Math.min(0.42, 0.12 + getAdaptationLevel(profile) * 0.06);
+  const strength = assessment.deploymentStrength;
   const usedRadarIds = new Set<string>();
   // 目标区最近的火控雷达承担固定防御职责，不参与历史航路反制移位。
   const protectedFireControlId = radars
@@ -104,19 +128,19 @@ export function applyEnemyCounterDeployment(
     .sort((first, second) => distance(first.position, mission.target.position) - distance(second.position, mission.target.position))[0]?.id;
 
   const primaryTerrain = mission.terrain[0];
-  if (profile.terrainMaskingPreference >= 0.35 && primaryTerrain) {
+  if (assessment.terrainMasking && primaryTerrain) {
     const exit = { x: primaryTerrain.x + primaryTerrain.width, y: primaryTerrain.y + primaryTerrain.height / 2 };
     moveNearestRadar(radars, exit, strength, usedRadarIds, protectedFireControlId);
     notes.push("山地出口增设搜索覆盖");
   }
 
-  if (Math.abs(profile.southernRouteBias - 0.5) >= 0.08) {
+  if (assessment.routeBias) {
     const corridorY = profile.southernRouteBias * gameConfig.world.height;
     moveNearestRadar(radars, { x: gameConfig.world.width * 0.58, y: corridorY }, strength, usedRadarIds, protectedFireControlId);
     notes.push(profile.southernRouteBias > 0.5 ? "南部航路搜索加强" : "北部航路搜索加强");
   }
 
-  if (profile.aggressiveRouting >= 0.72) {
+  if (assessment.aggressiveRouting) {
     const directAxis = {
       x: (mission.route.waypoints[0]!.position.x + mission.target.position.x) / 2,
       y: (mission.route.waypoints[0]!.position.y + mission.target.position.y) / 2,

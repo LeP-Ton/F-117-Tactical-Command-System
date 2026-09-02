@@ -1,6 +1,7 @@
 import { gameConfig } from "../config/gameConfig";
 import { SeededRandom } from "../core/SeededRandom";
 import { createRadarOperatorState } from "./radarOperatorAI";
+import { getAdaptationAssessment } from "./enemyAdaptation";
 import type { MissionNodeType, MissionSession, PlayerTacticalProfile, RadarState, RadarType } from "./types";
 
 export interface FinalStrikeContext {
@@ -48,20 +49,16 @@ export function applyFinalStrikeDefense(
   const radars = [...mission.radars];
   const notes: string[] = ["最终目标启用分层防空戒备"];
 
-  if (completed.has("SEAD")) {
-    notes.push("SEAD 战果阻止目标区后备雷达上线");
-  } else {
-    const angle = random.range(0, Math.PI * 2);
-    radars.push(createGuardRadar(
-      "FINAL-GUARD",
-      mission.target.position.x + Math.cos(angle) * 145,
-      mission.target.position.y + Math.sin(angle) * 145,
-      averageRange * 0.92,
-      random.range(0, 360),
-      "FIRE_CONTROL",
-    ));
-    notes.push("未执行 SEAD：目标区后备雷达上线");
-  }
+  const angle = random.range(0, Math.PI * 2);
+  radars.push(createGuardRadar(
+    "FINAL-GUARD",
+    mission.target.position.x + Math.cos(angle) * 145,
+    mission.target.position.y + Math.sin(angle) * 145,
+    averageRange * 0.92,
+    random.range(0, 360),
+    "FIRE_CONTROL",
+  ));
+  notes.push("目标区后备火控雷达上线");
 
   if (context.enemyAlert >= 15) {
     radars.push(createGuardRadar(
@@ -77,7 +74,8 @@ export function applyFinalStrikeDefense(
     notes.push("低 Enemy Alert：未触发警戒增援");
   }
 
-  if (context.tacticalProfile.missionSamples >= 2) {
+  const adaptation = getAdaptationAssessment(context.tacticalProfile);
+  if (context.tacticalProfile.missionSamples >= 2 && adaptation.signalCount >= 2) {
     const corridorY = context.tacticalProfile.southernRouteBias * gameConfig.world.height;
     radars.push(createGuardRadar(
       "ADAPT-GUARD",
@@ -88,10 +86,12 @@ export function applyFinalStrikeDefense(
       "ACQUISITION",
     ));
     notes.push(`${context.tacticalProfile.southernRouteBias > 0.5 ? "南部" : "北部"}历史航路部署自适应截击雷达`);
+  } else {
+    notes.push("历史航迹未形成高可信反制画像");
   }
 
   if (completed.has("COMMAND_STRIKE")) notes.push("Command Strike 战果削弱最终指挥链");
-  if (completed.has("INTEL")) notes.push("情报战果提高最终目标雷达识别质量");
+  if (completed.has("INTEL")) notes.push("情报战果已核实最终目标雷达坐标与型号");
 
   return {
     ...mission,

@@ -12,21 +12,15 @@ function getIntelLevel(confidence: number): RadarIntelLevel {
   return "POSSIBLE";
 }
 
-/**
- * 根据任务 Seed 生成玩家可见的战前雷达情报。同一个 Seed 可复现；精度越高，
- * 雷达暴露数量越多，位置与覆盖半径误差越小。真实 RadarState 不会写入报告。
- */
+/** 根据任务 Seed 和固定基线生成 Tier 0 有限情报；真实 RadarState 不会写入报告。 */
 export function generateRadarIntel(
   missionSeed: string,
   radars: readonly RadarState[],
-  intelAccuracy: number,
 ): RadarIntelReport[] {
-  const accuracy = clamp(intelAccuracy, 0, 1);
-
   return radars.map((radar) => {
     const random = new SeededRandom(`${missionSeed}:INTEL:${radar.id}`);
-    const confidence = clamp(accuracy + random.range(-0.18, 0.1), 0.08, 0.99);
-    const revealed = random.next() < clamp(0.18 + accuracy * 0.92, 0, 1);
+    const confidence = random.range(...gameConfig.intel.confidenceRange);
+    const revealed = random.next() < gameConfig.intel.revealProbability;
 
     if (!revealed) {
       return {
@@ -37,7 +31,7 @@ export function generateRadarIntel(
       };
     }
 
-    const positionErrorRadius = Math.max(5, (1 - accuracy) * 210 + random.range(4, 24));
+    const positionErrorRadius = random.range(...gameConfig.intel.positionErrorRadiusRange);
     const offsetDistance = random.range(0, positionErrorRadius);
     const offsetAngle = random.range(0, Math.PI * 2);
     const estimatedPosition = {
@@ -45,8 +39,6 @@ export function generateRadarIntel(
       y: clamp(radar.position.y + Math.sin(offsetAngle) * offsetDistance, 0, gameConfig.world.height),
     };
     const level = getIntelLevel(confidence);
-    const rangeErrorRatio = (1 - accuracy) * 0.35;
-
     return {
       radarId: radar.id,
       radarType: radar.type,
@@ -55,7 +47,7 @@ export function generateRadarIntel(
       positionErrorRadius,
       estimatedRange: level === "POSSIBLE"
         ? undefined
-        : radar.range * (1 + random.range(-rangeErrorRatio, rangeErrorRatio)),
+        : radar.range * (1 + random.range(-gameConfig.intel.rangeErrorRatio, gameConfig.intel.rangeErrorRatio)),
     };
   });
 }

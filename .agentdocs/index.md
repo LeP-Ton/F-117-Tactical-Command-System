@@ -1,9 +1,18 @@
 # 项目文档索引
 
 ## 设计提案与废案
+`proposals/20260902112715-explore-remove-intel-quality.md` - 会话-119提出、会话-121采纳的“移除情报质量百分比、仅保留 INTEL 分级权限”设计来源；重新评估固定有限情报参数或回退方案时读取，最终实现以会话-121 workflow 为准。
 `proposals/20260825225610-rejected-sigint-overlay.md` - 会话-80/81：已废弃的“有限情报动态 SIGINT Overlay”方案；重新讨论 AI DEBUG、直播观赏性或有限情报动态反馈时读取，不能视为已实施功能。
 
 ## 当前变更文档
+`workflow/20260902170448-enforce-two-intel-mission-limit.md` - 会话-124：将“任务网络最多两个 INTEL 行动”设为集中式硬约束，生成器拒绝第三个 INTEL，权限派生复用同一上限，并明确错过首次行动将无法取得 `TOTAL INTEL`；扩展任务网络或核对情报上限时读取。
+`workflow/20260902114838-distinguish-intel-reward-copy.md` - 会话-122：将第一次 INTEL 明确为核实全部雷达坐标与型号、第二次明确为授权 `TOTAL INTEL` 完整敌方态势，并通过动态派生兼容旧存档文案；核对任务网络 INTEL 奖励说明时读取。
+`workflow/20260902113647-remove-continuous-intel-quality.md` - 会话-121：删除 `intelAccuracyBonus`、任务基础情报精度及相关 UI，改用 Seed 可复现的固定有限情报基线并保持两级 INTEL 权限，兼容剥离旧存档字段；核对有限情报参数、INTEL 奖励边界或存档兼容时读取。
+`workflow/20260826225554-strike-scan-rate-and-system-docs.md` - 会话-115：将 STRIKE 改为累计降低所有后续雷达真实扫描速率，SEAD 改为只缩小覆盖并恢复最终火控增援，同时补齐任务、奖励、地图、雷达、天气和 OPERATION CODE 确定性生成文档；核对任务收益分工、扫描周期、Seed 复现或旧存档兼容时读取。
+`workflow/20260826223103-balance-campaign-mission-effects.md` - 会话-112：为 STRIKE 增加累计最终战削弱，收敛 SEAD、加强 COMMAND STRIKE，将 Enemy Adaptation 改为画像特征与失败半权重驱动，并精简任务网络战略状态；核对任务收益、最终战构筑或敌方适应平衡时读取。
+`workflow/20260826214504-rename-guide-to-operating-instructions.md` - 会话-107：纠正“作战简报”与通用帮助内容不匹配的问题，统一改为“操作说明 / OPERATING INSTRUCTIONS”；核对顶部帮助入口语义时读取。
+`workflow/20260826213328-refine-operation-briefing-copy.md` - 会话-106：将游戏内“玩法说明”沉浸式改为“作战简报”，关闭按钮改为图标，仅在实时任务中显示持续执行提示，并补齐五类任务的战术价值；核对游戏内帮助文案时读取。
+`workflow/20260826211925-add-developer-readme-and-gameplay-guide.md` - 会话-105：重写开发者 README、同步当前机制手册，并增加不暂停实时任务的顶部玩法说明弹窗；了解项目机制、开发边界或游戏内帮助入口时读取。
 `workflow/20260826183457-unify-planning-task-copy.md` - 会话-103：将任务网络可执行入口与规划页面标题统一为“规划任务”，并将规划页入口改为统一黄色全宽“返回任务网络”；核对规划入口文案时读取。
 `workflow/20260826182606-unify-task-entry-copy-and-separators.md` - 会话-102：将任务网络入口与页面标题统一为“预览任务/复盘任务”，统一黄色全宽返回按钮，并修复 THREAT WARNING 覆盖底部分割线为红色的问题；排查任务入口文案或侧栏分割线时读取。
 `workflow/20260826174932-share-tactical-workspace-components.md` - 会话-99：在保留任务执行、任务情报与任务复盘独立布局的前提下，抽取三栏工作区、地图舞台、天气预报、部署简报及敌方分析基础组件，并将三个页面迁出 App；排查战术 UI 组件职责或减少页面重复时读取。
@@ -86,14 +95,14 @@
 - Belief Map 仅消费 Contact，以 24×24 网格保存概率分布并进行运动传播、扩散和衰减。
 - Commander 只读取 Awareness、Belief 与雷达状态，通过 Utility 偏置协调各 Radar Operator；投弹只提高警戒，不提供目标区定位，网络静默仍已移除。
 - 单 Mission 已形成 Plan → Infiltrate → Strike → High-alert Extraction → Result 闭环。
-- Mission 的静态地形、动态天气初始参数与演化、天气预报、雷达、目标和情报精度均由 Seed 确定生成；相同任务时间可复现相同真实天气。
+- Mission 的静态地形、动态天气初始参数与演化、天气预报、雷达和目标均由 Seed 确定生成；有限雷达情报按固定规则和逐雷达子 Seed 生成，相同任务时间可复现相同真实天气。
 - Campaign 固定为三个顺序二选一阶段与 Final Strike；只有摧毁目标并成功撤离才推进并关闭同层选择；所有失败都把当前节点标记为可重试的 `FAILED`、增加 Enemy Alert，同层备选保持 `AVAILABLE`，下一层保持锁定。
 - Tactical Reward 与 Player Build 已完整移除，成功任务直接返回 Campaign。
 - 当前 Roguelike 差异集中在程序生成地图、雷达网络、天气与 Campaign 防空构建。
-- Intel、SEAD、Command Strike 与 Enemy Alert 会分别修改后续任务的情报精度、雷达覆盖或 Commander 协调。
+- Intel 只保留两级权限成长，不再维护连续情报质量；STRIKE 每次使所有后续雷达扫描速率乘以 90%；SEAD 只将后续雷达覆盖乘以 90%，不阻止最终火控增援；Command Strike 将 Commander 协调乘以 65%；所有成功任务使 Enemy Alert 增加 2，失败增加 10。
 - 默认战术地图只呈现带误差的玩家雷达情报；敌方真实雷达、Contact、Belief、警戒和 Utility 仅在 AI DEBUG 中呈现。
-- Enemy Adaptation 仅分析按位移采样的真实已飞轨迹，并根据地形利用、南北航路及直达倾向选择空间上最合适的雷达调整部署。
-- Final Strike 会综合 SEAD、Command Strike、情报任务、Enemy Alert、适应等级与失败历史动态生成最终防空体系。
+- Enemy Adaptation 仅分析按位移采样的真实已飞轨迹，成功与失败分别按 1.0/0.5 权重更新画像；地形利用、南北航路及直达倾向达到阈值后才触发 22%–42% 的空间反制部署。
+- Final Strike 固定部署目标区后备火控，并综合 STRIKE 扫描削弱、SEAD 覆盖削弱、Command Strike、情报任务、Enemy Alert 与画像特征动态生成最终防空体系；自适应增援要求累计观察权重至少为 2 且形成两项以上显著特征。
 - 飞机基础速度为 `3.6 u/s`，运行中进入目标攻击半径后自动投弹，无需玩家手动操作。
 - F-117 满油航程为 `2000 u`，按真实累计飞行距离消耗；燃油耗尽会停止飞机并令当前任务失败。
 - Weather Cell 会令飞机减速 10%–30%，多个天气重叠时只取最强效果；天气延长暴露时间但不额外增加单位距离油耗。

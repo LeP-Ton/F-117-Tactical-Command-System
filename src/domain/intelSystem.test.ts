@@ -5,29 +5,29 @@ import { generateRadarIntel } from "./intelSystem";
 describe("雷达有限情报系统", () => {
   const mission = createMission("INTEL-SYSTEM-TEST");
 
-  it("相同 Seed 与精度会生成完全一致的报告", () => {
-    const first = generateRadarIntel(mission.seed, mission.radars, 0.68);
-    const second = generateRadarIntel(mission.seed, mission.radars, 0.68);
+  it("相同 Seed 会按固定规则生成完全一致的报告", () => {
+    const first = generateRadarIntel(mission.seed, mission.radars);
+    const second = generateRadarIntel(mission.seed, mission.radars);
 
     expect(second).toEqual(first);
   });
 
-  it("提高情报精度不会减少已定位雷达，并会缩小位置误差", () => {
-    const low = generateRadarIntel(mission.seed, mission.radars, 0.35);
-    const high = generateRadarIntel(mission.seed, mission.radars, 0.95);
-    const lowVisible = low.filter((report) => report.estimatedPosition);
-    const highVisible = high.filter((report) => report.estimatedPosition);
-    const averageError = (reports: typeof lowVisible) => reports.reduce(
-      (sum, report) => sum + report.positionErrorRadius,
-      0,
-    ) / Math.max(1, reports.length);
-
-    expect(highVisible.length).toBeGreaterThanOrEqual(lowVisible.length);
-    expect(averageError(highVisible)).toBeLessThan(averageError(lowVisible));
+  it("有限情报的位置与范围误差遵循固定基线", () => {
+    const reports = generateRadarIntel(mission.seed, mission.radars);
+    reports.forEach((report) => {
+      if (!report.estimatedPosition) return;
+      expect(report.positionErrorRadius).toBeGreaterThanOrEqual(50);
+      expect(report.positionErrorRadius).toBeLessThanOrEqual(70);
+      const radar = mission.radars.find((candidate) => candidate.id === report.radarId)!;
+      if (report.estimatedRange !== undefined) {
+        expect(report.estimatedRange).toBeGreaterThanOrEqual(radar.range * 0.92);
+        expect(report.estimatedRange).toBeLessThanOrEqual(radar.range * 1.08);
+      }
+    });
   });
 
   it("所有估计坐标均限制在战术地图内", () => {
-    const reports = generateRadarIntel(mission.seed, mission.radars, 0.5);
+    const reports = generateRadarIntel(mission.seed, mission.radars);
 
     reports.forEach((report) => {
       if (!report.estimatedPosition) return;
@@ -39,7 +39,7 @@ describe("雷达有限情报系统", () => {
   });
 
   it("玩家报告不泄露雷达实时开关、扫描角度和操作员状态", () => {
-    const [report] = generateRadarIntel(mission.seed, mission.radars, 0.8);
+    const [report] = generateRadarIntel(mission.seed, mission.radars);
 
     expect(report).not.toHaveProperty("active");
     expect(report).not.toHaveProperty("sweepAngleDegrees");

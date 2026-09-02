@@ -15,6 +15,7 @@ import { advanceEngagement } from "../domain/engagementSystem";
 import { advanceWeather, getWeatherSpeedFactor } from "../domain/weatherSystem";
 import { ensureTargetFireControlCoverage } from "../domain/targetDefense";
 import { enforceExtractionRadarClearance } from "../domain/radarDeployment";
+import { campaignBalance, getMissionAlertDelta } from "../domain/campaignBalance";
 import {
   addWaypoint,
   moveWaypoint,
@@ -67,11 +68,9 @@ export function prepareCampaignMission(state: RunState, node: CampaignNode): Mis
     ...radar,
     range: radar.range * state.enemyState.radarCoverageModifier * alertCoverageMultiplier,
   }));
-  const adjustedIntelAccuracy = Math.min(0.99, selectedMission.intelAccuracy + state.resources.intelAccuracyBonus);
   const adaptedMission = applyEnemyCounterDeployment({
     ...selectedMission,
     radars: adjustedRadars,
-    intelAccuracy: adjustedIntelAccuracy,
   }, state.enemyState);
   const finalMission = node.type === "FINAL_STRIKE"
     ? applyFinalStrikeDefense(adaptedMission, {
@@ -88,7 +87,7 @@ export function prepareCampaignMission(state: RunState, node: CampaignNode): Mis
     finalMission.extractionArea,
   );
 
-  const generatedIntel = generateRadarIntel(selectedMission.seed, radars, adjustedIntelAccuracy);
+  const generatedIntel = generateRadarIntel(selectedMission.seed, radars);
   const radarIntel = getIntelAccessTier(state.campaign) >= 1
     ? radars.map((radar) => {
       const previous = generatedIntel.find((report) => report.radarId === radar.id);
@@ -99,7 +98,7 @@ export function prepareCampaignMission(state: RunState, node: CampaignNode): Mis
     ...finalMission,
     radars,
     radarIntel,
-    intelAccuracy: adjustedIntelAccuracy,
+    radarScanRateModifier: state.enemyState.radarScanRateModifier,
     commanderCoordinationModifier: state.enemyState.commanderCoordinationModifier,
   };
 }
@@ -151,8 +150,14 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         // 所有失败都不推进 Campaign：失败节点可重试，同层备选保持 AVAILABLE，下一层保持锁定。
         return node;
       });
-      const alertDelta = succeeded && currentNode.type === "SEAD" ? -8 : succeeded ? 2 : 10;
-      const tacticalProfile = analyzeCompletedMission(state.enemyState.tacticalProfile, mission);
+      const alertDelta = getMissionAlertDelta(succeeded);
+      const tacticalProfile = analyzeCompletedMission(
+        state.enemyState.tacticalProfile,
+        mission,
+        succeeded
+          ? campaignBalance.successfulMissionAdaptationWeight
+          : campaignBalance.failedMissionAdaptationWeight,
+      );
       // 除 Final Strike 成功外，结算后 Run 均保持 ACTIVE，失败任务可继续重试。
       const runStatus = succeeded
         ? currentNode.type === "FINAL_STRIKE" ? "VICTORY" as const : "ACTIVE" as const
@@ -162,22 +167,28 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         status: runStatus,
         campaign: { ...state.campaign, nodes, currentNodeId: succeeded ? undefined : currentNode.id },
         resources: {
-          ...state.resources,
           enemyAlert: Math.max(0, Math.min(100, state.resources.enemyAlert + alertDelta)),
-          intelAccuracyBonus: Math.min(
-            0.24,
-            state.resources.intelAccuracyBonus
-              + (succeeded && currentNode.type === "INTEL" ? 0.1 : 0),
-          ),
         },
         enemyState: {
           ...state.enemyState,
           tacticalProfile,
           radarCoverageModifier: succeeded && currentNode.type === "SEAD"
-            ? Math.max(0.55, state.enemyState.radarCoverageModifier * 0.85)
+            ? Math.max(
+              campaignBalance.radarCoverageFloor,
+              state.enemyState.radarCoverageModifier * campaignBalance.seadRadarCoverageMultiplier,
+            )
             : state.enemyState.radarCoverageModifier,
+          radarScanRateModifier: succeeded && currentNode.type === "STRIKE"
+            ? Math.max(
+              campaignBalance.radarScanRateFloor,
+              state.enemyState.radarScanRateModifier * campaignBalance.strikeRadarScanRateMultiplier,
+            )
+            : state.enemyState.radarScanRateModifier,
           commanderCoordinationModifier: succeeded && currentNode.type === "COMMAND_STRIKE"
-            ? Math.max(0.45, state.enemyState.commanderCoordinationModifier * 0.75)
+            ? Math.max(
+              campaignBalance.commanderCoordinationFloor,
+              state.enemyState.commanderCoordinationModifier * campaignBalance.commandCoordinationMultiplier,
+            )
             : state.enemyState.commanderCoordinationModifier,
         },
       };
@@ -284,6 +295,7 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         weather,
         nextTimestamp,
         action.deltaSeconds,
+        mission.radarScanRateModifier,
       );
       const reachedEvents = result.reachedWaypointIds.map((waypointId) =>
         createGameEvent(mission, "WAYPOINT_REACHED", { waypointId }),

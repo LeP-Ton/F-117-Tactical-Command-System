@@ -43,4 +43,14 @@ describe("Radar Sensor", () => {
     expect(early.radars[0]!.scanCount).toBe(8);
     expect(fireControl.radars[0]!.scanCount).toBe(9);
   });
+
+  it("扫描速率修正同时降低波束旋转速度与实际扫描频率", () => {
+    const source = { ...radar, sweepAngleDegrees: 0, scanAccumulatorSeconds: 0, scanCount: 0 };
+    const normal = advanceRadarSensors("SCAN-RATE", [source], aircraft, [], [], 500, 0.25, 1);
+    const reduced = advanceRadarSensors("SCAN-RATE", [source], aircraft, [], [], 500, 0.25, 0.9);
+
+    expect(normal.radars[0]!.scanCount).toBe(1);
+    expect(reduced.radars[0]!.scanCount).toBe(0);
+    expect(reduced.radars[0]!.sweepAngleDegrees).toBeCloseTo(normal.radars[0]!.sweepAngleDegrees * 0.9);
+  });
 });

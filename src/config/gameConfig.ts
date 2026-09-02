@@ -26,6 +26,13 @@ export const gameConfig = {
     sectorContactMemoryMs: 9000,
     sharedContactMemoryMs: 4500,
   },
+  /** Tier 0 有限情报使用固定规则，逐雷达差异仍由 Mission Seed 确定生成。 */
+  intel: {
+    revealProbability: 0.9,
+    confidenceRange: [0.6, 0.88] as const,
+    positionErrorRadiusRange: [50, 70] as const,
+    rangeErrorRatio: 0.08,
+  },
   belief: {
     gridSize: 24,
     propagationIntervalSeconds: 0.25,

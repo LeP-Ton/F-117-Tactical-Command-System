@@ -1,4 +1,5 @@
 import type { CampaignEdge, CampaignNode, CampaignState, MissionNodeType } from "../domain/types";
+import { campaignBalance, getMissionEffectDescription } from "../domain/campaignBalance";
 import { generateMissionContent } from "./missionGenerator";
 
 const stageTypes: readonly (readonly MissionNodeType[])[] = [
@@ -8,22 +9,21 @@ const stageTypes: readonly (readonly MissionNodeType[])[] = [
   ["FINAL_STRIKE"],
 ];
 
-const effects: Record<MissionNodeType, string> = {
-  INTEL: "获取敌防空网电子情报，提升后续目标识别质量",
-  STRIKE: "打击任务目标，不改变敌防空网当前战备状态",
-  SEAD: "压制敌防空节点，削弱后续雷达覆盖",
-  COMMAND_STRIKE: "打击敌指挥链，削弱后续协同搜索能力",
-  FINAL_STRIKE: "对最终目标实施纵深精确打击",
-};
-
 export function generateCampaign(seed: string): CampaignState {
   const nodes: CampaignNode[] = [];
+  let intelOrdinal = 0;
   stageTypes.forEach((types, layer) => {
     types.forEach((type, index) => {
       const count = types.length;
       const id = `C${layer}-${index}`;
       const missionSeed = `${seed}:${id}`;
       const generated = generateMissionContent(missionSeed);
+      if (type === "INTEL") {
+        intelOrdinal += 1;
+        if (intelOrdinal > campaignBalance.maxIntelMissions) {
+          throw new Error(`任务网络最多允许 ${campaignBalance.maxIntelMissions} 个 INTEL 节点`);
+        }
+      }
       nodes.push({
         id,
         type,
@@ -36,8 +36,7 @@ export function generateCampaign(seed: string): CampaignState {
           weather: generated.weather
             .map((cell) => cell.kind)
             .join(" + "),
-          intelAccuracy: generated.intelAccuracy,
-          effect: effects[type],
+          effect: getMissionEffectDescription(type, intelOrdinal),
         },
       });
     });

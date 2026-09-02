@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import type { MissionDebrief, MissionSession, RunState } from "../domain/types";
 import type { GameAction } from "../game/gameReducer";
-import { getAdaptationLevel } from "../domain/enemyAdaptation";
+import { getAdaptationAssessment } from "../domain/enemyAdaptation";
 import { getIntelAccessTier } from "../domain/intelAccess";
 import { prepareCampaignMission } from "../game/gameReducer";
+import { getMissionEffectDescription } from "../domain/campaignBalance";
 
 interface CampaignMapProps {
   state: RunState;
@@ -21,14 +22,6 @@ const typeLabels = {
   FINAL_STRIKE: "最终打击",
 } as const;
 
-const missionBriefings = {
-  INTEL: "获取敌防空网电子情报，提升后续目标识别质量。",
-  STRIKE: "打击任务目标，不改变敌防空网当前战备状态。",
-  SEAD: "压制敌防空节点，削弱后续雷达覆盖。",
-  COMMAND_STRIKE: "打击敌指挥链，削弱后续协同搜索能力。",
-  FINAL_STRIKE: "对最终目标实施纵深精确打击。",
-} as const;
-
 export function CampaignMap({ state, dispatch, onLaunch, onPreview, onDebrief }: CampaignMapProps) {
   const firstAvailable = state.campaign.nodes.find((node) => node.status === "AVAILABLE");
   const [selectedId, setSelectedId] = useState(
@@ -38,8 +31,14 @@ export function CampaignMap({ state, dispatch, onLaunch, onPreview, onDebrief }:
     () => state.campaign.nodes.find((node) => node.id === selectedId) ?? firstAvailable,
     [firstAvailable, selectedId, state.campaign.nodes],
   );
-  const adaptationLevel = getAdaptationLevel(state.enemyState.tacticalProfile);
+  const adaptation = getAdaptationAssessment(state.enemyState.tacticalProfile);
   const intelAccessTier = getIntelAccessTier(state.campaign);
+  const selectedIntelOrdinal = selected?.type === "INTEL"
+    ? state.campaign.nodes
+      .filter((node) => node.type === "INTEL")
+      .sort((left, right) => left.layer - right.layer)
+      .findIndex((node) => node.id === selected.id) + 1
+    : 0;
   const previewMission = useMemo(() => selected ? prepareCampaignMission(state, selected) : undefined, [selected, state]);
   const selectedDebrief = selected ? state.missionDebriefs[selected.id] : undefined;
   const hasAvailableNode = state.campaign.nodes.some((node) => node.status === "AVAILABLE");
@@ -53,11 +52,11 @@ export function CampaignMap({ state, dispatch, onLaunch, onPreview, onDebrief }:
         <div><span className="section-kicker">MISSION NETWORK</span><h2>任务网络</h2></div>
         <div className="campaign-resources">
           <span>ENEMY ALERT <strong>{state.resources.enemyAlert}</strong></span>
-          <span>INTEL QUALITY <strong>+{(state.resources.intelAccuracyBonus * 100).toFixed(0)}%</strong></span>
           <span>INTEL ACCESS <strong>{intelAccessTier}/2</strong></span>
-          <span>RADAR NET <strong>{(state.enemyState.radarCoverageModifier * 100).toFixed(0)}%</strong></span>
+          <span>RADAR COVERAGE <strong>{(state.enemyState.radarCoverageModifier * 100).toFixed(0)}%</strong></span>
+          <span>RADAR SCAN <strong>{(state.enemyState.radarScanRateModifier * 100).toFixed(0)}%</strong></span>
           <span>CMD LINK <strong>{(state.enemyState.commanderCoordinationModifier * 100).toFixed(0)}%</strong></span>
-          <span>ADAPT INDEX <strong>{adaptationLevel}</strong></span>
+          <span>ENEMY ADAPTATION <strong>{adaptation.status}</strong></span>
         </div>
       </div>
       <div className="campaign-content">
@@ -94,9 +93,8 @@ export function CampaignMap({ state, dispatch, onLaunch, onPreview, onDebrief }:
               <div><dt>任务代号</dt><dd>{selected.id}</dd></div>
               <div><dt>预估雷达数量</dt><dd>{selected.preview.radarDensity}</dd></div>
               <div><dt>天气</dt><dd>{selected.preview.weather}</dd></div>
-              <div><dt>情报可信度</dt><dd>{(selected.preview.intelAccuracy * 100).toFixed(0)}%</dd></div>
             </dl>
-            <p>{missionBriefings[selected.type]}</p>
+            <p>{getMissionEffectDescription(selected.type, selectedIntelOrdinal)}。</p>
             <p>{intelAccessTier === 0 ? "LIMITED INTELLIGENCE" : intelAccessTier === 1 ? "RADAR IDENTIFICATION VERIFIED" : "TOTAL INTELLIGENCE ACCESS"}</p>
             {selected.type === "FINAL_STRIKE" && <p>最终目标防空序列持续重构，部署态势将在出击时确认。</p>}
             {state.enemyState.tacticalProfile.missionSamples > 0 && <div className="campaign-build">

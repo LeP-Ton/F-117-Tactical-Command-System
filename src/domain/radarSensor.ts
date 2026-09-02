@@ -17,16 +17,20 @@ export function advanceRadarSensors(
   weather: WeatherCell[],
   timestamp: number,
   deltaSeconds: number,
+  scanRateModifier = 1,
 ): RadarSimulationResult {
   const contacts: RadarContact[] = [];
   const nextRadars = radars.map((radar) => {
     const profile = radarTypeProfiles[radar.type];
     let accumulator = radar.scanAccumulatorSeconds + deltaSeconds;
     let scanCount = radar.scanCount;
-    const wideSweep = (radar.sweepAngleDegrees + profile.sweepDegreesPerSecond * deltaSeconds) % 360;
+    const effectiveScanRate = Math.max(0.01, scanRateModifier);
+    const effectiveScanInterval = profile.scanIntervalSeconds / effectiveScanRate;
+    const wideSweep = (radar.sweepAngleDegrees
+      + profile.sweepDegreesPerSecond * effectiveScanRate * deltaSeconds) % 360;
     const sectorSweep = radar.operator.focusBearingDegrees === undefined
       ? wideSweep
-      : radar.operator.focusBearingDegrees + Math.sin(timestamp / 1300) * 42;
+      : radar.operator.focusBearingDegrees + Math.sin(timestamp * effectiveScanRate / 1300) * 42;
     const focusedSweep = radar.operator.focusBearingDegrees ?? radar.sweepAngleDegrees;
     const sweepAngleDegrees = radar.operator.mode === "FOCUSED_TRACK"
       ? focusedSweep
@@ -38,8 +42,8 @@ export function advanceRadarSensors(
       sweepAngleDegrees: (sweepAngleDegrees + 360) % 360,
     };
 
-    while (accumulator >= profile.scanIntervalSeconds) {
-      accumulator -= profile.scanIntervalSeconds;
+    while (accumulator >= effectiveScanInterval) {
+      accumulator -= effectiveScanInterval;
       scanCount += 1;
       const factors = calculateDetectionFactors(nextRadar, aircraft, terrain, weather);
       const random = new SeededRandom(`${missionSeed}:${radar.id}:${scanCount}`);
