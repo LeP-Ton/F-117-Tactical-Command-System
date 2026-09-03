@@ -1,6 +1,7 @@
 import { syncEventSequenceFromRun } from "../domain/factories";
 import { campaignBalance } from "../domain/campaignBalance";
 import type { MissionDebrief, MissionSession, RunState } from "../domain/types";
+import { gameConfig } from "../config/gameConfig";
 
 export const RUN_SAVE_KEY = "f117-tactical-command-system:run:v1";
 const SAVE_VERSION = 1;
@@ -38,6 +39,8 @@ function restoreMissionCompatibility(mission: MissionSession, scanRateModifier: 
   return {
     ...currentMission,
     radarScanRateModifier: mission.radarScanRateModifier ?? scanRateModifier,
+    // 固定任务区域属于当前规则配置，恢复旧存档时同步迁移，避免画面与撤离判定继续使用旧尺寸。
+    extractionArea: { ...gameConfig.mission.extractionArea },
   };
 }
 

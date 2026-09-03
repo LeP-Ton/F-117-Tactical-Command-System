@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { useGameController } from "../game/useGameController";
 import { CampaignMap } from "./CampaignMap";
 import { useGameAudio } from "../audio/useGameAudio";
@@ -84,7 +84,17 @@ export function App() {
         <div className="audio-control">
           <button type="button" onClick={() => setMuted(!muted)}>{muted ? copy.app.soundOff : copy.app.soundOn}</button>
           <label htmlFor="master-volume">{copy.app.volume}</label>
-          <input id="master-volume" type="range" min="0" max="1" step="0.05" value={volume} onChange={(event) => setVolume(Number(event.target.value))} aria-label={copy.app.volumeLabel} />
+          <input
+            id="master-volume"
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={volume}
+            style={{ "--audio-volume": `${volume * 100}%` } as CSSProperties}
+            onChange={(event) => setVolume(Number(event.target.value))}
+            aria-label={copy.app.volumeLabel}
+          />
         </div>
         <form className="seed-control" onSubmit={(event) => {
           event.preventDefault();

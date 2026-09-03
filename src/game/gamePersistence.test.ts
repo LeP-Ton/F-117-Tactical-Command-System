@@ -74,6 +74,20 @@ describe("任务进度保存", () => {
     expect(restored?.currentMission?.radarScanRateModifier).toBeCloseTo(0.9);
   });
 
+  it("恢复旧存档时将撤离区迁移到当前固定区域", () => {
+    const state = createRun("SAVE-LEGACY-EXTRACTION");
+    const legacyState = {
+      ...state,
+      currentMission: {
+        ...state.currentMission!,
+        extractionArea: { x: 850, y: 30, width: 120, height: 120 },
+      },
+    };
+    window.localStorage.setItem(RUN_SAVE_KEY, JSON.stringify({ version: 1, savedAt: Date.now(), state: legacyState }));
+
+    expect(loadRunProgress()?.currentMission?.extractionArea).toEqual({ x: 860, y: 50, width: 100, height: 100 });
+  });
+
   it("恢复旧存档时移除废弃的情报质量字段", () => {
     const state = createRun("SAVE-LEGACY-INTEL-QUALITY");
     const legacyState = {

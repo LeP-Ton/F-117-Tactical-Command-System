@@ -80,7 +80,8 @@ export const gameConfig = {
   mission: {
     attackRadius: 58,
     attackAwarenessGain: 34,
-    extractionArea: { x: 850, y: 30, width: 120, height: 120 },
+    /** 固定东北撤离空域，缩为正方形并下移上边界，为地图顶部状态文字留出间距。 */
+    extractionArea: { x: 860, y: 50, width: 100, height: 100 },
     /** 雷达中心与撤离区边界的最小部署间距；探测范围仍可覆盖撤离区。 */
     extractionRadarClearance: 80,
   },

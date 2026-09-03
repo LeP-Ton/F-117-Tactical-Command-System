@@ -7,6 +7,11 @@ import type { GameAction } from "../game/gameReducer";
 import f117TopSilhouette from "../assets/f117-top-silhouette.png";
 import type { MapElementSelection } from "./mapSelection";
 import { useI18n } from "../i18n/I18n";
+import {
+  getSelectionCornerSegments,
+  getSelectionPulseOpacity,
+  type SelectionHighlightBounds,
+} from "./mapSelectionHighlight";
 
 interface TacticalMapProps {
   mission: MissionSession;
@@ -77,6 +82,68 @@ function drawAircraft(
   context.restore();
 }
 
+function createCircleHighlight(center: Vector2, radius: number): SelectionHighlightBounds {
+  return {
+    x: center.x - radius,
+    y: center.y - radius,
+    width: radius * 2,
+    height: radius * 2,
+  };
+}
+
+function resolveSelectionHighlight(
+  mission: MissionSession,
+  selection: MapElementSelection,
+  showBelief: boolean,
+): SelectionHighlightBounds | undefined {
+  if (selection.kind === "AIRCRAFT") {
+    return createCircleHighlight(mission.aircraft.position, 34);
+  }
+  if (selection.kind === "TARGET") {
+    return createCircleHighlight(mission.target.position, mission.target.attackRadius + 12);
+  }
+  if (selection.kind === "EXTRACTION") {
+    const area = mission.extractionArea;
+    return {
+      x: area.x - 8,
+      y: area.y - 8,
+      width: area.width + 16,
+      height: area.height + 16,
+    };
+  }
+  if (selection.kind === "WAYPOINT") {
+    const waypoint = mission.route.waypoints.find((item) => item.id === selection.id);
+    return waypoint ? createCircleHighlight(waypoint.position, 22) : undefined;
+  }
+  if (selection.kind === "TERRAIN") {
+    const terrain = mission.terrain.find((item) => item.id === selection.id);
+    return terrain
+      ? {
+          x: terrain.x - 8,
+          y: terrain.y - 8,
+          width: terrain.width + 16,
+          height: terrain.height + 16,
+        }
+      : undefined;
+  }
+  if (selection.kind === "WEATHER") {
+    const weather = mission.weather.find((item) => item.id === selection.id);
+    return weather
+      ? {
+          x: weather.x - 8,
+          y: weather.y - 8,
+          width: weather.width + 16,
+          height: weather.height + 16,
+        }
+      : undefined;
+  }
+
+  const radarPosition = showBelief
+    ? mission.radars.find((radar) => radar.id === selection.id)?.position
+    : mission.radarIntel.find((radar) => radar.radarId === selection.id)?.estimatedPosition;
+  return radarPosition ? createCircleHighlight(radarPosition, 24) : undefined;
+}
+
 export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, dispatch, mapSelection, readOnly = false }: TacticalMapProps) {
   const { copy } = useI18n();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -91,12 +158,19 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
     if (!context) return;
     const aircraftImage = new Image();
     aircraftImage.src = f117TopSilhouette;
+    let animationFrameId: number | undefined;
+    let disposed = false;
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
-    const render = () => {
+    const render = (timestampMs = performance.now()) => {
       const pixelRatio = window.devicePixelRatio || 1;
       const metrics = getMetrics(canvas);
-      canvas.width = Math.round(metrics.width * pixelRatio);
-      canvas.height = Math.round(metrics.height * pixelRatio);
+      const pixelWidth = Math.round(metrics.width * pixelRatio);
+      const pixelHeight = Math.round(metrics.height * pixelRatio);
+      if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+        canvas.width = pixelWidth;
+        canvas.height = pixelHeight;
+      }
       context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
       context.clearRect(0, 0, metrics.width, metrics.height);
       context.fillStyle = "#07100e";
@@ -180,14 +254,23 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
         context.restore();
       });
 
+      const extractionArea = mission.extractionArea;
+      context.save();
       context.fillStyle = "rgba(63, 191, 154, 0.08)";
       context.strokeStyle = "rgba(63, 191, 154, 0.55)";
       context.lineWidth = 2 / metrics.scale;
-      context.fillRect(mission.extractionArea.x, mission.extractionArea.y, mission.extractionArea.width, mission.extractionArea.height);
-      context.strokeRect(mission.extractionArea.x, mission.extractionArea.y, mission.extractionArea.width, mission.extractionArea.height);
+      context.fillRect(extractionArea.x, extractionArea.y, extractionArea.width, extractionArea.height);
+      context.strokeRect(extractionArea.x, extractionArea.y, extractionArea.width, extractionArea.height);
       context.fillStyle = "#60c8a6";
-      context.font = "15px monospace";
-      context.fillText(copy.canvas.extraction, 881, 98);
+      context.font = "12px monospace";
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.fillText(
+        copy.canvas.extraction,
+        extractionArea.x + extractionArea.width / 2,
+        extractionArea.y + extractionArea.height / 2,
+      );
+      context.restore();
 
       context.beginPath();
       context.arc(mission.target.position.x, mission.target.position.y, mission.target.attackRadius, 0, Math.PI * 2);
@@ -331,48 +414,56 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
 
       drawAircraft(context, aircraftImage, mission.aircraft.position, mission.aircraft.headingDegrees);
 
-      if (mapSelection) {
+      const selectionHighlight = mapSelection
+        ? resolveSelectionHighlight(mission, mapSelection, showBelief)
+        : undefined;
+      if (selectionHighlight) {
         context.save();
-        context.strokeStyle = "rgba(255, 214, 104, 0.95)";
-        context.lineWidth = 3 / metrics.scale;
-        context.setLineDash([8 / metrics.scale, 5 / metrics.scale]);
-        context.shadowColor = "rgba(255, 196, 64, 0.75)";
-        context.shadowBlur = 14 / metrics.scale;
+        const pulseOpacity = reduceMotion ? 0.78 : getSelectionPulseOpacity(timestampMs);
+        const cornerSegments = getSelectionCornerSegments(
+          selectionHighlight,
+          7 / metrics.scale,
+          15 / metrics.scale,
+        );
+        context.setLineDash([]);
+        context.strokeStyle = `rgba(255, 220, 112, ${pulseOpacity})`;
+        context.lineWidth = 2 / metrics.scale;
+        context.lineCap = "square";
+        context.shadowColor = `rgba(255, 196, 64, ${pulseOpacity * 0.72})`;
+        context.shadowBlur = (4 + pulseOpacity * 5) / metrics.scale;
         context.beginPath();
-        if (mapSelection.kind === "AIRCRAFT") {
-          context.arc(mission.aircraft.position.x, mission.aircraft.position.y, 34, 0, Math.PI * 2);
-        } else if (mapSelection.kind === "TARGET") {
-          context.arc(mission.target.position.x, mission.target.position.y, mission.target.attackRadius + 12, 0, Math.PI * 2);
-        } else if (mapSelection.kind === "EXTRACTION") {
-          const area = mission.extractionArea;
-          context.rect(area.x - 8, area.y - 8, area.width + 16, area.height + 16);
-        } else if (mapSelection.kind === "WAYPOINT") {
-          const waypoint = mission.route.waypoints.find((item) => item.id === mapSelection.id);
-          if (waypoint) context.arc(waypoint.position.x, waypoint.position.y, 22, 0, Math.PI * 2);
-        } else if (mapSelection.kind === "TERRAIN") {
-          const terrain = mission.terrain.find((item) => item.id === mapSelection.id);
-          if (terrain) context.rect(terrain.x - 8, terrain.y - 8, terrain.width + 16, terrain.height + 16);
-        } else if (mapSelection.kind === "WEATHER") {
-          const weather = mission.weather.find((item) => item.id === mapSelection.id);
-          if (weather) context.rect(weather.x - 8, weather.y - 8, weather.width + 16, weather.height + 16);
-        } else {
-          const radarPosition = showBelief
-            ? mission.radars.find((radar) => radar.id === mapSelection.id)?.position
-            : mission.radarIntel.find((radar) => radar.radarId === mapSelection.id)?.estimatedPosition;
-          if (radarPosition) context.arc(radarPosition.x, radarPosition.y, 24, 0, Math.PI * 2);
-        }
+        cornerSegments.forEach((segment) => {
+          context.moveTo(segment.from.x, segment.from.y);
+          context.lineTo(segment.to.x, segment.to.y);
+        });
         context.stroke();
         context.restore();
       }
       context.restore();
     };
 
-    aircraftImage.addEventListener("load", render);
-    render();
-    const observer = new ResizeObserver(render);
+    const renderAnimatedFrame = (timestampMs: number) => {
+      render(timestampMs);
+      if (!disposed) {
+        animationFrameId = window.requestAnimationFrame(renderAnimatedFrame);
+      }
+    };
+    const handleImageLoad = () => render(performance.now());
+
+    aircraftImage.addEventListener("load", handleImageLoad);
+    if (mapSelection && !reduceMotion) {
+      animationFrameId = window.requestAnimationFrame(renderAnimatedFrame);
+    } else {
+      render();
+    }
+    const observer = new ResizeObserver(() => render(performance.now()));
     observer.observe(canvas);
     return () => {
-      aircraftImage.removeEventListener("load", render);
+      disposed = true;
+      if (animationFrameId !== undefined) {
+        window.cancelAnimationFrame(animationFrameId);
+      }
+      aircraftImage.removeEventListener("load", handleImageLoad);
       observer.disconnect();
     };
   }, [copy, mission, selectedIndex, showBelief, mapSelection]);

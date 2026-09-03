@@ -27,8 +27,8 @@ describe("撤离区雷达部署净空", () => {
       { ...radarAt(700, 300), id: "SAFE" },
     ], area);
 
-    expect(inside?.position).toEqual({ x: 770, y: 120 });
-    expect(nearby?.position).toEqual({ x: 830, y: 230 });
+    expect(inside?.position).toEqual({ x: 780, y: 120 });
+    expect(nearby?.position).toEqual({ x: 780, y: 180 });
     expect(safe?.position).toEqual({ x: 700, y: 300 });
   });
 

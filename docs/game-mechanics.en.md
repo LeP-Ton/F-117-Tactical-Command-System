@@ -315,7 +315,7 @@ Each base mission generates:
 
 Enemy Alert, SEAD, STRIKE, COMMAND STRIKE, Enemy Adaptation, and Final Strike reinforcement are applied before limited intelligence is regenerated against the final radar deployment.
 
-The map is `1000×1000 u` with a `100 u` grid. F-117 insertion is fixed at `(90, 850)`, extraction at `(850, 30, 120×120)`, and target generation at `x=400–790, y=100–390`. Radar centers keep `80 u` clearance from the extraction rectangle, though real coverage may extend into extraction. Final preparation also guarantees one Fire Control radar fully covers the target's `58 u` attack zone with `20 u` margin.
+The map is `1000×1000 u` with a `100 u` grid. F-117 insertion is fixed at `(90, 850)`, extraction at `(860, 50, 100×100)`, and target generation at `x=400–790, y=100–390`. Radar centers keep `80 u` clearance from the extraction rectangle, though real coverage may extend into extraction. Final preparation also guarantees one Fire Control radar fully covers the target's `58 u` attack zone with `20 u` margin.
 
 Named sub-Seeds isolate systems:
 

@@ -16,9 +16,10 @@ describe("Mission Rules", () => {
 
   it("撤离区边界包含边缘位置", () => {
     const mission = createMission("EXTRACT");
-    expect(isInsideExtraction({ x: 850, y: 30 }, mission.extractionArea)).toBe(true);
-    expect(isInsideExtraction({ x: 970, y: 150 }, mission.extractionArea)).toBe(true);
-    expect(isInsideExtraction({ x: 849, y: 30 }, mission.extractionArea)).toBe(false);
+    expect(mission.extractionArea).toEqual({ x: 860, y: 50, width: 100, height: 100 });
+    expect(isInsideExtraction({ x: 860, y: 50 }, mission.extractionArea)).toBe(true);
+    expect(isInsideExtraction({ x: 960, y: 150 }, mission.extractionArea)).toBe(true);
+    expect(isInsideExtraction({ x: 859, y: 50 }, mission.extractionArea)).toBe(false);
   });
 
   it("撤离距离按最近边界计算并在区域内归零", () => {
