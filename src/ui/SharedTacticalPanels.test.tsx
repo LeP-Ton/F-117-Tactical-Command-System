@@ -27,7 +27,7 @@ describe("战术工作区共享组件", () => {
       statusText="CURRENT ESTIMATE"
     />);
 
-    expect(screen.getByText("MISSION INTELLIGENCE")).toBeInTheDocument();
+    expect(screen.getByText("任务情报")).toBeInTheDocument();
     expect(screen.getByText("CURRENT ESTIMATE")).toBeInTheDocument();
     expect(screen.getByText("雷达情报 / 误差区")).toBeInTheDocument();
   });
@@ -35,26 +35,34 @@ describe("战术工作区共享组件", () => {
   it("天气预报沿用调用方指定的折叠状态", () => {
     const mission = createMission("SHARED-WEATHER");
     render(<WeatherForecastPanel mission={mission} defaultExpanded={false} />);
-    expect(screen.getByRole("button", { name: /WEATHER FORECAST/ })).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("button", { name: /天气预报/ })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("天气预报使用任务绝对时刻并隐藏已经过期的条目", () => {
+    const mission = { ...createMission("SHARED-WEATHER-TIMELINE"), elapsedMs: 45_000 };
+    render(<WeatherForecastPanel mission={mission} />);
+
+    expect(screen.queryByText(/任务时刻 \+30秒/)).not.toBeInTheDocument();
+    expect(screen.getAllByText(/任务时刻 \+(60|90)秒/)).toHaveLength(mission.weather.length * 2);
   });
 
   it("敌方状态摘要提供固定的精简与详细密度", () => {
     const mission = createMission("SHARED-ENEMY-SUMMARY");
     const { rerender } = render(<EnemyStateSummary mission={mission} density="compact" />);
-    expect(screen.getByText("Commander")).toBeInTheDocument();
+    expect(screen.getByText("指挥官")).toBeInTheDocument();
     expect(screen.queryByText("指挥链效率")).not.toBeInTheDocument();
     rerender(<EnemyStateSummary mission={mission} density="detailed" />);
     expect(screen.getByText("指挥链效率")).toBeInTheDocument();
     expect(screen.getByText("雷达数量")).toBeInTheDocument();
   });
 
-  it("Radar Operator 列表统一显示模式与三项 Utility", () => {
+  it("雷达操作员列表在中文模式显示三项中文效用缩写", () => {
     const mission = createMission("SHARED-OPERATORS");
     render(<RadarOperatorList mission={mission} />);
     expect(screen.getByText(mission.radars[0]!.id)).toBeInTheDocument();
-    expect(screen.getAllByText(/^W /)).toHaveLength(mission.radars.length);
-    expect(screen.getAllByText(/^S /)).toHaveLength(mission.radars.length);
-    expect(screen.getAllByText(/^F /)).toHaveLength(mission.radars.length);
+    expect(screen.getAllByText(/^广 /)).toHaveLength(mission.radars.length);
+    expect(screen.getAllByText(/^扇 /)).toHaveLength(mission.radars.length);
+    expect(screen.getAllByText(/^跟 /)).toHaveLength(mission.radars.length);
   });
 
   it("预览与复盘页面标题匹配入口文案且共用返回按钮样式", () => {

@@ -5,6 +5,7 @@ import { MapElementPanel } from "../MapElementPanel";
 import { TacticalMapStage } from "../TacticalMapStage";
 import { TacticalWorkspace } from "../TacticalWorkspace";
 import { WeatherForecastPanel } from "../WeatherForecastPanel";
+import { useI18n } from "../../i18n/I18n";
 
 interface IntelligenceWorkspaceProps {
   mission: MissionSession;
@@ -15,14 +16,15 @@ interface IntelligenceWorkspaceProps {
 }
 
 export function IntelligenceWorkspace({ mission, showBelief, mapSelection, onMapSelectionChange, onClose }: IntelligenceWorkspaceProps) {
+  const { copy } = useI18n();
   return <TacticalWorkspace
     className="intelligence-workspace"
     leftPanel={<aside className="control-panel">
       <section className="panel-section">
-        <div className="section-kicker">CURRENT ESTIMATE</div>
-        <h2>预览任务</h2>
-        <p className="hint">只读情报研判 // 任务尚未授权执行</p>
-        <button className="primary-button return-network-button" onClick={onClose}>返回任务网络</button>
+        <div className="section-kicker">{copy.intelligence.kicker}</div>
+        <h2>{copy.intelligence.title}</h2>
+        <p className="hint">{copy.intelligence.hint}</p>
+        <button className="primary-button return-network-button" onClick={onClose}>{copy.control.returnNetwork}</button>
       </section>
       <WeatherForecastPanel mission={mission} />
     </aside>}
@@ -35,11 +37,11 @@ export function IntelligenceWorkspace({ mission, showBelief, mapSelection, onMap
       dispatch={() => undefined}
       mapSelection={mapSelection}
       readOnly
-      statusText="CURRENT ESTIMATE"
+      statusText={copy.intelligence.status}
     />}
     rightPanel={<aside className="telemetry-panel">
       <MapElementPanel mission={mission} showBelief={showBelief} selection={mapSelection} onSelectionChange={onMapSelectionChange} defaultExpandedGroups />
-      <DeploymentBriefingPanel title="COUNTER DEPLOYMENT" notes={mission.adaptationNotes} defaultExpanded />
+      <DeploymentBriefingPanel title={copy.mission.counterDeployment} notes={mission.adaptationNotes} defaultExpanded />
     </aside>}
   />;
 }

@@ -36,7 +36,12 @@ export function generateCampaign(seed: string): CampaignState {
           weather: generated.weather
             .map((cell) => cell.kind)
             .join(" + "),
-          effect: getMissionEffectDescription(type, intelOrdinal),
+          // 第二个 INTEL 节点生成时前序选择尚未确定，因此静态元数据明确记录其授权条件。
+          effect: getMissionEffectDescription(
+            type,
+            type === "INTEL" ? 1 : undefined,
+            type === "INTEL" && intelOrdinal === 2 ? "CONDITIONAL" : "STANDARD",
+          ),
         },
       });
     });

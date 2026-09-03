@@ -5,6 +5,14 @@
 `proposals/20260825225610-rejected-sigint-overlay.md` - 会话-80/81：已废弃的“有限情报动态 SIGINT Overlay”方案；重新讨论 AI DEBUG、直播观赏性或有限情报动态反馈时读取，不能视为已实施功能。
 
 ## 当前变更文档
+`workflow/20260903114841-split-design-and-mechanics-docs.md` - 会话-140：将 README 收敛为设计与开发入口、将机制手册设为精确规则唯一来源，补齐雷达与地图唯一数据，并新增完整英文 README 和英文机制手册；理解文档职责、维护双语规则或调整平衡文档时读取。
+`workflow/20260903105407-add-extensible-language-selector.md` - 会话-136：将双语直接翻转按钮改为集中配置驱动的语言选择弹窗，显示当前语言并支持选中态、外部点击、Escape 与焦点恢复；扩展新语言或排查顶部语言交互时读取。
+`workflow/20260903103030-align-topbar-control-heights.md` - 会话-135：将顶部语言、操作说明、声音、行动代码输入框和初始化按钮统一为 `30px` 高并精确对齐，保持音量滑杆原尺寸；排查顶部工具栏控件高度或垂直对齐时读取。
+`workflow/20260903102239-tighten-campaign-preview-spacing.md` - 会话-134：移除任务预览段落统一的 `70px` 最小高度，改为内容自然撑高与 `14px` 固定段间距；排查任务预览文字纵向空白或段落节奏时读取。
+`workflow/20260902234648-complete-chinese-interface-localization.md` - 会话-132：纠正中文模式保留英文系统术语的本地化边界，将任务类型、全域情报、敌方警戒、雷达接触、敌情推测、目标名称和内部态势完整中文化，并兼容旧复盘混排记录；排查中文界面英文残留或本地化术语边界时读取。
+`workflow/20260902233326-restore-distinct-intel-reward-copy.md` - 会话-131：修复两次 INTEL 在任务网络初始状态下再次显示相同奖励的回归，分别呈现一级核实、二级授权条件、前序完成后的正式授权及错过前序后的一级补录；核对情报节点奖励文案与实际权限路线时读取。
+`workflow/20260902232256-add-bilingual-game-interface.md` - 会话-129：为任务网络、三类战术工作区、Canvas 地图、天气、事件、操作说明与敌方内部状态建立完整中英文文案层，增加即时切换和独立偏好持久化，并兼容翻译旧复盘部署记录；排查界面文案、语言切换或本地化状态边界时读取。
+`workflow/20260902230204-realign-game-design-documentation.md` - 会话-128：将 README 重构为完整游戏设计文档，校准机制手册与游戏内操作说明，补齐 Enemy Alert、天气预报时基和系统设计哲学，并修正 INTEL 动态奖励及核实雷达标识；理解当前完整设计、玩家说明和文档事实来源时优先读取。
 `workflow/20260902170448-enforce-two-intel-mission-limit.md` - 会话-124：将“任务网络最多两个 INTEL 行动”设为集中式硬约束，生成器拒绝第三个 INTEL，权限派生复用同一上限，并明确错过首次行动将无法取得 `TOTAL INTEL`；扩展任务网络或核对情报上限时读取。
 `workflow/20260902114838-distinguish-intel-reward-copy.md` - 会话-122：将第一次 INTEL 明确为核实全部雷达坐标与型号、第二次明确为授权 `TOTAL INTEL` 完整敌方态势，并通过动态派生兼容旧存档文案；核对任务网络 INTEL 奖励说明时读取。
 `workflow/20260902113647-remove-continuous-intel-quality.md` - 会话-121：删除 `intelAccuracyBonus`、任务基础情报精度及相关 UI，改用 Seed 可复现的固定有限情报基线并保持两级 INTEL 权限，兼容剥离旧存档字段；核对有限情报参数、INTEL 奖励边界或存档兼容时读取。
@@ -63,7 +71,10 @@
 `workflow/20260819052414-fix-ai-debug-map-resize.md` - 会话-16：固定战术工作区高度并让左右面板独立滚动，修复切换 AI DEBUG 导致地图缩放变化；排查地图尺寸或三栏布局时读取。
 `workflow/20260818233840-optimize-belief-heatmap-opacity.md` - 会话-14：让 Belief 热力图按绝对概率和有效状态缩放透明度；需要追踪失联残余色块变暗与隐藏逻辑时读取。
 `workflow/20260818232259-optimize-cmd-belief-positioning.md` - 会话-10：优化 Belief 速度估计、边界传播、失联失效与 CMD 平滑定位；需要追踪敌方位置推测和地图边缘伪定位修复时读取。
-`../docs/game-mechanics.md` - 当前版本完整游戏机制手册；需要理解玩家目标、有限情报、雷达动作、敌方认知、Commander 和 Campaign 规则时优先读取。
+`../README.md` - 中文设计与开发入口；需要理解设计哲学、系统关系、代码架构和扩展边界时读取，不作为可变平衡数值来源。
+`../README.en.md` - 与中文 README 职责一致的英文设计与开发入口；向英文开发者介绍项目时读取。
+`../docs/game-mechanics.md` - 中文精确规则、数值、阈值和状态转换的唯一文档来源；核对任务、雷达、天气、指挥、交战、生成或平衡规则时读取。
+`../docs/game-mechanics.en.md` - 与中文机制手册对齐的英文精确规则来源；向英文玩家或开发者解释当前规则时读取。
 `workflow/20260818143124-rename-project-directory.md` - 会话-1：初始化项目认知文档，并将项目目录由 `f117-simulator` 更名为 `f117-nighthawk-route`；需要追溯项目命名与目录初始化时读取。
 `workflow/20260818151940-phase-0-1-route-planning.md` - 会话-1：建立 ZERO RETURN Web 工程、Roguelike 状态边界与战术航线规划原型；需要了解当前架构、交互、测试和 Phase 边界时读取。
 `workflow/20260818153427-phase-2-radar-simulation.md` - 会话-14：实现 Phase 2 雷达扫描、动态探测概率、地形遮蔽和误差 Contact；需要了解 Sensor/AI 数据边界与雷达参数时读取。
@@ -87,27 +98,31 @@
 - 项目名称为 `F-117 Tactical Command System`，中文名为 `F-117 战术指挥系统`，包名为 `f117-tactical-command-system`。
 - 产品定位是解谜与动态规划导向的军事模拟；任务界面只呈现态势、情报、告警和指令，不直接解释幕后游戏机制、操作教程或程序生成信息。
 - 当前完成 Phase 0–12，采用 React、TypeScript、Vite 与 HTML Canvas。
+- 游戏界面全部玩家可见文案支持简体中文与 English 即时切换；语言偏好独立于 Run 存档，React 与 Canvas 共用同一文案目录，切换不影响 Seed、Tick 或任何模拟状态。
 - `RunState` 与 `MissionSession` 分离，Canvas 不持有领域状态。
 - 只有 Radar Sensor 可读取飞机真实状态，后续 AI 只能消费带误差 Radar Contact。
 - 雷达网络由 Early Warning、Acquisition、Fire Control 三类组成，类型分别影响覆盖、扫描周期、波束、探测概率、Contact 精度和火控贡献。
 - 每场任务最终至少一部 Fire Control 完整覆盖目标攻击区并保留 20 u 余量；唯一目标区火控雷达不参与 Enemy Adaptation 移位。
-- Radar Operator 基于自身 Contact 和历史状态计算 Utility 评分，不共享真实飞机信息。
+- Radar Operator 基于本地或指挥链允许的共享 Contact 计算 Utility 评分，不共享真实飞机信息；活动 Contact 最长保留 8 秒。
 - Belief Map 仅消费 Contact，以 24×24 网格保存概率分布并进行运动传播、扩散和衰减。
 - Commander 只读取 Awareness、Belief 与雷达状态，通过 Utility 偏置协调各 Radar Operator；投弹只提高警戒，不提供目标区定位，网络静默仍已移除。
 - 单 Mission 已形成 Plan → Infiltrate → Strike → High-alert Extraction → Result 闭环。
 - Mission 的静态地形、动态天气初始参数与演化、天气预报、雷达和目标均由 Seed 确定生成；有限雷达情报按固定规则和逐雷达子 Seed 生成，相同任务时间可复现相同真实天气。
-- Campaign 固定为三个顺序二选一阶段与 Final Strike；只有摧毁目标并成功撤离才推进并关闭同层选择；所有失败都把当前节点标记为可重试的 `FAILED`、增加 Enemy Alert，同层备选保持 `AVAILABLE`，下一层保持锁定。
-- Tactical Reward 与 Player Build 已完整移除，成功任务直接返回 Campaign。
-- 当前 Roguelike 差异集中在程序生成地图、雷达网络、天气与 Campaign 防空构建。
+- 天气预报是任务创建时生成的绝对时刻 `T+30/60/90s` 快照，不是滚动预报；执行到对应时刻后过期条目与轮廓隐藏。
+- 任务网络固定为三个顺序二选一阶段与 Final Strike；只有摧毁目标并成功撤离才推进并关闭同层选择；所有失败都把当前节点标记为可重试的 `FAILED`、增加 Enemy Alert，同层备选保持 `AVAILABLE`，下一层保持锁定。
+- Tactical Reward 与 Player Build 已完整移除；成功或失败后任务停留在冻结结果页，由玩家手动返回任务网络结算。
+- 当前 Roguelike 差异集中在程序生成地图、雷达网络、天气与任务网络防空构建。
 - Intel 只保留两级权限成长，不再维护连续情报质量；STRIKE 每次使所有后续雷达扫描速率乘以 90%；SEAD 只将后续雷达覆盖乘以 90%，不阻止最终火控增援；Command Strike 将 Commander 协调乘以 65%；所有成功任务使 Enemy Alert 增加 2，失败增加 10。
-- 默认战术地图只呈现带误差的玩家雷达情报；敌方真实雷达、Contact、Belief、警戒和 Utility 仅在 AI DEBUG 中呈现。
+- 默认战术地图只呈现玩家侧雷达情报；敌方真实雷达、Contact、Belief、Awareness 和 Utility 仅在 `TOTAL INTEL`、全景复盘或开发调试视图中呈现。
+- Enemy Alert 是 `0–100` 的跨任务持久警戒，成功增加 2、失败增加 10，后续基础雷达范围乘以 `1 + Alert / 250`，且 Final Strike 在 Alert ≥ 15 时追加警戒雷达；它不等于单任务 Awareness 或 THREAT WARNING。
 - Enemy Adaptation 仅分析按位移采样的真实已飞轨迹，成功与失败分别按 1.0/0.5 权重更新画像；地形利用、南北航路及直达倾向达到阈值后才触发 22%–42% 的空间反制部署。
 - Final Strike 固定部署目标区后备火控，并综合 STRIKE 扫描削弱、SEAD 覆盖削弱、Command Strike、情报任务、Enemy Alert 与画像特征动态生成最终防空体系；自适应增援要求累计观察权重至少为 2 且形成两项以上显著特征。
 - 飞机基础速度为 `3.6 u/s`，运行中进入目标攻击半径后自动投弹，无需玩家手动操作。
 - F-117 满油航程为 `2000 u`，按真实累计飞行距离消耗；燃油耗尽会停止飞机并令当前任务失败。
 - Weather Cell 会令飞机减速 10%–30%，多个天气重叠时只取最强效果；天气延长暴露时间但不额外增加单位距离油耗。
 - 连续 Contact 会累积跟踪并触发导弹；切断新证据可以脱锁，导弹命中会摧毁飞机并结束当前 Mission，但不会结束 Run。
-- Run、Campaign、Mission 与当前工作区视图保存在浏览器本地；运行中的存档刷新后以暂停状态恢复。
+- Run、任务网络、Mission、成功复盘与当前工作区视图保存在浏览器本地；运行中的存档刷新后继续执行，旧版 `PAUSED` 存档迁移为 `RUNNING`。
 - 右侧 `MAP ELEMENTS` 可说明并高亮地图元素，普通模式下雷达定位仍严格使用有限情报。
+- Mission Generator 没有严格的路径可达性或数学可通关证明，只保证撤离区雷达净空和目标区最低 Fire Control 覆盖等局部约束。
 - `main` 分支通过 GitHub Actions 自动发布 GitHub Pages 在线版本。
 - 检索时先读取本索引，再按需读取具体 workflow 文档。

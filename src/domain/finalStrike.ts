@@ -69,9 +69,9 @@ export function applyFinalStrikeDefense(
       random.range(0, 360),
       "EARLY_WARNING",
     ));
-    notes.push(`Enemy Alert ${context.enemyAlert}：增援警戒雷达部署`);
+    notes.push(`敌方警戒 ${context.enemyAlert}：增援警戒雷达部署`);
   } else {
-    notes.push("低 Enemy Alert：未触发警戒增援");
+    notes.push("敌方警戒较低：未触发警戒增援");
   }
 
   const adaptation = getAdaptationAssessment(context.tacticalProfile);
@@ -90,7 +90,7 @@ export function applyFinalStrikeDefense(
     notes.push("历史航迹未形成高可信反制画像");
   }
 
-  if (completed.has("COMMAND_STRIKE")) notes.push("Command Strike 战果削弱最终指挥链");
+  if (completed.has("COMMAND_STRIKE")) notes.push("指挥打击战果削弱最终指挥链");
   if (completed.has("INTEL")) notes.push("情报战果已核实最终目标雷达坐标与型号");
 
   return {

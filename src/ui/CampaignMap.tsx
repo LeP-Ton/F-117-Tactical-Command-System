@@ -4,7 +4,8 @@ import type { GameAction } from "../game/gameReducer";
 import { getAdaptationAssessment } from "../domain/enemyAdaptation";
 import { getIntelAccessTier } from "../domain/intelAccess";
 import { prepareCampaignMission } from "../game/gameReducer";
-import { getMissionEffectDescription } from "../domain/campaignBalance";
+import { useI18n } from "../i18n/I18n";
+import { getMissionEffectKey } from "../domain/campaignBalance";
 
 interface CampaignMapProps {
   state: RunState;
@@ -14,15 +15,8 @@ interface CampaignMapProps {
   onDebrief: (debrief: MissionDebrief) => void;
 }
 
-const typeLabels = {
-  INTEL: "情报行动",
-  STRIKE: "打击",
-  SEAD: "防空压制",
-  COMMAND_STRIKE: "指挥打击",
-  FINAL_STRIKE: "最终打击",
-} as const;
-
 export function CampaignMap({ state, dispatch, onLaunch, onPreview, onDebrief }: CampaignMapProps) {
+  const { copy } = useI18n();
   const firstAvailable = state.campaign.nodes.find((node) => node.status === "AVAILABLE");
   const [selectedId, setSelectedId] = useState(
     state.campaign.currentNodeId ?? firstAvailable?.id ?? state.campaign.nodes[0]?.id ?? "",
@@ -33,30 +27,52 @@ export function CampaignMap({ state, dispatch, onLaunch, onPreview, onDebrief }:
   );
   const adaptation = getAdaptationAssessment(state.enemyState.tacticalProfile);
   const intelAccessTier = getIntelAccessTier(state.campaign);
+  const intelNodes = state.campaign.nodes
+    .filter((node) => node.type === "INTEL")
+    .sort((left, right) => left.layer - right.layer);
+  const completedIntelNodes = intelNodes.filter((node) => node.status === "COMPLETED");
   const selectedIntelOrdinal = selected?.type === "INTEL"
-    ? state.campaign.nodes
-      .filter((node) => node.type === "INTEL")
-      .sort((left, right) => left.layer - right.layer)
-      .findIndex((node) => node.id === selected.id) + 1
+    ? intelNodes.findIndex((node) => node.id === selected.id) + 1
     : 0;
+  const selectedIntelRewardLevel = selected?.type === "INTEL"
+    ? Math.min(2, selected.status === "COMPLETED"
+      ? completedIntelNodes.filter((node) => node.layer <= selected.layer).length
+      : completedIntelNodes.length + 1) as 1 | 2
+    : undefined;
+  const priorIntelNodes = selectedIntelOrdinal > 1
+    ? intelNodes.slice(0, selectedIntelOrdinal - 1)
+    : [];
+  // 第二情报节点必须同时说明“前序仍可完成”和“前序已经错过”两种真实收益，避免把两次行动写成同一句。
+  const selectedIntelContext = selected?.type === "INTEL"
+    && selectedIntelOrdinal > 1
+    && selectedIntelRewardLevel === 1
+    ? priorIntelNodes.some((node) => node.status !== "EXPIRED" && node.status !== "COMPLETED")
+      ? "CONDITIONAL" as const
+      : "RECOVERY" as const
+    : "STANDARD" as const;
   const previewMission = useMemo(() => selected ? prepareCampaignMission(state, selected) : undefined, [selected, state]);
   const selectedDebrief = selected ? state.missionDebriefs[selected.id] : undefined;
   const hasAvailableNode = state.campaign.nodes.some((node) => node.status === "AVAILABLE");
   const canRetryFailedNode = selected?.status === "FAILED" && state.status !== "VICTORY";
   // FAILED 表示上次执行结果，同时也是合法重试入口；AVAILABLE 节点仍可改选。
   const canContinueRun = state.status === "ACTIVE" || hasAvailableNode || canRetryFailedNode;
+  const selectedEffect = selected
+    ? copy.campaign.effect[getMissionEffectKey(selected.type, selectedIntelRewardLevel, selectedIntelContext)]
+    : "";
+  const selectedWeather = selected?.preview.weather.split(" + ").map((kind) =>
+    copy.enums.weatherKind[kind as keyof typeof copy.enums.weatherKind] ?? kind).join(" + ");
 
   return (
     <section className="campaign-screen">
       <div className="campaign-header">
-        <div><span className="section-kicker">MISSION NETWORK</span><h2>任务网络</h2></div>
+        <div><span className="section-kicker">{copy.campaign.kicker}</span><h2>{copy.campaign.title}</h2></div>
         <div className="campaign-resources">
-          <span>ENEMY ALERT <strong>{state.resources.enemyAlert}</strong></span>
-          <span>INTEL ACCESS <strong>{intelAccessTier}/2</strong></span>
-          <span>RADAR COVERAGE <strong>{(state.enemyState.radarCoverageModifier * 100).toFixed(0)}%</strong></span>
-          <span>RADAR SCAN <strong>{(state.enemyState.radarScanRateModifier * 100).toFixed(0)}%</strong></span>
-          <span>CMD LINK <strong>{(state.enemyState.commanderCoordinationModifier * 100).toFixed(0)}%</strong></span>
-          <span>ENEMY ADAPTATION <strong>{adaptation.status}</strong></span>
+          <span>{copy.campaign.enemyAlert} <strong>{state.resources.enemyAlert}</strong></span>
+          <span>{copy.campaign.intelAccess} <strong>{intelAccessTier}/2</strong></span>
+          <span>{copy.campaign.radarCoverage} <strong>{(state.enemyState.radarCoverageModifier * 100).toFixed(0)}%</strong></span>
+          <span>{copy.campaign.radarScan} <strong>{(state.enemyState.radarScanRateModifier * 100).toFixed(0)}%</strong></span>
+          <span>{copy.campaign.commandLink} <strong>{(state.enemyState.commanderCoordinationModifier * 100).toFixed(0)}%</strong></span>
+          <span>{copy.campaign.enemyAdaptation} <strong>{copy.enums.adaptationStatus[adaptation.status]}</strong></span>
         </div>
       </div>
       <div className="campaign-content">
@@ -64,7 +80,7 @@ export function CampaignMap({ state, dispatch, onLaunch, onPreview, onDebrief }:
           <svg
             viewBox="0 0 1000 600"
             preserveAspectRatio="none"
-            aria-label="任务节点连线"
+            aria-label={copy.campaign.graphLabel}
           >
             {state.campaign.edges.map((edge) => {
               const from = state.campaign.nodes.find((node) => node.id === edge.from)!;
@@ -80,28 +96,28 @@ export function CampaignMap({ state, dispatch, onLaunch, onPreview, onDebrief }:
               onClick={() => setSelectedId(node.id)}
             >
               <span>{node.id}</span>
-              <strong>{typeLabels[node.type]}</strong>
-              <small>{node.status}</small>
+              <strong>{copy.enums.missionType[node.type]}</strong>
+              <small>{copy.enums.campaignStatus[node.status]}</small>
             </button>
           ))}
         </div>
         <aside className="campaign-preview">
           {selected && <>
-            <span className="section-kicker">MISSION PREVIEW</span>
-            <h3>{typeLabels[selected.type]}</h3>
+            <span className="section-kicker">{copy.campaign.previewKicker}</span>
+            <h3>{copy.enums.missionType[selected.type]}</h3>
             <dl>
-              <div><dt>任务代号</dt><dd>{selected.id}</dd></div>
-              <div><dt>预估雷达数量</dt><dd>{selected.preview.radarDensity}</dd></div>
-              <div><dt>天气</dt><dd>{selected.preview.weather}</dd></div>
+              <div><dt>{copy.campaign.missionCode}</dt><dd>{selected.id}</dd></div>
+              <div><dt>{copy.campaign.estimatedRadars}</dt><dd>{selected.preview.radarDensity}</dd></div>
+              <div><dt>{copy.campaign.weather}</dt><dd>{selectedWeather}</dd></div>
             </dl>
-            <p>{getMissionEffectDescription(selected.type, selectedIntelOrdinal)}。</p>
-            <p>{intelAccessTier === 0 ? "LIMITED INTELLIGENCE" : intelAccessTier === 1 ? "RADAR IDENTIFICATION VERIFIED" : "TOTAL INTELLIGENCE ACCESS"}</p>
-            {selected.type === "FINAL_STRIKE" && <p>最终目标防空序列持续重构，部署态势将在出击时确认。</p>}
+            <p>{selectedEffect}{copy.common.sentencePeriod}</p>
+            <p>{intelAccessTier === 0 ? copy.campaign.limitedIntelligence : intelAccessTier === 1 ? copy.campaign.radarIdentificationVerified : copy.campaign.totalIntelligenceAccess}</p>
+            {selected.type === "FINAL_STRIKE" && <p>{copy.campaign.finalStrikeWarning}</p>}
             {state.enemyState.tacticalProfile.missionSamples > 0 && <div className="campaign-build">
-              <span className="section-kicker">ENEMY HISTORICAL ANALYSIS</span>
-              <div>地形利用 {(state.enemyState.tacticalProfile.terrainMaskingPreference * 100).toFixed(0)}%</div>
-              <div>{state.enemyState.tacticalProfile.southernRouteBias > 0.5 ? "南部" : "北部"}航路偏好 {(Math.abs(state.enemyState.tacticalProfile.southernRouteBias - 0.5) * 200).toFixed(0)}%</div>
-              <div>直达倾向 {(state.enemyState.tacticalProfile.aggressiveRouting * 100).toFixed(0)}%</div>
+              <span className="section-kicker">{copy.campaign.historicalAnalysis}</span>
+              <div>{copy.campaign.terrainUse} {(state.enemyState.tacticalProfile.terrainMaskingPreference * 100).toFixed(0)}%</div>
+              <div>{state.enemyState.tacticalProfile.southernRouteBias > 0.5 ? copy.campaign.southern : copy.campaign.northern} {copy.campaign.routePreference} {(Math.abs(state.enemyState.tacticalProfile.southernRouteBias - 0.5) * 200).toFixed(0)}%</div>
+              <div>{copy.campaign.directRouting} {(state.enemyState.tacticalProfile.aggressiveRouting * 100).toFixed(0)}%</div>
             </div>}
             <button
               className="primary-button"
@@ -116,12 +132,12 @@ export function CampaignMap({ state, dispatch, onLaunch, onPreview, onDebrief }:
               }}
             >
               {selected.status === "COMPLETED"
-                ? selectedDebrief ? "复盘任务" : "任务已完成"
+                ? selectedDebrief ? copy.campaign.debriefMission : copy.campaign.missionCompleted
                 : state.status === "VICTORY"
-                ? "任务网络完成"
+                ? copy.campaign.networkCompleted
                 : state.status === "DEFEAT" && !canContinueRun
-                  ? "任务网络终止 // 飞机损失"
-                  : selected.status === "LOCKED" ? "预览任务" : "规划任务"}
+                  ? copy.campaign.networkTerminated
+                  : selected.status === "LOCKED" ? copy.campaign.previewMission : copy.campaign.planMission}
             </button>
           </>}
         </aside>

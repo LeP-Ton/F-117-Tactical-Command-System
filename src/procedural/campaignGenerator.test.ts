@@ -30,12 +30,14 @@ describe("Campaign Generator", () => {
     });
   });
 
-  it("两次 INTEL 使用不同且准确的奖励说明", () => {
+  it("两个 INTEL 静态节点分别说明一级收益与二级授权条件", () => {
     const intelNodes = generateCampaign("INTEL-REWARD-COPY").nodes
       .filter((node) => node.type === "INTEL")
       .sort((left, right) => left.layer - right.layer);
 
-    expect(intelNodes[0]?.preview.effect).toBe("核实后续任务全部雷达坐标与型号");
-    expect(intelNodes[1]?.preview.effect).toBe("授权 TOTAL INTEL，开放真实雷达覆盖与完整敌方态势");
+    expect(intelNodes.map((node) => node.preview.effect)).toEqual([
+      "补齐后续任务全部雷达，并精确核实坐标与型号",
+      "完成前序情报行动后授权全域情报；若前序缺失则降为一级情报核实",
+    ]);
   });
 });

@@ -3,6 +3,7 @@ import type { MissionSession } from "../domain/types";
 import type { GameAction } from "../game/gameReducer";
 import { TacticalMap } from "./TacticalMap";
 import type { MapElementSelection } from "./mapSelection";
+import { useI18n } from "../i18n/I18n";
 
 export type TacticalMapVariant = "MISSION" | "INTELLIGENCE" | "DEBRIEF";
 
@@ -19,12 +20,6 @@ interface TacticalMapStageProps {
   statusText?: string;
 }
 
-const stageTitles: Record<TacticalMapVariant, string> = {
-  MISSION: "TACTICAL AREA // 1000 × 1000",
-  INTELLIGENCE: "MISSION INTELLIGENCE",
-  DEBRIEF: "MISSION DEBRIEF",
-};
-
 export function TacticalMapStage({
   variant,
   mission,
@@ -37,14 +32,15 @@ export function TacticalMapStage({
   toolbar,
   statusText,
 }: TacticalMapStageProps) {
-  const resolvedStatus = statusText ?? (showBelief ? "敌方内部状态" : "有限情报任务规划");
-  const aircraftLabel = variant === "DEBRIEF" ? "F-117 最终位置" : "F-117";
+  const { copy } = useI18n();
+  const resolvedStatus = statusText ?? (showBelief ? copy.stage.enemyInternal : copy.stage.limitedPlanning);
+  const aircraftLabel = variant === "DEBRIEF" ? copy.stage.aircraftFinalPosition : "F-117";
   const radarLabel = showBelief
-    ? "真实雷达 / 敌方 Contact"
-    : variant === "DEBRIEF" ? "任务雷达情报" : "雷达情报 / 误差区";
+    ? copy.stage.realRadarContact
+    : variant === "DEBRIEF" ? copy.stage.missionRadarIntel : copy.stage.radarIntelError;
 
   return <section className="map-stage">
-    <div className="map-label"><span>{stageTitles[variant]}</span><span>{resolvedStatus}</span></div>
+    <div className="map-label"><span>{copy.stage.title[variant]}</span><span>{resolvedStatus}</span></div>
     {toolbar}
     <TacticalMap
       mission={mission}
@@ -57,8 +53,8 @@ export function TacticalMapStage({
     />
     <div className="map-legend">
       <span><i className="legend-aircraft" />{aircraftLabel}</span>
-      {variant === "MISSION" && <span><i className="legend-waypoint" />航点</span>}
-      <span><i className="legend-extraction" />撤离区</span>
+      {variant === "MISSION" && <span><i className="legend-waypoint" />{copy.stage.waypoint}</span>}
+      <span><i className="legend-extraction" />{copy.stage.extraction}</span>
       <span><i className="legend-radar" />{radarLabel}</span>
     </div>
   </section>;

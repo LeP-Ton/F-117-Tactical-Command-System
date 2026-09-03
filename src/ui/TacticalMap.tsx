@@ -5,8 +5,8 @@ import { canEditWaypoint } from "../domain/route";
 import type { MissionSession, RadarType, Vector2 } from "../domain/types";
 import type { GameAction } from "../game/gameReducer";
 import f117TopSilhouette from "../assets/f117-top-silhouette.png";
-import { radarTypeProfiles } from "../domain/radarTypes";
 import type { MapElementSelection } from "./mapSelection";
+import { useI18n } from "../i18n/I18n";
 
 interface TacticalMapProps {
   mission: MissionSession;
@@ -78,6 +78,7 @@ function drawAircraft(
 }
 
 export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, dispatch, mapSelection, readOnly = false }: TacticalMapProps) {
+  const { copy } = useI18n();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const editable = mission.status === "PLANNING" || mission.status === "RUNNING";
@@ -154,11 +155,13 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
         context.setLineDash([]);
         context.fillStyle = "#819a9c";
         context.font = "12px monospace";
-        context.fillText(weather.kind, weather.x + 9, weather.y + 19);
+        context.fillText(copy.enums.weatherKind[weather.kind], weather.x + 9, weather.y + 19);
       });
 
-      // 规划及实时航线调整阶段显示有误差的未来轮廓。
-      if (editable) mission.weatherForecast.forEach((forecast) => {
+      // 出动前预报使用任务绝对时刻；执行中仅保留尚未到达的预测轮廓。
+      if (editable) mission.weatherForecast
+        .filter((forecast) => forecast.horizonSeconds * 1000 > mission.elapsedMs)
+        .forEach((forecast) => {
         context.save();
         context.setLineDash([3 / metrics.scale, 9 / metrics.scale]);
         context.strokeStyle = forecast.confidence === "高"
@@ -173,7 +176,7 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
         );
         context.fillStyle = "rgba(117, 177, 181, 0.65)";
         context.font = "9px monospace";
-        context.fillText(`T+${forecast.horizonSeconds} ${forecast.kind}`, forecast.estimatedPosition.x + 5, forecast.estimatedPosition.y + 12);
+        context.fillText(`${copy.common.taskTimePrefix}${forecast.horizonSeconds}${copy.common.secondsUnit} ${copy.enums.weatherKind[forecast.kind]}`, forecast.estimatedPosition.x + 5, forecast.estimatedPosition.y + 12);
         context.restore();
       });
 
@@ -184,7 +187,7 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
       context.strokeRect(mission.extractionArea.x, mission.extractionArea.y, mission.extractionArea.width, mission.extractionArea.height);
       context.fillStyle = "#60c8a6";
       context.font = "15px monospace";
-      context.fillText("撤离区", 881, 98);
+      context.fillText(copy.canvas.extraction, 881, 98);
 
       context.beginPath();
       context.arc(mission.target.position.x, mission.target.position.y, mission.target.attackRadius, 0, Math.PI * 2);
@@ -196,7 +199,7 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
       context.fillStyle = mission.target.destroyed ? "#65736e" : "#ea7658";
       context.fillRect(mission.target.position.x - 10, mission.target.position.y - 10, 20, 20);
       context.font = "12px monospace";
-      context.fillText(mission.target.destroyed ? "DESTROYED" : "TARGET", mission.target.position.x + 16, mission.target.position.y + 4);
+      context.fillText(mission.target.destroyed ? copy.canvas.destroyed : copy.canvas.target, mission.target.position.x + 16, mission.target.position.y + 4);
 
       mission.terrain.forEach((terrain) => {
         context.fillStyle = "rgba(73, 102, 84, 0.3)";
@@ -206,7 +209,7 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
         context.strokeRect(terrain.x, terrain.y, terrain.width, terrain.height);
         context.fillStyle = "#718f7e";
         context.font = "13px monospace";
-        context.fillText("地形遮蔽", terrain.x + 10, terrain.y + 22);
+        context.fillText(copy.canvas.terrainMasking, terrain.x + 10, terrain.y + 22);
       });
 
       if (!showBelief) mission.radarIntel.forEach((report) => {
@@ -235,8 +238,9 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
         context.restore();
         context.fillStyle = "#e4bd63";
         context.font = "12px monospace";
+        const identificationMark = report.level === "CONFIRMED" && report.positionErrorRadius === 0 ? "" : "?";
         context.fillText(
-          `${report.radarId}? ${radarTypeProfiles[report.radarType].label} ${report.level}`,
+          `${report.radarId}${identificationMark} ${copy.enums.radarType[report.radarType]} ${copy.enums.radarIntelLevel[report.level]}`,
           position.x + 12,
           position.y + 4,
         );
@@ -263,7 +267,7 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
         context.fillStyle = radarColor;
         context.fillRect(radar.position.x - 6, radar.position.y - 6, 12, 12);
         context.font = "12px monospace";
-        context.fillText(`${radar.id} ${radarTypeProfiles[radar.type].label} ${radar.operator.mode}`, radar.position.x + 12, radar.position.y + 4);
+        context.fillText(`${radar.id} ${copy.enums.radarType[radar.type]} ${copy.enums.operatorMode[radar.operator.mode]}`, radar.position.x + 12, radar.position.y + 4);
       });
 
       if (showBelief) mission.radarContacts.forEach((contact) => {
@@ -297,7 +301,7 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
         context.stroke();
         context.fillStyle = "#e56a4d";
         context.font = "12px monospace";
-        context.fillText("CMD", target.x + 22, target.y - 18);
+        context.fillText(copy.canvas.commandTarget, target.x + 22, target.y - 18);
       }
 
       context.beginPath();
@@ -371,7 +375,7 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
       aircraftImage.removeEventListener("load", render);
       observer.disconnect();
     };
-  }, [mission, selectedIndex, showBelief, mapSelection]);
+  }, [copy, mission, selectedIndex, showBelief, mapSelection]);
 
   const findWaypointIndex = (position: Vector2): number => {
     const canvas = canvasRef.current;
@@ -415,7 +419,7 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
     <canvas
       ref={canvasRef}
       className="tactical-map"
-      aria-label="战术航线地图"
+      aria-label={copy.canvas.mapLabel}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={() => setDraggingIndex(null)}

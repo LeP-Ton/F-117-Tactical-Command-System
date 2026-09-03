@@ -11,6 +11,8 @@ import { DebriefWorkspace } from "./workspaces/DebriefWorkspace";
 import { IntelligenceWorkspace } from "./workspaces/IntelligenceWorkspace";
 import { MissionWorkspace } from "./workspaces/MissionWorkspace";
 import { GameplayGuide } from "./GameplayGuide";
+import { LanguageSelector } from "./LanguageSelector";
+import { useI18n } from "../i18n/I18n";
 
 const workspaceViewStorageKey = "f117-tactical-command-system:view:v1";
 
@@ -27,6 +29,7 @@ function loadCampaignView(missionStatus: string | undefined): boolean {
 }
 
 export function App() {
+  const { copy } = useI18n();
   const { state, dispatch } = useGameController();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [showBelief, setShowBelief] = useState(false);
@@ -46,7 +49,10 @@ export function App() {
   const currentDebrief = currentNodeId ? state.missionDebriefs[currentNodeId] : undefined;
   const closeGuide = useCallback(() => setGuideOpen(false), []);
 
-  useEffect(() => setShowBelief(intelAccessTier >= 2), [mission?.id, intelAccessTier]);
+  useEffect(() => {
+    // 每次进入新的规划态（包括同节点重试）按权限恢复默认视图；任务内手动关闭后不再被 Tick 重置。
+    if (mission?.status === "PLANNING") setShowBelief(intelAccessTier >= 2);
+  }, [mission?.id, mission?.status, intelAccessTier]);
   useEffect(() => { if (mission?.status === "RUNNING") setCampaignView(false); }, [mission?.status]);
   useEffect(() => {
     try {
@@ -56,7 +62,7 @@ export function App() {
     }
   }, [campaignView]);
 
-  if (!mission) return <main className="fatal-state">任务会话初始化失败</main>;
+  if (!mission) return <main className="fatal-state">{copy.app.fatalState}</main>;
 
   const closeDebrief = () => {
     if (activeDebrief && mission.status === "SUCCESS" && state.campaign.currentNodeId === activeDebrief.nodeId) {
@@ -69,15 +75,16 @@ export function App() {
   return <main className="app-shell">
     <header className="topbar">
       <div className="brand-block">
-        <div className="brand-mark" aria-label="F-117 侧面剪影"><img className="brand-aircraft-silhouette" src={f117SideSilhouette} alt="" /></div>
-        <div><h1>F-117 TACTICAL COMMAND SYSTEM</h1><p>FROM USA AIR FORCE // VERSION 1.0</p></div>
+        <div className="brand-mark" aria-label={copy.app.aircraftSilhouette}><img className="brand-aircraft-silhouette" src={f117SideSilhouette} alt="" /></div>
+        <div><h1>{copy.app.title}</h1><p>{copy.app.subtitle}</p></div>
       </div>
       <div className="topbar-controls">
-        <button ref={guideTriggerRef} type="button" className="guide-trigger" onClick={() => setGuideOpen(true)}>操作说明</button>
+        <LanguageSelector />
+        <button ref={guideTriggerRef} type="button" className="guide-trigger" onClick={() => setGuideOpen(true)}>{copy.app.instructions}</button>
         <div className="audio-control">
-          <button type="button" onClick={() => setMuted(!muted)}>{muted ? "SOUND OFF" : "SOUND ON"}</button>
-          <label htmlFor="master-volume">VOL</label>
-          <input id="master-volume" type="range" min="0" max="1" step="0.05" value={volume} onChange={(event) => setVolume(Number(event.target.value))} aria-label="游戏音效音量" />
+          <button type="button" onClick={() => setMuted(!muted)}>{muted ? copy.app.soundOff : copy.app.soundOn}</button>
+          <label htmlFor="master-volume">{copy.app.volume}</label>
+          <input id="master-volume" type="range" min="0" max="1" step="0.05" value={volume} onChange={(event) => setVolume(Number(event.target.value))} aria-label={copy.app.volumeLabel} />
         </div>
         <form className="seed-control" onSubmit={(event) => {
           event.preventDefault();
@@ -86,9 +93,9 @@ export function App() {
           setActiveDebrief(undefined);
           setCampaignView(true);
         }}>
-          <label htmlFor="run-seed">OPERATION CODE</label>
+          <label htmlFor="run-seed">{copy.app.operationCode}</label>
           <input id="run-seed" value={seedInput} onChange={(event) => setSeedInput(event.target.value)} />
-          <button type="submit">初始化任务网络</button>
+          <button type="submit">{copy.app.initializeNetwork}</button>
         </form>
       </div>
     </header>

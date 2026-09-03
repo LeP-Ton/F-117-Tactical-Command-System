@@ -23,7 +23,8 @@ export const gameConfig = {
     maxErrorRadius: 85,
     operatorDecisionIntervalSeconds: 0.5,
     focusedContactMemoryMs: 4500,
-    sectorContactMemoryMs: 9000,
+    // 活动 Contact 只保留 8 秒，扇区搜索记忆与该事实来源保持一致。
+    sectorContactMemoryMs: 8000,
     sharedContactMemoryMs: 4500,
   },
   /** Tier 0 有限情报使用固定规则，逐雷达差异仍由 Mission Seed 确定生成。 */

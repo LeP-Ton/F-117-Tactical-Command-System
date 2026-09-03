@@ -20,6 +20,8 @@ describe("ControlPanel 航点操作", () => {
     );
     expect(screen.getByRole("heading", { name: "规划任务" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "返回任务网络" })).toHaveClass("primary-button", "return-network-button");
+    expect(screen.getByText("指挥掩体")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /航点序列/ })).toHaveTextContent("0 个");
   });
 
   it("飞机运行中禁用航点排序和删除按钮", () => {
@@ -47,7 +49,7 @@ describe("ControlPanel 航点操作", () => {
     expect(screen.getByRole("button", { name: "下移" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "删除" })).toBeDisabled();
     expect(screen.queryByText("◆")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /WEATHER FORECAST/ })).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("button", { name: /天气预报/ })).toHaveAttribute("aria-expanded", "false");
   });
 
   it("执行中允许删除当前目标之后的航点", () => {
