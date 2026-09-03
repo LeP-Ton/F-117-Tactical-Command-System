@@ -76,7 +76,7 @@ export function CampaignMap({ state, dispatch, onLaunch, onPreview, onDebrief }:
         </div>
       </div>
       <div className="campaign-content">
-        <div className="campaign-graph">
+        <div className="campaign-graph" data-tutorial="mission-network">
           <svg
             viewBox="0 0 1000 600"
             preserveAspectRatio="none"
@@ -101,7 +101,7 @@ export function CampaignMap({ state, dispatch, onLaunch, onPreview, onDebrief }:
             </button>
           ))}
         </div>
-        <aside className="campaign-preview">
+        <aside className="campaign-preview" data-tutorial="mission-assessment">
           {selected && <>
             <span className="section-kicker">{copy.campaign.previewKicker}</span>
             <h3>{copy.enums.missionType[selected.type]}</h3>
@@ -121,6 +121,7 @@ export function CampaignMap({ state, dispatch, onLaunch, onPreview, onDebrief }:
             </div>}
             <button
               className="primary-button"
+              data-tutorial="mission-entry"
               disabled={(selected.status === "COMPLETED" && !selectedDebrief)
                 || (selected.status !== "LOCKED" && selected.status !== "COMPLETED"
                   && ((selected.status !== "AVAILABLE" && !canRetryFailedNode) || !canContinueRun))}

@@ -47,7 +47,7 @@ export function MissionWorkspace(props: MissionWorkspaceProps) {
       mapSelection={mapSelection}
       toolbar={canUseAiDebug ? <button className={`belief-toggle ${showBelief ? "active" : ""}`} onClick={onToggleBelief}>{showBelief ? copy.mission.totalIntelOn : copy.mission.totalIntelOff}</button> : undefined}
     />}
-    rightPanel={<aside className="telemetry-panel">
+    rightPanel={<aside className="telemetry-panel" data-tutorial="mission-telemetry">
       <section className={`panel-section threat-section threat-${mission.engagement.stage.toLowerCase()}`}>
         <div className="section-heading"><span>{copy.mission.threatWarning}</span><span>{copy.enums.threatStage[mission.engagement.stage]}</span></div>
         <div className="threat-progress"><i style={{ width: `${mission.engagement.trackProgress}%` }} /></div>

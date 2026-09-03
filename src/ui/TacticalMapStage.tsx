@@ -39,7 +39,7 @@ export function TacticalMapStage({
     ? copy.stage.realRadarContact
     : variant === "DEBRIEF" ? copy.stage.missionRadarIntel : copy.stage.radarIntelError;
 
-  return <section className="map-stage">
+  return <section className="map-stage" data-tutorial="tactical-map">
     <div className="map-label"><span>{copy.stage.title[variant]}</span><span>{resolvedStatus}</span></div>
     {toolbar}
     <TacticalMap

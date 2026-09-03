@@ -125,6 +125,7 @@ export const localeCatalogs = {
       kicker: "操作指令",
       title: "操作说明",
       close: "关闭操作说明",
+      startTutorial: "开始任务引导",
       liveWarning: "任务执行中 // 作战进程未中断",
       sections: [
         ["作战目标", "规划 F-117 航线，进入目标空域完成打击，并安全抵达东北撤离区。"],
@@ -138,6 +139,51 @@ export const localeCatalogs = {
         ["生存规则", "威胁告警表示当前跟踪与火控威胁。利用转向、距离、地形和天气切断新的雷达接触；导弹来袭后必须尽快脱离持续照射。"],
         ["任务结果", "只有摧毁目标并成功撤离才算完成。失败可返回任务网络重试或改选；成功任务可用任务视角或全景视角复盘。"],
       ],
+    },
+    tutorial: {
+      label: "任务引导",
+      kicker: "训练链路",
+      progressLabel: "任务引导进度",
+      exit: "退出任务引导",
+      back: "上一步",
+      next: "下一步",
+      complete: "结束引导",
+      awaitAction: "在高亮区域完成操作后自动继续",
+      routeTarget: "至少一个航点位于目标攻击圈",
+      routeExtraction: "最终航点位于撤离区",
+      suspendedTitle: "引导暂挂",
+      suspendedBody: "当前为只读情报或复盘视图。返回任务网络后，引导将从任务选择继续。",
+      suspendedAction: "返回任务网络以继续",
+      steps: {
+        network: {
+          title: "读取任务网络",
+          body: "每层只能完成一个节点。前置任务分别改变情报权限、雷达扫描、覆盖范围或指挥协同；你的选择会重塑最终打击的战场条件。",
+        },
+        assessment: {
+          title: "评估任务收益",
+          body: "选择节点后，先核对任务代号、预估雷达、天气和长期收益。锁定节点只能预览情报；可用或失败节点才能进入规划。",
+        },
+        planningEntry: {
+          title: "选择首项任务",
+          body: "选中一个标记为“可用”的节点，再使用高亮按钮进入任务规划。另一条同层路线会在任务成功后失效。",
+        },
+        map: {
+          title: "识别战术地图",
+          body: "先定位起始点、打击目标与东北撤离区，再读取雷达估计圈、地形和动态天气。雷达情报可能遗漏目标或存在位置与范围误差。",
+        },
+        route: {
+          title: "构建完整航线",
+          body: "点击地图添加航点并拖动调整。至少让航线进入目标攻击圈，并把最后一个航点放入撤离区；同时用左侧规划距离检查燃油余量。",
+        },
+        launch: {
+          title: "确认出动条件",
+          body: "确认目标、撤离航段、天气窗口和燃油后执行高亮指令。出动后任务不会暂停，也不能重置或返回任务网络。",
+        },
+        execution: {
+          title: "执行与动态修正",
+          body: "持续观察威胁告警与燃油航程。遭遇持续照射时利用转向、距离、地形或天气切断接触；飞行中仍可修改当前目标之后的未来航点。摧毁目标并进入撤离区才算成功。",
+        },
+      },
     },
     mapElements: {
       title: "地图元素",
@@ -423,6 +469,7 @@ export const localeCatalogs = {
       kicker: "OPERATING INSTRUCTIONS",
       title: "OPERATING INSTRUCTIONS",
       close: "Close operating instructions",
+      startTutorial: "START MISSION GUIDANCE",
       liveWarning: "MISSION IN PROGRESS // OPERATION CONTINUES",
       sections: [
         ["OBJECTIVE", "Plan the F-117 route, strike the designated target area, and reach the extraction zone in the northeast."],
@@ -436,6 +483,51 @@ export const localeCatalogs = {
         ["SURVIVAL", "THREAT WARNING shows current tracking and fire-control danger. Use turns, distance, terrain, and weather to break new Contacts; once a missile is inbound, leave sustained illumination quickly."],
         ["MISSION RESULT", "A mission succeeds only after the target is destroyed and the aircraft extracts. Failed missions may be retried or replaced; successful missions support mission-view and panoramic debriefs."],
       ],
+    },
+    tutorial: {
+      label: "MISSION GUIDANCE",
+      kicker: "TRAINING LINK",
+      progressLabel: "Mission guidance progress",
+      exit: "Exit mission guidance",
+      back: "BACK",
+      next: "NEXT",
+      complete: "END GUIDANCE",
+      awaitAction: "COMPLETE THE ACTION IN THE HIGHLIGHTED AREA",
+      routeTarget: "At least one waypoint is inside the target attack radius",
+      routeExtraction: "Final waypoint is inside extraction",
+      suspendedTitle: "GUIDANCE ON HOLD",
+      suspendedBody: "This is a read-only intelligence or debrief view. Return to the mission network to continue guidance from mission selection.",
+      suspendedAction: "RETURN TO MISSION NETWORK",
+      steps: {
+        network: {
+          title: "READ THE MISSION NETWORK",
+          body: "Only one node may be completed per layer. Precursor missions change intelligence access, radar scanning, coverage, or command coordination; your choices reshape the Final Strike battlefield.",
+        },
+        assessment: {
+          title: "ASSESS MISSION EFFECTS",
+          body: "After selecting a node, review its code, estimated radars, weather, and persistent effect. Locked nodes allow intelligence preview only; available or failed nodes may enter planning.",
+        },
+        planningEntry: {
+          title: "SELECT THE FIRST MISSION",
+          body: "Select a node marked AVAILABLE, then use the highlighted control to enter mission planning. The alternative at that layer expires after a successful mission.",
+        },
+        map: {
+          title: "READ THE TACTICAL MAP",
+          body: "Locate insertion, the strike target, and the northeast extraction zone. Then inspect estimated radar circles, terrain, and dynamic weather. Radar reports may contain omissions and position or range error.",
+        },
+        route: {
+          title: "BUILD A COMPLETE ROUTE",
+          body: "Click the map to add waypoints and drag to reposition them. Route through the target attack radius and place the final waypoint inside extraction, while checking planned distance against fuel.",
+        },
+        launch: {
+          title: "CONFIRM LAUNCH CONDITIONS",
+          body: "Verify the target leg, extraction leg, weather window, and fuel before using the highlighted command. After launch, the mission cannot pause, reset, or return to the mission network.",
+        },
+        execution: {
+          title: "EXECUTE AND REVISE",
+          body: "Monitor THREAT WARNING and FUEL RANGE. Break sustained illumination with turns, distance, terrain, or weather. Future waypoints beyond the current target remain editable. Success requires both target destruction and extraction.",
+        },
+      },
     },
     mapElements: {
       title: "MAP ELEMENTS",

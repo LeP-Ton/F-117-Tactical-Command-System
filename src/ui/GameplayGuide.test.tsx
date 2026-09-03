@@ -8,8 +8,9 @@ afterEach(cleanup);
 
 function renderGuide(onClose = vi.fn()) {
   const triggerRef = createRef<HTMLButtonElement>();
-  render(<><button ref={triggerRef}>操作说明</button><GameplayGuide open onClose={onClose} triggerRef={triggerRef} missionRunning /></>);
-  return { onClose, triggerRef };
+  const onStartTutorial = vi.fn();
+  render(<><button ref={triggerRef}>操作说明</button><GameplayGuide open onClose={onClose} onStartTutorial={onStartTutorial} triggerRef={triggerRef} missionRunning /></>);
+  return { onClose, onStartTutorial, triggerRef };
 }
 
 describe("GameplayGuide", () => {
@@ -27,8 +28,14 @@ describe("GameplayGuide", () => {
 
   it("非执行阶段不显示实时任务提示", () => {
     const triggerRef = createRef<HTMLButtonElement>();
-    render(<><button ref={triggerRef}>操作说明</button><GameplayGuide open onClose={vi.fn()} triggerRef={triggerRef} missionRunning={false} /></>);
+    render(<><button ref={triggerRef}>操作说明</button><GameplayGuide open onClose={vi.fn()} onStartTutorial={vi.fn()} triggerRef={triggerRef} missionRunning={false} /></>);
     expect(screen.queryByText("任务执行中 // 作战进程未中断")).not.toBeInTheDocument();
+  });
+
+  it("可从操作说明启动情境式任务引导", () => {
+    const { onStartTutorial } = renderGuide();
+    fireEvent.click(screen.getByRole("button", { name: "开始任务引导" }));
+    expect(onStartTutorial).toHaveBeenCalledTimes(1);
   });
 
   it("关闭按钮、遮罩和 Escape 都会关闭并恢复入口焦点", () => {
@@ -54,7 +61,7 @@ describe("GameplayGuide", () => {
     const triggerRef = createRef<HTMLButtonElement>();
     render(<I18nProvider initialLanguage="en" persist={false}>
       <button ref={triggerRef}>OPERATING INSTRUCTIONS</button>
-      <GameplayGuide open onClose={vi.fn()} triggerRef={triggerRef} missionRunning />
+      <GameplayGuide open onClose={vi.fn()} onStartTutorial={vi.fn()} triggerRef={triggerRef} missionRunning />
     </I18nProvider>);
 
     expect(screen.getByRole("dialog", { name: "OPERATING INSTRUCTIONS" })).toBeInTheDocument();

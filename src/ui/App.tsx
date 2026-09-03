@@ -12,9 +12,11 @@ import { IntelligenceWorkspace } from "./workspaces/IntelligenceWorkspace";
 import { MissionWorkspace } from "./workspaces/MissionWorkspace";
 import { GameplayGuide } from "./GameplayGuide";
 import { LanguageSelector } from "./LanguageSelector";
+import { MissionTutorial, type TutorialContext } from "./MissionTutorial";
 import { useI18n } from "../i18n/I18n";
 
 const workspaceViewStorageKey = "f117-tactical-command-system:view:v1";
+const tutorialStorageKey = "f117-tactical-command-system:mission-tutorial:v1";
 
 function loadCampaignView(missionStatus: string | undefined): boolean {
   if (missionStatus === "RUNNING") return false;
@@ -28,6 +30,22 @@ function loadCampaignView(missionStatus: string | undefined): boolean {
   return missionStatus === "PLANNING";
 }
 
+function shouldStartTutorial(): boolean {
+  try {
+    return localStorage.getItem(tutorialStorageKey) === null;
+  } catch {
+    return true;
+  }
+}
+
+function saveTutorialStatus(status: "COMPLETED" | "DISMISSED"): void {
+  try {
+    localStorage.setItem(tutorialStorageKey, status);
+  } catch {
+    // 引导偏好独立于任务存档；无法保存时仅影响下次访问是否自动打开。
+  }
+}
+
 export function App() {
   const { copy } = useI18n();
   const { state, dispatch } = useGameController();
@@ -39,6 +57,7 @@ export function App() {
   const [activeDebrief, setActiveDebrief] = useState<MissionDebrief>();
   const [mapSelection, setMapSelection] = useState<MapElementSelection | null>(null);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [tutorialActive, setTutorialActive] = useState(shouldStartTutorial);
   const guideTriggerRef = useRef<HTMLButtonElement>(null);
   const mission = state.currentMission;
   const { muted, volume, setMuted, setVolume } = useGameAudio(mission);
@@ -48,6 +67,10 @@ export function App() {
   const currentNodeId = state.campaign.currentNodeId;
   const currentDebrief = currentNodeId ? state.missionDebriefs[currentNodeId] : undefined;
   const closeGuide = useCallback(() => setGuideOpen(false), []);
+  const stopTutorial = useCallback((status: "COMPLETED" | "DISMISSED") => {
+    saveTutorialStatus(status);
+    setTutorialActive(false);
+  }, []);
 
   useEffect(() => {
     // 每次进入新的规划态（包括同节点重试）按权限恢复默认视图；任务内手动关闭后不再被 Tick 重置。
@@ -63,6 +86,16 @@ export function App() {
   }, [campaignView]);
 
   if (!mission) return <main className="fatal-state">{copy.app.fatalState}</main>;
+
+  const tutorialContext: TutorialContext = activeDebrief
+    ? "DEBRIEF"
+    : intelligencePreview
+      ? "INTELLIGENCE"
+      : campaignView
+        ? "CAMPAIGN"
+        : mission.status === "PLANNING" || mission.status === "RUNNING"
+          ? mission.status
+          : "RESULT";
 
   const closeDebrief = () => {
     if (activeDebrief && mission.status === "SUCCESS" && state.campaign.currentNodeId === activeDebrief.nodeId) {
@@ -131,6 +164,21 @@ export function App() {
             onReturnCampaign={() => setCampaignView(true)}
             onOpenDebrief={currentDebrief ? () => setActiveDebrief(currentDebrief) : undefined}
           />}
-    <GameplayGuide open={guideOpen} onClose={closeGuide} triggerRef={guideTriggerRef} missionRunning={mission.status === "RUNNING"} />
+    <GameplayGuide
+      open={guideOpen}
+      onClose={closeGuide}
+      onStartTutorial={() => {
+        closeGuide();
+        setTutorialActive(true);
+      }}
+      triggerRef={guideTriggerRef}
+      missionRunning={mission.status === "RUNNING"}
+    />
+    {tutorialActive && <MissionTutorial
+      context={tutorialContext}
+      mission={mission}
+      onDismiss={() => stopTutorial("DISMISSED")}
+      onComplete={() => stopTutorial("COMPLETED")}
+    />}
   </main>;
 }

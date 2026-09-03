@@ -223,6 +223,57 @@ button:disabled { opacity: 0.32; cursor: not-allowed; }
 .gameplay-guide-content article:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .gameplay-guide-content h3 { margin: 0; color: #b9d3ca; font-size: 11px; font-weight: 500; }
 .gameplay-guide-content p { margin: 7px 0 0; color: #6f998c; font-size: 10px; line-height: 1.7; }
+.gameplay-guide-footer { flex: 0 0 auto; padding: 0 20px 20px; }
+.gameplay-guide-footer .primary-button { width: 100%; min-height: 38px; }
+.tutorial-focus-frame {
+  position: fixed;
+  z-index: 11;
+  border: 1px solid rgba(232, 181, 74, 0.9);
+  box-shadow: 0 0 0 9999px rgba(2, 7, 6, 0.34), 0 0 18px rgba(224, 167, 57, 0.34), inset 0 0 18px rgba(224, 167, 57, 0.1);
+  pointer-events: none;
+  animation: tutorial-focus-pulse 1.6s ease-in-out infinite;
+}
+.mission-tutorial {
+  position: fixed;
+  z-index: 12;
+  width: min(380px, calc(100vw - 48px));
+  border: 1px solid #8e6a2e;
+  background: rgba(5, 15, 12, 0.97);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.66), inset 0 0 30px rgba(39, 79, 64, 0.1);
+}
+.tutorial-card-left { left: 24px; }
+.tutorial-card-right { right: 24px; }
+.tutorial-card-top { top: 96px; }
+.tutorial-card-bottom { bottom: 24px; }
+.tutorial-header { min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 13px 15px; border-bottom: 1px solid #27463c; }
+.tutorial-header div { min-width: 0; }
+.tutorial-header span, .tutorial-header strong { display: block; }
+.tutorial-header span { color: #5c8478; font-size: 8px; letter-spacing: 0.14em; }
+.tutorial-header strong { margin-top: 5px; color: #e9bd5e; font-size: 13px; font-weight: 500; letter-spacing: 0.04em; }
+.tutorial-close { position: relative; width: 28px; height: 28px; flex: 0 0 28px; padding: 0; color: #b58a3c; border-color: #5f4c28; background: transparent; }
+.tutorial-close i::before, .tutorial-close i::after { content: ""; position: absolute; top: 13px; left: 7px; width: 13px; height: 1px; background: currentColor; }
+.tutorial-close i::before { transform: rotate(45deg); }
+.tutorial-close i::after { transform: rotate(-45deg); }
+.tutorial-progress { position: relative; height: 18px; border-bottom: 1px solid #19352d; background: #07110e; overflow: hidden; }
+.tutorial-progress i { display: block; height: 100%; background: rgba(185, 137, 49, 0.2); transition: width 180ms ease; }
+.tutorial-progress span { position: absolute; inset: 0 10px 0 auto; display: flex; align-items: center; color: #806b3d; font-size: 8px; }
+.tutorial-body { padding: 15px; }
+.tutorial-body p { margin: 0; color: #91aea5; font-size: 10px; line-height: 1.75; }
+.tutorial-route-checks { display: grid; gap: 7px; margin: 13px 0 0; padding: 11px; list-style: none; border: 1px solid #1e3d34; background: rgba(21, 53, 43, 0.18); }
+.tutorial-route-checks li { color: #65877d; font-size: 9px; }
+.tutorial-route-checks li.complete { color: #70c4a8; }
+.tutorial-actions { min-height: 50px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 15px; border-top: 1px solid #1c3b32; }
+.tutorial-actions button { min-width: 84px; padding: 7px 10px; font-size: 9px; }
+.tutorial-actions .tutorial-primary { color: #efc363; border-color: #96702e; background: rgba(114, 79, 20, 0.24); }
+.tutorial-await { margin-left: auto; color: #8c7440; font-size: 8px; letter-spacing: 0.06em; text-align: right; }
+@keyframes tutorial-focus-pulse {
+  0%, 100% { border-color: rgba(232, 181, 74, 0.58); }
+  50% { border-color: rgba(247, 202, 105, 1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-focus-frame { animation: none; }
+  .tutorial-progress i { transition: none; }
+}
 .campaign-screen { flex: 1 1 auto; height: auto; min-height: 0; padding: 24px; overflow: auto; overscroll-behavior: contain; background: radial-gradient(circle at 45% 45%, #10231d, #050b09 70%); }
 .campaign-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
 .campaign-header h2 { margin: 6px 0 0; color: #e5eee9; font-size: 20px; font-weight: 500; }

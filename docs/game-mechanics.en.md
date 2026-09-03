@@ -20,6 +20,8 @@ Base aircraft speed is `3.6 u/s`. Full fuel provides `2000 u` of travel, equal t
 
 The Operating Instructions can be opened at any time. They are an overlay above the terminal and do not pause a live mission. When opened during flight, “MISSION IN PROGRESS // OPERATION CONTINUES” means aircraft, radar, and engagement simulation continue to advance.
 
+First visits automatically start seven-step contextual Mission Guidance covering the mission network, effect assessment, planning entry, tactical map, complete route, launch confirmation, and live telemetry. The complete-route step advances only after at least one waypoint enters the target attack radius and the final waypoint enters extraction. The highlight layer does not intercept pointer input. Guidance dispatches no game actions and pauses neither Tick nor audio. Completion or dismissal uses a dedicated browser `localStorage` key outside `RunState`, Seeds, and debriefs. It can be restarted from Operating Instructions at any time. If started from a read-only intelligence or debrief view, it stays on hold until the player returns to the mission network.
+
 Success requires both a destroyed target and entry into the extraction zone. A route that ends with the target intact, a destroyed target without extraction, mid-route fuel exhaustion, or aircraft loss is a failure. `FUEL RANGE` shows the remaining percentage and available distance; below 20% it enters the red warning state.
 
 ## 2. What the Player Can See

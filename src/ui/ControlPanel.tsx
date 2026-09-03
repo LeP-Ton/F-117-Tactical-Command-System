@@ -42,6 +42,7 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
           {mission.status === "PLANNING" && (
             <button
               className="primary-button"
+              data-tutorial="confirm-route"
               disabled={mission.route.waypoints.length < 2}
               onClick={() => dispatch({ type: "START" })}
             >
