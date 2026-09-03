@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cueForEvent } from "./gameAudio";
+import { cueForEvent, normalizeVolume } from "./gameAudio";
 import type { GameEvent, GameEventType } from "../domain/types";
 
 function event(type: GameEventType, data: Record<string, unknown> = {}): GameEvent {
@@ -28,5 +28,13 @@ describe("游戏音效事件映射", () => {
 
   it("不需要声音的内部事件不会生成提示", () => {
     expect(cueForEvent(event("COMMANDER_ORDER"))).toBeUndefined();
+  });
+});
+
+describe("游戏音量边界", () => {
+  it("允许直接把主音量调至零以完全关闭声音", () => {
+    expect(normalizeVolume(0)).toBe(0);
+    expect(normalizeVolume(-0.2)).toBe(0);
+    expect(normalizeVolume(1.2)).toBe(1);
   });
 });

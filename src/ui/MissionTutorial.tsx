@@ -85,12 +85,24 @@ export function MissionTutorial({ context, mission, onDismiss, onComplete }: Mis
         setFocusRect(null);
         return;
       }
+      const scaler = target.closest<HTMLElement>(".viewport-scaler");
+      const scalerRect = scaler?.getBoundingClientRect();
+      // getBoundingClientRect 返回缩放后的物理坐标，浮层定位则运行在缩放容器的逻辑坐标系中。
+      const scale = scaler && scalerRect && scaler.clientWidth > 0 ? scalerRect.width / scaler.clientWidth : 1;
+      const logicalViewportWidth = window.innerWidth / scale;
+      const logicalViewportHeight = window.innerHeight / scale;
+      const logicalRect = {
+        top: rect.top / scale,
+        left: rect.left / scale,
+        width: rect.width / scale,
+        height: rect.height / scale,
+      };
       const inset = 6;
       setFocusRect({
-        top: Math.max(8, rect.top - inset),
-        left: Math.max(8, rect.left - inset),
-        width: Math.min(window.innerWidth - Math.max(8, rect.left - inset) - 8, rect.width + inset * 2),
-        height: Math.min(window.innerHeight - Math.max(8, rect.top - inset) - 8, rect.height + inset * 2),
+        top: Math.max(8, logicalRect.top - inset),
+        left: Math.max(8, logicalRect.left - inset),
+        width: Math.min(logicalViewportWidth - Math.max(8, logicalRect.left - inset) - 8, logicalRect.width + inset * 2),
+        height: Math.min(logicalViewportHeight - Math.max(8, logicalRect.top - inset) - 8, logicalRect.height + inset * 2),
       });
     };
 
@@ -156,8 +168,11 @@ export function MissionTutorial({ context, mission, onDismiss, onComplete }: Mis
   const isSuspended = context === "INTELLIGENCE" || context === "DEBRIEF";
   const stepCopy = copy.tutorial.steps[step.id as TutorialStepId];
   const canGoBack = resolvedStepIndex > 0 && tutorialSteps[resolvedStepIndex - 1]?.context === step.context;
-  const cardHorizontal = focusRect && focusRect.left + focusRect.width / 2 > window.innerWidth / 2 ? "left" : "right";
-  const cardVertical = focusRect && focusRect.top + focusRect.height / 2 > window.innerHeight / 2 ? "top" : "bottom";
+  const logicalViewport = document.querySelector<HTMLElement>(".viewport-scaler");
+  const logicalViewportWidth = logicalViewport?.clientWidth ?? window.innerWidth;
+  const logicalViewportHeight = logicalViewport?.clientHeight ?? window.innerHeight;
+  const cardHorizontal = focusRect && focusRect.left + focusRect.width / 2 > logicalViewportWidth / 2 ? "left" : "right";
+  const cardVertical = focusRect && focusRect.top + focusRect.height / 2 > logicalViewportHeight / 2 ? "top" : "bottom";
   const focusStyle = focusRect ? {
     top: focusRect.top,
     left: focusRect.left,

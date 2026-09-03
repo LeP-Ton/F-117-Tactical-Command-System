@@ -37,13 +37,17 @@ export function cueForEvent(event: GameEvent): SoundCue | undefined {
 
 type AlarmMode = "LOCK" | "MISSILE";
 
+/** 将音量约束在 Web Audio 主增益允许的 0–1 范围，0 即完全关闭声音。 */
+export function normalizeVolume(volume: number): number {
+  return Math.max(0, Math.min(1, volume));
+}
+
 /** 使用 Web Audio 合成座舱提示音，避免引入外部音频素材与加载状态。 */
 export class GameAudioEngine {
   private context?: AudioContext;
   private master?: GainNode;
   private alarmTimer?: number;
   private alarmMode?: AlarmMode;
-  private muted = false;
   private volume = 0.35;
   private lastContactAt = 0;
   private lastFailureAt = 0;
@@ -59,13 +63,8 @@ export class GameAudioEngine {
     if (this.context.state === "suspended") await this.context.resume();
   }
 
-  setMuted(muted: boolean): void {
-    this.muted = muted;
-    this.applyVolume();
-  }
-
   setVolume(volume: number): void {
-    this.volume = Math.max(0, Math.min(1, volume));
+    this.volume = normalizeVolume(volume);
     this.applyVolume();
   }
 
@@ -136,7 +135,7 @@ export class GameAudioEngine {
 
   private applyVolume(): void {
     if (!this.master || !this.context) return;
-    this.master.gain.setTargetAtTime(this.muted ? 0 : this.volume, this.context.currentTime, 0.015);
+    this.master.gain.setTargetAtTime(this.volume, this.context.currentTime, 0.015);
   }
 
   private startAlarm(mode: AlarmMode): void {

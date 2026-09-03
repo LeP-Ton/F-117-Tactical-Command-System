@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { useGameController } from "../game/useGameController";
 import { CampaignMap } from "./CampaignMap";
 import { useGameAudio } from "../audio/useGameAudio";
@@ -10,8 +10,8 @@ import type { MapElementSelection } from "./mapSelection";
 import { DebriefWorkspace } from "./workspaces/DebriefWorkspace";
 import { IntelligenceWorkspace } from "./workspaces/IntelligenceWorkspace";
 import { MissionWorkspace } from "./workspaces/MissionWorkspace";
-import { GameplayGuide } from "./GameplayGuide";
 import { LanguageSelector } from "./LanguageSelector";
+import { FullscreenToggle } from "./FullscreenToggle";
 import { MissionTutorial, type TutorialContext } from "./MissionTutorial";
 import { useI18n } from "../i18n/I18n";
 
@@ -56,17 +56,20 @@ export function App() {
   const [intelligencePreview, setIntelligencePreview] = useState<typeof state.currentMission>();
   const [activeDebrief, setActiveDebrief] = useState<MissionDebrief>();
   const [mapSelection, setMapSelection] = useState<MapElementSelection | null>(null);
-  const [guideOpen, setGuideOpen] = useState(false);
   const [tutorialActive, setTutorialActive] = useState(shouldStartTutorial);
-  const guideTriggerRef = useRef<HTMLButtonElement>(null);
+  const [tutorialSessionId, setTutorialSessionId] = useState(0);
   const mission = state.currentMission;
-  const { muted, volume, setMuted, setVolume } = useGameAudio(mission);
+  const { volume, setVolume } = useGameAudio(mission);
   const intelAccessTier = getIntelAccessTier(state.campaign);
   const debugOverride = new URLSearchParams(window.location.search).get("ai-debug") === "1";
   const canUseAiDebug = debugOverride || intelAccessTier >= 2;
   const currentNodeId = state.campaign.currentNodeId;
   const currentDebrief = currentNodeId ? state.missionDebriefs[currentNodeId] : undefined;
-  const closeGuide = useCallback(() => setGuideOpen(false), []);
+  const startTutorial = useCallback(() => {
+    // 每次点击都重新挂载引导，使已完成或正在进行的引导从当前页面对应步骤重新开始。
+    setTutorialSessionId((value) => value + 1);
+    setTutorialActive(true);
+  }, []);
   const stopTutorial = useCallback((status: "COMPLETED" | "DISMISSED") => {
     saveTutorialStatus(status);
     setTutorialActive(false);
@@ -113,9 +116,9 @@ export function App() {
       </div>
       <div className="topbar-controls">
         <LanguageSelector />
-        <button ref={guideTriggerRef} type="button" className="guide-trigger" onClick={() => setGuideOpen(true)}>{copy.app.instructions}</button>
+        <button type="button" className="tutorial-trigger" onClick={startTutorial}>{copy.app.missionGuidance}</button>
+        <FullscreenToggle />
         <div className="audio-control">
-          <button type="button" onClick={() => setMuted(!muted)}>{muted ? copy.app.soundOff : copy.app.soundOn}</button>
           <label htmlFor="master-volume">{copy.app.volume}</label>
           <input
             id="master-volume"
@@ -164,17 +167,8 @@ export function App() {
             onReturnCampaign={() => setCampaignView(true)}
             onOpenDebrief={currentDebrief ? () => setActiveDebrief(currentDebrief) : undefined}
           />}
-    <GameplayGuide
-      open={guideOpen}
-      onClose={closeGuide}
-      onStartTutorial={() => {
-        closeGuide();
-        setTutorialActive(true);
-      }}
-      triggerRef={guideTriggerRef}
-      missionRunning={mission.status === "RUNNING"}
-    />
     {tutorialActive && <MissionTutorial
+      key={tutorialSessionId}
       context={tutorialContext}
       mission={mission}
       onDismiss={() => stopTutorial("DISMISSED")}

@@ -57,12 +57,21 @@ function worldToScreen(position: Vector2, metrics: CanvasMetrics): Vector2 {
   };
 }
 
-function screenToWorld(canvas: HTMLCanvasElement, clientX: number, clientY: number): Vector2 {
+function clientToCanvas(canvas: HTMLCanvasElement, clientX: number, clientY: number): Vector2 {
   const rect = canvas.getBoundingClientRect();
-  const metrics = getMetrics(canvas);
   return {
-    x: Math.max(0, Math.min(gameConfig.world.width, (clientX - rect.left - metrics.offsetX) / metrics.scale)),
-    y: Math.max(0, Math.min(gameConfig.world.height, (clientY - rect.top - metrics.offsetY) / metrics.scale)),
+    // 应用外壳会整体缩放，指针坐标需还原到 Canvas 的逻辑布局坐标。
+    x: (clientX - rect.left) * (rect.width > 0 ? canvas.clientWidth / rect.width : 1),
+    y: (clientY - rect.top) * (rect.height > 0 ? canvas.clientHeight / rect.height : 1),
+  };
+}
+
+function screenToWorld(canvas: HTMLCanvasElement, clientX: number, clientY: number): Vector2 {
+  const metrics = getMetrics(canvas);
+  const position = clientToCanvas(canvas, clientX, clientY);
+  return {
+    x: Math.max(0, Math.min(gameConfig.world.width, (position.x - metrics.offsetX) / metrics.scale)),
+    y: Math.max(0, Math.min(gameConfig.world.height, (position.y - metrics.offsetY) / metrics.scale)),
   };
 }
 
@@ -163,8 +172,11 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
     const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
     const render = (timestampMs = performance.now()) => {
-      const pixelRatio = window.devicePixelRatio || 1;
       const metrics = getMetrics(canvas);
+      const renderedWidth = canvas.getBoundingClientRect().width;
+      // 物理像素密度包含全局界面缩放，避免高分辨率放大时 Canvas 文字与线条发虚。
+      const visualScale = metrics.width > 0 && renderedWidth > 0 ? renderedWidth / metrics.width : 1;
+      const pixelRatio = (window.devicePixelRatio || 1) * visualScale;
       const pixelWidth = Math.round(metrics.width * pixelRatio);
       const pixelHeight = Math.round(metrics.height * pixelRatio);
       if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
@@ -482,8 +494,7 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
     if (readOnly) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const hitIndex = findWaypointIndex({ x: event.clientX - rect.left, y: event.clientY - rect.top });
+    const hitIndex = findWaypointIndex(clientToCanvas(canvas, event.clientX, event.clientY));
     if (hitIndex >= 0) {
       onSelect(hitIndex);
       if (editable && canEditWaypoint(mission.route, hitIndex, editMode)) {

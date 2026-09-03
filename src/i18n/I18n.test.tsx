@@ -39,6 +39,10 @@ function collectStrings(value: unknown, prefix = ""): Array<[string, string]> {
 describe("游戏界面国际化", () => {
   it("中英文目录结构完全一致", () => {
     expect(collectKeyPaths(localeCatalogs.en)).toEqual(collectKeyPaths(localeCatalogs.zh));
+    expect(localeCatalogs.zh.app.missionGuidance).toBe("任务引导");
+    expect(localeCatalogs.en.app.missionGuidance).toBe("MISSION GUIDANCE");
+    expect(localeCatalogs.zh.app.subtitle).toContain("版本 1.1");
+    expect(localeCatalogs.en.app.subtitle).toContain("VERSION 1.1");
     const untranslatedEnglish = collectStrings(localeCatalogs.en)
       .filter(([, value]) => /[\u3400-\u9fff]/u.test(value));
     expect(untranslatedEnglish).toEqual([]);

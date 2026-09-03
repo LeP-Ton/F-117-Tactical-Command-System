@@ -3,7 +3,6 @@ import type { MissionSession } from "../domain/types";
 import { gameAudio } from "./gameAudio";
 
 export function useGameAudio(mission: MissionSession | undefined) {
-  const [muted, setMutedState] = useState(false);
   const [volume, setVolumeState] = useState(0.35);
   const missionId = useRef(mission?.id);
   const lastProcessedEventId = useRef(mission?.events.at(-1)?.id);
@@ -43,14 +42,10 @@ export function useGameAudio(mission: MissionSession | undefined) {
     gameAudio.syncMission(mission.status, mission.engagement.stage);
   }, [mission?.engagement.stage, mission?.status]);
 
-  const setMuted = (nextMuted: boolean) => {
-    setMutedState(nextMuted);
-    gameAudio.setMuted(nextMuted);
-  };
   const setVolume = (nextVolume: number) => {
     setVolumeState(nextVolume);
     gameAudio.setVolume(nextVolume);
   };
 
-  return { muted, volume, setMuted, setVolume };
+  return { volume, setVolume };
 }
