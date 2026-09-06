@@ -1,6 +1,5 @@
 import type { MissionSession } from "../../domain/types";
 import type { MapElementSelection } from "../mapSelection";
-import { DeploymentBriefingPanel } from "../DeploymentBriefingPanel";
 import { MapElementPanel } from "../MapElementPanel";
 import { TacticalMapStage } from "../TacticalMapStage";
 import { TacticalWorkspace } from "../TacticalWorkspace";
@@ -41,7 +40,6 @@ export function IntelligenceWorkspace({ mission, showBelief, mapSelection, onMap
     />}
     rightPanel={<aside className="telemetry-panel">
       <MapElementPanel mission={mission} showBelief={showBelief} selection={mapSelection} onSelectionChange={onMapSelectionChange} defaultExpandedGroups />
-      <DeploymentBriefingPanel title={copy.mission.counterDeployment} notes={mission.adaptationNotes} defaultExpanded />
     </aside>}
   />;
 }

@@ -77,7 +77,7 @@
 - 语言是独立界面偏好，保存到单独的浏览器 `localStorage` 键。
 - 语言不进入 `RunState`、`MissionSession`、Seed 或成功复盘，不影响 Tick、音频、雷达探测和任务结算。
 - 领域层生成的部署记录保留稳定存档值，渲染英文界面时兼容翻译已有中文记录。
-- 中文界面将任务类型与系统术语完整显示为中文，例如“情报行动、防空压制、全域情报、雷达接触、敌情推测和敌方警戒”；英文界面显示对应英文术语。只保留 `F-117`、节点/雷达/航点编号、坐标轴和计量单位等识别符。
+- 中文界面将任务类型与系统术语完整显示为中文，例如“情报行动、防空压制、全域情报、雷达接触、敌情推测和态势警戒”；英文界面显示对应英文术语。只保留 `F-117`、节点/雷达/航点编号、坐标轴和计量单位等识别符。
 
 ## 3. 雷达如何探测飞机
 
@@ -131,7 +131,7 @@ min(0.95,
 
 Early Warning 更容易在远距离和较宽方向范围内形成早期 Contact，但难以单独快速完成火控锁定；Fire Control 必须把窄波束准确指向目标，一旦连续命中便会快速提高跟踪质量。Acquisition 位于两者之间，并通过 Commander 的 Contact 共享帮助火控雷达集中搜索。
 
-Final Strike 的增援同样承担明确职责：目标区 `FINAL-GUARD` 是 Fire Control，Enemy Alert 触发的 `ALERT-GUARD` 是 Early Warning，历史航路触发的 `ADAPT-GUARD` 是 Acquisition。
+Final Strike 固定增加一部目标区 `FINAL-GUARD` Fire Control，确保最终目标始终具备独立的近程火控防御。
 
 STRIKE 会降低后续任务的统一扫描速率。该修正同时乘到 Wide Search 的旋转角速度、Sector Search 的摆扫相位和 Sensor 的实际扫描频率：一次 STRIKE 后为 90%，两次为 81%。有效扫描间隔按 `基础扫描周期 / 扫描速率` 计算，因此它不是只改变地图动画；单次扫描的覆盖范围、波束宽度、探测概率倍率和 Contact 精度保持不变。
 
@@ -144,7 +144,7 @@ STRIKE 会降低后续任务的统一扫描速率。该修正同时乘到 Wide S
 ≤ 火控雷达实际范围 - 20 u
 ```
 
-若现有部署不满足条件，系统只移动距离目标最近的 Fire Control，并保留 Seed 生成的相对方位。该校验发生在 SEAD 缩圈、Enemy Adaptation 移位和 Final Strike 增援之后；Enemy Adaptation 也不会移动唯一承担目标防御的火控雷达。
+若现有部署不满足条件，系统只移动距离目标最近的 Fire Control，并保留 Seed 生成的相对方位。该校验发生在 SEAD 缩圈和 Final Strike 目标区守卫加入之后。
 
 完整覆盖只保证飞机攻击目标时处于 Fire Control 的真实范围内，不保证立即暴露。窄波束、概率探测、飞机朝向、地形和天气仍然决定是否形成连续 Contact。
 
@@ -291,16 +291,9 @@ Command Strike 成功后，后续任务的指挥链效率乘以 65%。配置保�
 - 已完成节点可进入“复盘任务”：默认还原任务视角，也可切换全景复盘查看冻结的敌方内部状态。
 - 复盘只读取历史快照，不修改当前 Mission、任务网络或持久状态。
 
-### 9.2 Enemy Alert、Awareness 与 THREAT WARNING
+### 9.2 任务结算、Awareness 与 THREAT WARNING
 
-Enemy Alert 是跨任务持久战略警戒，初始为 0，范围为 `0–100`，当前版本不会自然下降：
-
-- 成功任务增加 2，失败增加 10。
-- 准备后续任务或失败重试时，基础雷达范围乘以 `1 + Enemy Alert / 250`。
-- Enemy Alert ≥ 15 时，Final Strike 增加一部 `ALERT-GUARD` Early Warning；其范围还会获得最高 18% 的额外 Alert 增幅。
-- 任务网络顶部 `RADAR COVERAGE` 只显示 SEAD 持久修正，不包含 Enemy Alert 倍率；两者在任务准备时相乘。
-
-不要把 Enemy Alert 与任务内状态混淆：Awareness 是单场任务内 Commander 的总体警戒，会在失去 Contact 后衰减；THREAT WARNING 是针对 F-117 的跟踪、锁定和导弹进度。
+任务成功只应用当前节点对应的直接收益；任务失败只把当前节点标记为可重试的 `FAILED`，不会额外强化后续防空。Awareness 是单场任务内 Commander 的总体态势警戒，会在失去 Contact 后衰减；THREAT WARNING 是针对 F-117 的跟踪、锁定和导弹进度。两者都会在新任务中重新初始化，不作为跨任务成长资源。
 
 四类前置任务分别作用于互不相同的系统维度：INTEL 改变玩家信息权限，STRIKE 改变雷达时间采样，SEAD 改变覆盖空间，COMMAND STRIKE 改变多雷达协同。`RADAR COVERAGE` 和 `RADAR SCAN` 因而是两个独立持久状态。
 
@@ -315,7 +308,7 @@ Enemy Alert 是跨任务持久战略警戒，初始为 0，范围为 `0–100`�
 - 3–5 部雷达，类型按 Early Warning、Acquisition、Fire Control 循环，位置、范围和初始朝向由 Seed 决定。
 - 位于地图中上部的目标位置。
 
-Enemy Alert、SEAD、STRIKE、COMMAND STRIKE、Enemy Adaptation 与 Final Strike 增援全部应用完毕后，系统才针对最终雷达部署生成玩家侧有限情报，避免战前报告引用已经失效的雷达位置。
+SEAD、STRIKE、COMMAND STRIKE 与 Final Strike 目标区守卫全部应用完毕后，系统才针对最终雷达部署生成玩家侧有限情报，避免战前报告引用应用收益前的基础雷达。
 
 地图固定为 `1000×1000 u`，网格间隔 `100 u`；F-117 插入点固定为 `(90, 850)`，撤离区固定为 `(860, 50, 100×100)`，目标生成范围为 `x=400–790、y=100–390`。雷达中心必须与撤离区边界保持 `80 u` 净空，但真实覆盖允许延伸进入撤离区。任务最终准备时还会保证至少一部 Fire Control 完整覆盖目标 `58 u` 攻击区并保留 `20 u` 余量。
 
@@ -328,34 +321,16 @@ Enemy Alert、SEAD、STRIKE、COMMAND STRIKE、Enemy Adaptation 与 Final Strike
 探测概率判定  <节点 Seed>-M01:<Radar ID>:<Scan Count>
 ```
 
-天气真实状态由初始参数和任务绝对时间纯函数推导，雷达探测由扫描计数确定随机结果，因此相同 Seed、Run 历史、航线操作和时间演进可以复现。Seed 只固定基础世界：已选节点、失败次数、Enemy Alert、INTEL 权限、SEAD/STRIKE/COMMAND STRIKE 战果与历史航迹仍会在准备任务时改变最终部署。
+天气真实状态由初始参数和任务绝对时间纯函数推导，雷达探测由扫描计数确定随机结果，因此相同 Seed、已完成节点、航线操作和时间演进可以复现。Seed 固定基础世界，INTEL 权限及 SEAD/STRIKE/COMMAND STRIKE 战果在准备任务时应用清晰、确定的直接修正。
 
 ## 10. 当前成长边界
 
 - 成功后停留在只读结果状态，由玩家返回任务网络；不插入奖励选择流程。
 - 游戏不包含 Tactical Reward 或 Player Build 流程。
-- 当前成长只来自离散情报权限、Enemy Alert、Radar Coverage、Radar Scan、Command Link 和敌方适应。
+- 当前成长只来自离散情报权限、Radar Coverage、Radar Scan 和 Command Link。
 - 正式玩法差异来自程序生成地图、雷达、天气和任务网络防空变化。
 
-## 11. Enemy Adaptation
-
-任务结束后，敌方只分析已经发生的历史，不读取下一任务尚未执行的航线：
-
-- 地形利用：实际轨迹采样点落在地形遮蔽区内的比例。
-- 南北航路偏好：实际轨迹采样点在地图纵向的位置分布。
-- 直达倾向：轨迹起终点直线距离与实际已飞轨迹长度的比例。
-
-成功航迹按 `1.0` 权重、失败航迹按 `0.5` 权重更新画像。系统不再把任务次数直接当作适应等级，而是根据已形成的显著特征确定性调整雷达部署：
-
-- 地形利用率达到 35% 时，雷达向山地出口加强覆盖。
-- 南北航路偏离中线达到 8% 时，雷达向对应走廊移动。
-- 直达倾向达到 72% 时，雷达向插入点至目标的直达轴线移动。
-
-识别出一、二、三项特征时，反制移位强度分别为 22%、32% 和 42%；任务网络以 `LOW / ACTIVE / HIGH` 显示当前画像状态。
-
-任务面板中的 `COUNTER DEPLOYMENT` 会说明本场采用了哪些反制。敌方学习的是历史倾向而非未来计划，因此玩家可以主动改变打法，甚至利用既有画像制造误判。
-
-## 12. 航线规划建议
+## 11. 航线规划建议
 
 - 不要把黄色情报圈当成真实边界，给误差和多个雷达覆盖重叠留出余量。
 - 尽量从雷达覆盖边缘穿越，而不是经过雷达中心附近。
@@ -366,22 +341,19 @@ Enemy Alert、SEAD、STRIKE、COMMAND STRIKE、Enemy Adaptation 与 Final Strike
 - 出现持续照射或火控锁定时应立即规划脱离雷达波束；导弹来袭后必须在 8 秒内把跟踪质量压到 32 以下。
 - 攻击会提高 Awareness，使 Commander 更倾向协同或集中搜索；实际搜索方位仍来自 Belief/CMD。
 - 任务网络中的第一次 INTEL 会补齐全部雷达并精确核实坐标与型号，第二次授权 `TOTAL INTEL`；SEAD 缩小后续危险区，Command Strike 削弱多雷达协同。
-- 连续使用同一走廊会让后续雷达向该区域移动；适时改变南北路线、地形利用方式和突击角度。
 - 规划时必须为目标攻击后的撤离段保留燃油；过度绕飞虽然能避开雷达，但可能导致总航程超过 `2000 u`。
 
-## 13. Final Strike
+## 12. Final Strike
 
-最终打击不是普通任务换名，而是在出击时根据完整 Run 历史组装防空体系：
+最终打击不是普通任务换名，而是在出击时根据已完成任务的直接效果组装防空体系：
 
 - 目标区固定增加一部后备 Fire Control；SEAD 只缩小其覆盖，不阻止其上线。
-- Enemy Alert ≥ 15：增加一部警戒增援雷达，其覆盖还会随 Alert 小幅增加。
-- Enemy Adaptation 累计观察权重至少为 2 且识别两项以上显著特征：根据历史南北航路偏好增加一部自适应截击雷达。
 - 已完成 STRIKE 的扫描速率削弱继续作用于最终战全部雷达；一次为 90%，两次为 81%。
 - Command Strike 的指挥链削弱、INTEL 的离散显示权限和 SEAD 的覆盖削弱仍会继续生效。
 
-进入最终任务后，`FINAL DEFENSE BRIEFING` 会列出每项历史造成的结果；新增雷达也会经过有限情报系统，不会向玩家直接暴露真实位置。成功摧毁目标并撤离后，本次 Run 状态变为 `VICTORY`。
+进入最终任务后，`FINAL DEFENSE BRIEFING` 会列出固定后备火控与已完成任务产生的直接结果；新增雷达也会经过有限情报系统，不会向玩家直接暴露真实位置。成功摧毁目标并撤离后，本次 Run 状态变为 `VICTORY`。
 
-## 14. 当前尚未实现
+## 13. 当前尚未实现
 
 - 反辐射导弹与直接摧毁任务内雷达。
 - 雷达开机辐射暴露、实时 ELINT 测向与玩家侧实时更新情报。

@@ -4,16 +4,12 @@ import type { MissionNodeType } from "./types";
 export const campaignBalance = {
   /** 两级情报权限各由一次 INTEL 解锁，任务网络不得生成没有新奖励的第三次行动。 */
   maxIntelMissions: 2,
-  successAlertDelta: 2,
-  failureAlertDelta: 10,
   seadRadarCoverageMultiplier: 0.9,
   radarCoverageFloor: 0.55,
   commandCoordinationMultiplier: 0.65,
   commanderCoordinationFloor: 0.45,
   strikeRadarScanRateMultiplier: 0.9,
   radarScanRateFloor: 0.65,
-  failedMissionAdaptationWeight: 0.5,
-  successfulMissionAdaptationWeight: 1,
 } as const;
 
 export const missionEffectDescriptions: Record<MissionNodeType, string> = {
@@ -63,8 +59,4 @@ export function getMissionEffectDescription(
   if (key === "INTEL_2_RECOVERY") return "补录一级情报，核实全部雷达坐标与型号；本次任务网络无法再授权全域情报";
   if (key === "INTEL_GENERIC") return missionEffectDescriptions.INTEL;
   return missionEffectDescriptions[key];
-}
-
-export function getMissionAlertDelta(succeeded: boolean): number {
-  return succeeded ? campaignBalance.successAlertDelta : campaignBalance.failureAlertDelta;
 }

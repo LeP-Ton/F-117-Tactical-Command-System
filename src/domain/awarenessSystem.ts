@@ -8,7 +8,7 @@ export function awarenessStage(value: number): AwarenessStage {
   return "CALM";
 }
 
-/** 敌方警戒只由已经获得的 Contact 与已知打击事件变化，不读取飞机真实状态。 */
+/** 任务内态势警戒只由已经获得的 Contact 与已知打击事件变化，不读取飞机真实状态。 */
 export function advanceAwareness(
   state: AwarenessState,
   contacts: readonly RadarContact[],

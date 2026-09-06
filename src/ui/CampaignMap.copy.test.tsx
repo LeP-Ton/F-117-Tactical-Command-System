@@ -7,15 +7,16 @@ import { I18nProvider } from "../i18n/I18n";
 afterEach(cleanup);
 
 describe("任务网络入口文案", () => {
-  it("顶部只显示有效战略状态", () => {
+  it("顶部只显示四类直接任务收益状态", () => {
     const state = createRun("CAMPAIGN-STATUS-COPY");
     render(<CampaignMap state={state} dispatch={vi.fn()} onLaunch={vi.fn()} onPreview={vi.fn()} onDebrief={vi.fn()} />);
     expect(screen.queryByText("INTEL QUALITY")).not.toBeInTheDocument();
     expect(screen.queryByText("情报可信度")).not.toBeInTheDocument();
     expect(screen.getByText("雷达覆盖")).toBeInTheDocument();
     expect(screen.getByText("雷达扫描")).toBeInTheDocument();
-    expect(screen.getByText("敌方适应")).toBeInTheDocument();
-    expect(screen.getByText("低")).toBeInTheDocument();
+    expect(screen.getByText("指挥链路")).toBeInTheDocument();
+    expect(screen.queryByText("敌方警戒")).not.toBeInTheDocument();
+    expect(screen.queryByText("敌方适应")).not.toBeInTheDocument();
   });
 
   it("可执行节点使用规划任务", () => {

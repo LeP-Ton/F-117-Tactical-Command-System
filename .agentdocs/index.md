@@ -1,10 +1,12 @@
 # 项目文档索引
 
 ## 设计提案与废案
+`proposals/20260903234232-explore-escalating-campaign-rewards.md` - 会话-9：归档精简前的任务奖励系统，完整记录 INTEL/STRIKE/SEAD/COMMAND STRIKE 直接收益、Enemy Alert 跨任务雷达增幅、Enemy Adaptation 历史航迹画像及三类 Final Strike 增援；仅在复盘或重新探索双向升级体系时读取，不代表当前实现。
 `proposals/20260902112715-explore-remove-intel-quality.md` - 会话-119提出、会话-121采纳的“移除情报质量百分比、仅保留 INTEL 分级权限”设计来源；重新评估固定有限情报参数或回退方案时读取，最终实现以会话-121 workflow 为准。
 `proposals/20260825225610-rejected-sigint-overlay.md` - 会话-80/81：已废弃的“有限情报动态 SIGINT Overlay”方案；重新讨论 AI DEBUG、直播观赏性或有限情报动态反馈时读取，不能视为已实施功能。
 
 ## 当前变更文档
+`workflow/20260904000338-simplify-mission-reward-system.md` - 会话-9：将正式任务奖励收敛为 INTEL、STRIKE、SEAD、COMMAND STRIKE 四类直接收益，删除 Enemy Alert 跨任务警戒与 Enemy Adaptation 历史航迹画像、后续雷达反制和最终战动态增援，同时迁移旧存档并同步中英文 UI/文档；核对当前任务收益、失败结算、最终战构筑或旧存档迁移时优先读取。
 `workflow/20260903222241-align-tutorial-trigger-color.md` - 会话-6：将顶部任务引导按钮由金色调整为与相邻语言、全屏按钮一致的青绿色文字与边框，同时保留全屏激活态；核对顶部工具按钮普通状态配色时读取。
 `workflow/20260903221322-streamline-guidance-audio-and-version.md` - 会话-5：将顶部“操作说明”改为直接启动或重启七步任务引导，删除独立说明弹窗与声音开关，明确音量归零即静音，并将中英文 UI 版本更新为 1.1；核对顶部引导、声音控制或版本号时读取。
 `workflow/20260903214149-constrain-viewport-height-and-topbar.md` - 会话-4：将全局最小逻辑视口调整为 1500×720，确保窄宽高比下中英文顶部栏不换行，并移除任务网络强制高度与页面级滚动，以显式逻辑视口变量约束说明弹窗、引导和航点列表；排查顶部栏换行、非侧栏元素越界或缩放浮层高度时读取。
@@ -118,21 +120,20 @@
 - `RunState` 与 `MissionSession` 分离，Canvas 不持有领域状态。
 - 只有 Radar Sensor 可读取飞机真实状态，后续 AI 只能消费带误差 Radar Contact。
 - 雷达网络由 Early Warning、Acquisition、Fire Control 三类组成，类型分别影响覆盖、扫描周期、波束、探测概率、Contact 精度和火控贡献。
-- 每场任务最终至少一部 Fire Control 完整覆盖目标攻击区并保留 20 u 余量；唯一目标区火控雷达不参与 Enemy Adaptation 移位。
+- 每场任务最终至少一部 Fire Control 完整覆盖目标攻击区并保留 20 u 余量。
 - Radar Operator 基于本地或指挥链允许的共享 Contact 计算 Utility 评分，不共享真实飞机信息；活动 Contact 最长保留 8 秒。
 - Belief Map 仅消费 Contact，以 24×24 网格保存概率分布并进行运动传播、扩散和衰减。
 - Commander 只读取 Awareness、Belief 与雷达状态，通过 Utility 偏置协调各 Radar Operator；投弹只提高警戒，不提供目标区定位，网络静默仍已移除。
 - 单 Mission 已形成 Plan → Infiltrate → Strike → High-alert Extraction → Result 闭环。
 - Mission 的静态地形、动态天气初始参数与演化、天气预报、雷达和目标均由 Seed 确定生成；有限雷达情报按固定规则和逐雷达子 Seed 生成，相同任务时间可复现相同真实天气。
 - 天气预报是任务创建时生成的绝对时刻 `T+30/60/90s` 快照，不是滚动预报；执行到对应时刻后过期条目与轮廓隐藏。
-- 任务网络固定为三个顺序二选一阶段与 Final Strike；只有摧毁目标并成功撤离才推进并关闭同层选择；所有失败都把当前节点标记为可重试的 `FAILED`、增加 Enemy Alert，同层备选保持 `AVAILABLE`，下一层保持锁定。
+- 任务网络固定为三个顺序二选一阶段与 Final Strike；只有摧毁目标并成功撤离才推进并关闭同层选择；所有失败都把当前节点标记为可重试的 `FAILED`，同层备选保持 `AVAILABLE`，下一层保持锁定，但不会强化后续防空。
 - Tactical Reward 与 Player Build 已完整移除；成功或失败后任务停留在冻结结果页，由玩家手动返回任务网络结算。
 - 当前 Roguelike 差异集中在程序生成地图、雷达网络、天气与任务网络防空构建。
-- Intel 只保留两级权限成长，不再维护连续情报质量；STRIKE 每次使所有后续雷达扫描速率乘以 90%；SEAD 只将后续雷达覆盖乘以 90%，不阻止最终火控增援；Command Strike 将 Commander 协调乘以 65%；所有成功任务使 Enemy Alert 增加 2，失败增加 10。
+- Intel 只保留两级权限成长，不再维护连续情报质量；STRIKE 每次使所有后续雷达扫描速率乘以 90%；SEAD 只将后续雷达覆盖乘以 90%，不阻止最终火控增援；Command Strike 将 Commander 协调乘以 65%。
 - 默认战术地图只呈现玩家侧雷达情报；敌方真实雷达、Contact、Belief、Awareness 和 Utility 仅在 `TOTAL INTEL`、全景复盘或开发调试视图中呈现。
-- Enemy Alert 是 `0–100` 的跨任务持久警戒，成功增加 2、失败增加 10，后续基础雷达范围乘以 `1 + Alert / 250`，且 Final Strike 在 Alert ≥ 15 时追加警戒雷达；它不等于单任务 Awareness 或 THREAT WARNING。
-- Enemy Adaptation 仅分析按位移采样的真实已飞轨迹，成功与失败分别按 1.0/0.5 权重更新画像；地形利用、南北航路及直达倾向达到阈值后才触发 22%–42% 的空间反制部署。
-- Final Strike 固定部署目标区后备火控，并综合 STRIKE 扫描削弱、SEAD 覆盖削弱、Command Strike、情报任务、Enemy Alert 与画像特征动态生成最终防空体系；自适应增援要求累计观察权重至少为 2 且形成两项以上显著特征。
+- Enemy Alert 与 Enemy Adaptation 已从正式实现移除；任务成败不再累积跨任务警戒，系统不再记录历史航迹画像或据此调整后续雷达。精简前方案仅保存在 `proposals/20260903234232-explore-escalating-campaign-rewards.md`。
+- Final Strike 固定部署目标区后备火控，并继续应用 STRIKE 扫描削弱、SEAD 覆盖削弱、Command Strike 指挥链削弱与 INTEL 情报权限；不会根据失败次数或历史航迹追加雷达。
 - 飞机基础速度为 `3.6 u/s`，运行中进入目标攻击半径后自动投弹，无需玩家手动操作。
 - F-117 满油航程为 `2000 u`，按真实累计飞行距离消耗；燃油耗尽会停止飞机并令当前任务失败。
 - Weather Cell 会令飞机减速 10%–30%，多个天气重叠时只取最强效果；天气延长暴露时间但不额外增加单位距离油耗。

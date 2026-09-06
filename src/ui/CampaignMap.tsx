@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import type { MissionDebrief, MissionSession, RunState } from "../domain/types";
 import type { GameAction } from "../game/gameReducer";
-import { getAdaptationAssessment } from "../domain/enemyAdaptation";
 import { getIntelAccessTier } from "../domain/intelAccess";
 import { prepareCampaignMission } from "../game/gameReducer";
 import { useI18n } from "../i18n/I18n";
@@ -25,7 +24,6 @@ export function CampaignMap({ state, dispatch, onLaunch, onPreview, onDebrief }:
     () => state.campaign.nodes.find((node) => node.id === selectedId) ?? firstAvailable,
     [firstAvailable, selectedId, state.campaign.nodes],
   );
-  const adaptation = getAdaptationAssessment(state.enemyState.tacticalProfile);
   const intelAccessTier = getIntelAccessTier(state.campaign);
   const intelNodes = state.campaign.nodes
     .filter((node) => node.type === "INTEL")
@@ -67,12 +65,10 @@ export function CampaignMap({ state, dispatch, onLaunch, onPreview, onDebrief }:
       <div className="campaign-header">
         <div><span className="section-kicker">{copy.campaign.kicker}</span><h2>{copy.campaign.title}</h2></div>
         <div className="campaign-resources">
-          <span>{copy.campaign.enemyAlert} <strong>{state.resources.enemyAlert}</strong></span>
           <span>{copy.campaign.intelAccess} <strong>{intelAccessTier}/2</strong></span>
           <span>{copy.campaign.radarCoverage} <strong>{(state.enemyState.radarCoverageModifier * 100).toFixed(0)}%</strong></span>
           <span>{copy.campaign.radarScan} <strong>{(state.enemyState.radarScanRateModifier * 100).toFixed(0)}%</strong></span>
           <span>{copy.campaign.commandLink} <strong>{(state.enemyState.commanderCoordinationModifier * 100).toFixed(0)}%</strong></span>
-          <span>{copy.campaign.enemyAdaptation} <strong>{copy.enums.adaptationStatus[adaptation.status]}</strong></span>
         </div>
       </div>
       <div className="campaign-content">
@@ -113,12 +109,6 @@ export function CampaignMap({ state, dispatch, onLaunch, onPreview, onDebrief }:
             <p>{selectedEffect}{copy.common.sentencePeriod}</p>
             <p>{intelAccessTier === 0 ? copy.campaign.limitedIntelligence : intelAccessTier === 1 ? copy.campaign.radarIdentificationVerified : copy.campaign.totalIntelligenceAccess}</p>
             {selected.type === "FINAL_STRIKE" && <p>{copy.campaign.finalStrikeWarning}</p>}
-            {state.enemyState.tacticalProfile.missionSamples > 0 && <div className="campaign-build">
-              <span className="section-kicker">{copy.campaign.historicalAnalysis}</span>
-              <div>{copy.campaign.terrainUse} {(state.enemyState.tacticalProfile.terrainMaskingPreference * 100).toFixed(0)}%</div>
-              <div>{state.enemyState.tacticalProfile.southernRouteBias > 0.5 ? copy.campaign.southern : copy.campaign.northern} {copy.campaign.routePreference} {(Math.abs(state.enemyState.tacticalProfile.southernRouteBias - 0.5) * 200).toFixed(0)}%</div>
-              <div>{copy.campaign.directRouting} {(state.enemyState.tacticalProfile.aggressiveRouting * 100).toFixed(0)}%</div>
-            </div>}
             <button
               className="primary-button"
               data-tutorial="mission-entry"

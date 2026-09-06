@@ -10,7 +10,6 @@ describe("gameReducer", () => {
     state = gameReducer(state, { type: "SELECT_CAMPAIGN_NODE", nodeId: secondNode.id });
     state = {
       ...state,
-      resources: { ...state.resources, enemyAlert: 25 },
       enemyState: {
         ...state.enemyState,
         radarCoverageModifier: 0.85,
@@ -24,13 +23,11 @@ describe("gameReducer", () => {
     };
 
     const campaignBeforeReset = state.campaign;
-    const resourcesBeforeReset = state.resources;
     const enemyStateBeforeReset = state.enemyState;
     state = gameReducer(state, { type: "RESET" });
 
     expect(state.campaign).toBe(campaignBeforeReset);
     expect(state.campaign.currentNodeId).toBe("C0-1");
-    expect(state.resources).toBe(resourcesBeforeReset);
     expect(state.enemyState).toBe(enemyStateBeforeReset);
     expect(state.currentMission?.id).toBe(`mission-${secondNode.missionSeed}`);
     expect(state.currentMission?.status).toBe("PLANNING");
@@ -234,16 +231,14 @@ describe("gameReducer", () => {
     expect(state.campaign.nodes.find((node) => node.id === "C0-0")?.status).toBe("COMPLETED");
     expect(state.campaign.nodes.find((node) => node.id === "C0-1")?.status).toBe("EXPIRED");
     expect(getIntelAccessTier(state.campaign)).toBe(1);
-    expect(state.resources).toEqual({ enemyAlert: 2 });
     expect(state.campaign.nodes.filter((node) => node.layer === 1).every((node) => node.status === "AVAILABLE")).toBe(true);
   });
 
-  it("普通失败不推进 Campaign，保留当前层选择并提高 Enemy Alert", () => {
+  it("普通失败不推进 Campaign，并保留当前层重试或改选", () => {
     let state = createRun("CAMPAIGN-FAILURE");
     state = { ...state, currentMission: { ...state.currentMission!, status: "FAILED" } };
     state = gameReducer(state, { type: "RETURN_CAMPAIGN" });
     expect(state.status).toBe("ACTIVE");
-    expect(state.resources.enemyAlert).toBe(10);
     expect(state.campaign.nodes.find((node) => node.id === "C0-0")?.status).toBe("FAILED");
     expect(state.campaign.nodes.find((node) => node.id === "C0-1")?.status).toBe("AVAILABLE");
     expect(state.campaign.currentNodeId).toBe("C0-0");
@@ -264,11 +259,10 @@ describe("gameReducer", () => {
     };
     state = gameReducer(state, { type: "RETURN_CAMPAIGN" });
     expect(state.enemyState.radarCoverageModifier).toBeCloseTo(0.9);
-    expect(state.resources.enemyAlert).toBe(2);
     const available = state.campaign.nodes.find((node) => node.status === "AVAILABLE")!;
     const baseline = createMission(available.missionSeed).radars[0]!.range;
     state = gameReducer(state, { type: "SELECT_CAMPAIGN_NODE", nodeId: available.id });
-    expect(state.currentMission!.radars[0]!.range).toBeCloseTo(baseline * 0.9 * 1.008);
+    expect(state.currentMission!.radars[0]!.range).toBeCloseTo(baseline * 0.9);
     expect(state.currentMission!.radars.some((radar) => radar.type === "FIRE_CONTROL"
       && Math.hypot(
         radar.position.x - state.currentMission!.target.position.x,
@@ -375,48 +369,7 @@ describe("gameReducer", () => {
     expect(state.currentMission!.commanderCoordinationModifier).toBeCloseTo(0.65);
   });
 
-  it("Enemy Alert 会扩大后续任务雷达覆盖", () => {
-    let state = createRun("ALERT-EFFECT");
-    const node = state.campaign.nodes.find((candidate) => candidate.status === "AVAILABLE")!;
-    const baseline = createMission(node.missionSeed).radars[0]!.range;
-    state = { ...state, resources: { ...state.resources, enemyAlert: 50 } };
-    state = gameReducer(state, { type: "SELECT_CAMPAIGN_NODE", nodeId: node.id });
-    expect(state.currentMission!.radars[0]!.range).toBeCloseTo(baseline * 1.2);
-  });
-
-  it("完成任务后学习已飞航线并反制后续部署", () => {
-    let state = createRun("ADAPTATION-FLOW");
-    const mission = state.currentMission!;
-    state = {
-      ...state,
-      currentMission: {
-        ...mission,
-        status: "SUCCESS",
-        flightPath: [
-          { x: 90, y: 850 },
-          { x: 350, y: 850 },
-          { x: 700, y: 820 },
-        ],
-        route: {
-          activeWaypointIndex: 2,
-          waypoints: [
-            { ...mission.route.waypoints[0]!, status: "COMPLETED" },
-            { id: "south-1", kind: "NAVIGATION", status: "COMPLETED", position: { x: 350, y: 850 } },
-            { id: "south-2", kind: "NAVIGATION", status: "COMPLETED", position: { x: 700, y: 820 } },
-          ],
-        },
-      },
-    };
-    state = gameReducer(state, { type: "RETURN_CAMPAIGN" });
-    expect(state.enemyState.tacticalProfile.missionSamples).toBe(1);
-    expect(state.enemyState.tacticalProfile.southernRouteBias).toBeGreaterThan(0.7);
-
-    const nextNode = state.campaign.nodes.find((node) => node.status === "AVAILABLE")!;
-    state = gameReducer(state, { type: "SELECT_CAMPAIGN_NODE", nodeId: nextNode.id });
-    expect(state.currentMission!.adaptationNotes).toContain("南部航路搜索加强");
-  });
-
-  it("选择 Final Strike 时根据完整 Run 历史生成最终防空", () => {
+  it("选择 Final Strike 时只应用任务直接收益与固定目标区守卫", () => {
     let state = createRun("FINAL-FLOW");
     const finalNode = state.campaign.nodes.find((node) => node.type === "FINAL_STRIKE")!;
     const seadNode = state.campaign.nodes.find((node) => node.type === "SEAD")!;
@@ -429,42 +382,15 @@ describe("gameReducer", () => {
             ? { ...node, status: "AVAILABLE" }
             : node.id === seadNode.id ? { ...node, status: "COMPLETED" } : node),
       },
-      resources: { ...state.resources, enemyAlert: 25 },
-      enemyState: {
-        ...state.enemyState,
-        tacticalProfile: {
-          missionSamples: 2,
-          terrainMaskingPreference: 0.5,
-          southernRouteBias: 0.8,
-          aggressiveRouting: 0.5,
-        },
-      },
     };
 
     state = gameReducer(state, { type: "SELECT_CAMPAIGN_NODE", nodeId: finalNode.id });
 
     expect(state.currentMission!.finalStrikeNotes).toContain("目标区后备火控雷达上线");
     expect(state.currentMission!.radars.some((radar) => radar.id === "FINAL-GUARD")).toBe(true);
-    expect(state.currentMission!.radars.some((radar) => radar.id === "ALERT-GUARD")).toBe(true);
-    expect(state.currentMission!.radars.some((radar) => radar.id === "ADAPT-GUARD")).toBe(true);
+    expect(state.currentMission!.radars.some((radar) => radar.id === "ALERT-GUARD")).toBe(false);
+    expect(state.currentMission!.radars.some((radar) => radar.id === "ADAPT-GUARD")).toBe(false);
     expect(state.currentMission!.radarIntel).toHaveLength(state.currentMission!.radars.length);
-  });
-
-  it("失败航迹只按半权重更新敌方画像", () => {
-    let state = createRun("FAILED-ADAPTATION-WEIGHT");
-    state = {
-      ...state,
-      currentMission: {
-        ...state.currentMission!,
-        status: "FAILED",
-        flightPath: [{ x: 90, y: 800 }, { x: 400, y: 800 }],
-      },
-    };
-
-    state = gameReducer(state, { type: "RETURN_CAMPAIGN" });
-
-    expect(state.enemyState.tacticalProfile.missionSamples).toBe(0.5);
-    expect(state.resources.enemyAlert).toBe(10);
   });
 
   it("STRIKE 战果累计降低所有后续任务的雷达扫描速率", () => {

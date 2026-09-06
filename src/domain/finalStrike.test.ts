@@ -1,12 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { createMission, createRun } from "./factories";
+import { createMission } from "./factories";
 import { applyFinalStrikeDefense, type FinalStrikeContext } from "./finalStrike";
 
 function context(overrides: Partial<FinalStrikeContext> = {}): FinalStrikeContext {
   return {
     completedNodeTypes: [],
-    enemyAlert: 0,
-    tacticalProfile: createRun("FINAL-CONTEXT").enemyState.tacticalProfile,
     ...overrides,
   };
 }
@@ -29,43 +27,22 @@ describe("Final Strike 动态防空体系", () => {
     expect(finalMission.radars.some((radar) => radar.id === "FINAL-GUARD")).toBe(true);
   });
 
-  it("高 Alert 与历史画像会分别增加警戒和自适应雷达", () => {
-    const mission = createMission("FINAL-ESCALATION");
+  it("最终战不再生成警戒或历史航迹增援", () => {
+    const mission = createMission("FINAL-SIMPLIFIED");
     const finalMission = applyFinalStrikeDefense(mission, context({
-      enemyAlert: 30,
-      tacticalProfile: {
-        missionSamples: 3,
-        terrainMaskingPreference: 0.5,
-        southernRouteBias: 0.8,
-        aggressiveRouting: 0.85,
-      },
+      completedNodeTypes: ["INTEL", "STRIKE", "SEAD", "COMMAND_STRIKE"],
     }));
 
-    expect(finalMission.radars.some((radar) => radar.id === "ALERT-GUARD")).toBe(true);
-    expect(finalMission.radars.some((radar) => radar.id === "ADAPT-GUARD")).toBe(true);
-  });
-
-  it("仅在至少两项显著画像特征形成后部署自适应雷达", () => {
-    const mission = createMission("FINAL-ADAPTATION-SIGNALS");
-    const low = applyFinalStrikeDefense(mission, context({
-      tacticalProfile: {
-        missionSamples: 3,
-        terrainMaskingPreference: 0.1,
-        southernRouteBias: 0.5,
-        aggressiveRouting: 0.8,
-      },
-    }));
-
-    expect(low.radars.some((radar) => radar.id === "ADAPT-GUARD")).toBe(false);
-    expect(low.finalStrikeNotes).toContain("历史航迹未形成高可信反制画像");
+    expect(finalMission.radars).toHaveLength(mission.radars.length + 1);
+    expect(finalMission.radars.some((radar) => radar.id === "ALERT-GUARD")).toBe(false);
+    expect(finalMission.radars.some((radar) => radar.id === "ADAPT-GUARD")).toBe(false);
+    expect(finalMission.finalStrikeNotes).toContain("指挥打击战果削弱最终指挥链");
+    expect(finalMission.finalStrikeNotes).toContain("情报战果已核实最终目标雷达坐标与型号");
   });
 
   it("相同任务历史会生成完全一致的最终体系", () => {
     const mission = createMission("FINAL-REPLAY");
-    const history = context({
-      enemyAlert: 25,
-      tacticalProfile: { ...context().tacticalProfile, missionSamples: 2 },
-    });
+    const history = context({ completedNodeTypes: ["INTEL", "SEAD"] });
 
     expect(applyFinalStrikeDefense(mission, history)).toEqual(applyFinalStrikeDefense(mission, history));
   });

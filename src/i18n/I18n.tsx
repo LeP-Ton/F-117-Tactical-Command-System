@@ -49,12 +49,10 @@ export const localeCatalogs = {
     campaign: {
       kicker: "任务网络控制",
       title: "任务网络",
-      enemyAlert: "敌方警戒",
       intelAccess: "情报权限",
       radarCoverage: "雷达覆盖",
       radarScan: "雷达扫描",
       commandLink: "指挥链路",
-      enemyAdaptation: "敌方适应",
       graphLabel: "任务节点连线",
       previewKicker: "任务预览",
       missionCode: "任务代号",
@@ -63,13 +61,7 @@ export const localeCatalogs = {
       limitedIntelligence: "有限情报",
       radarIdentificationVerified: "雷达识别已核实",
       totalIntelligenceAccess: "全域情报已授权",
-      finalStrikeWarning: "最终目标防空序列持续重构，部署态势将在出击时确认。",
-      historicalAnalysis: "敌方历史分析",
-      terrainUse: "地形利用",
-      southern: "南部",
-      northern: "北部",
-      routePreference: "航路偏好",
-      directRouting: "直达倾向",
+      finalStrikeWarning: "最终目标防空部署将在出击时确认。",
       debriefMission: "复盘任务",
       missionCompleted: "任务已完成",
       networkCompleted: "任务网络完成",
@@ -213,16 +205,14 @@ export const localeCatalogs = {
       missionIntel: "任务情报",
       knownRadarIntel: "已知雷达情报",
       unlocatedSignals: "未定位信号",
-      adaptationStatus: "敌方适应状态",
       radarScanRate: "雷达扫描速率",
-      counterDeployment: "反制部署",
       finalDefenseBriefing: "最终防御简报",
       enemySystemState: "敌方系统状态",
       internal: "内部",
       structuredEvents: "结构化事件",
       waitingEvents: "等待操作事件…",
       airDefenseCommander: "防空指挥官",
-      alert: "警戒",
+      awareness: "态势",
       radarOperatorAi: "雷达操作员决策",
       utility: "效用值",
       totalIntelOn: "全域情报开启",
@@ -265,7 +255,7 @@ export const localeCatalogs = {
       radarIntelError: "雷达情报 / 误差区",
     },
     enemy: {
-      enemyAlert: "敌方警戒",
+      awareness: "态势警戒",
       activeContact: "有效接触点",
       beliefPeak: "推测概率峰值",
       commander: "指挥官",
@@ -314,7 +304,6 @@ export const localeCatalogs = {
         LOCKED: "火控锁定",
         MISSILE_INBOUND: "导弹来袭",
       },
-      adaptationStatus: { LOW: "低", ACTIVE: "活跃", HIGH: "高" },
       eventType: {
         WAYPOINT_ADDED: "新增航点",
         WAYPOINT_MOVED: "调整航点",
@@ -375,12 +364,10 @@ export const localeCatalogs = {
     campaign: {
       kicker: "MISSION NETWORK CONTROL",
       title: "MISSION NETWORK",
-      enemyAlert: "ENEMY ALERT",
       intelAccess: "INTEL ACCESS",
       radarCoverage: "RADAR COVERAGE",
       radarScan: "RADAR SCAN",
       commandLink: "CMD LINK",
-      enemyAdaptation: "ENEMY ADAPTATION",
       graphLabel: "Mission node connections",
       previewKicker: "MISSION PREVIEW",
       missionCode: "MISSION CODE",
@@ -389,13 +376,7 @@ export const localeCatalogs = {
       limitedIntelligence: "LIMITED INTELLIGENCE",
       radarIdentificationVerified: "RADAR IDENTIFICATION VERIFIED",
       totalIntelligenceAccess: "TOTAL INTELLIGENCE ACCESS",
-      finalStrikeWarning: "Final-target air defenses continue to reorganize. Deployment will be confirmed at launch.",
-      historicalAnalysis: "ENEMY HISTORICAL ANALYSIS",
-      terrainUse: "TERRAIN USE",
-      southern: "SOUTHERN",
-      northern: "NORTHERN",
-      routePreference: "ROUTE PREFERENCE",
-      directRouting: "DIRECT ROUTING",
+      finalStrikeWarning: "Final-target air defenses will be confirmed at launch.",
       debriefMission: "DEBRIEF MISSION",
       missionCompleted: "MISSION COMPLETED",
       networkCompleted: "MISSION NETWORK COMPLETED",
@@ -539,16 +520,14 @@ export const localeCatalogs = {
       missionIntel: "MISSION INTEL",
       knownRadarIntel: "KNOWN RADAR INTEL",
       unlocatedSignals: "UNLOCATED SIGNALS",
-      adaptationStatus: "ENEMY ADAPTATION",
       radarScanRate: "RADAR SCAN RATE",
-      counterDeployment: "COUNTER DEPLOYMENT",
       finalDefenseBriefing: "FINAL DEFENSE BRIEFING",
       enemySystemState: "ENEMY SYSTEM STATE",
       internal: "INTERNAL",
       structuredEvents: "STRUCTURED EVENTS",
       waitingEvents: "AWAITING OPERATION EVENTS…",
       airDefenseCommander: "AIR DEFENSE COMMANDER",
-      alert: "ALERT",
+      awareness: "AWARENESS",
       radarOperatorAi: "RADAR OPERATOR AI",
       utility: "UTILITY",
       totalIntelOn: "TOTAL INTEL ON",
@@ -591,7 +570,7 @@ export const localeCatalogs = {
       radarIntelError: "RADAR INTEL / ERROR ZONE",
     },
     enemy: {
-      enemyAlert: "ENEMY ALERT",
+      awareness: "AWARENESS",
       activeContact: "ACTIVE CONTACTS",
       beliefPeak: "BELIEF PEAK",
       commander: "COMMANDER",
@@ -640,7 +619,6 @@ export const localeCatalogs = {
         LOCKED: "FIRE-CONTROL LOCK",
         MISSILE_INBOUND: "MISSILE INBOUND",
       },
-      adaptationStatus: { LOW: "LOW", ACTIVE: "ACTIVE", HIGH: "HIGH" },
       eventType: {
         WAYPOINT_ADDED: "WAYPOINT ADDED",
         WAYPOINT_MOVED: "WAYPOINT MOVED",
@@ -727,39 +705,20 @@ export function useI18n(): I18nContextValue {
   return useContext(I18nContext);
 }
 
-/** 兼容既有复盘存档中的中文部署记录，并将所有当前可生成记录映射为英文。 */
+/** 兼容既有复盘存档中的指挥打击旧称，并将当前最终防御简报映射为英文。 */
 export function localizeBriefingNote(note: string, language: Language): string {
   if (language === "zh") {
     const chineseCompatibilityNotes: Record<string, string> = {
-      "低 Enemy Alert：未触发警戒增援": "敌方警戒较低：未触发警戒增援",
       "Command Strike 战果削弱最终指挥链": "指挥打击战果削弱最终指挥链",
     };
-    if (chineseCompatibilityNotes[note]) return chineseCompatibilityNotes[note];
-    const alertMatch = note.match(/^Enemy Alert (\d+)：增援警戒雷达部署$/);
-    return alertMatch ? `敌方警戒 ${alertMatch[1]}：增援警戒雷达部署` : note;
+    return chineseCompatibilityNotes[note] ?? note;
   }
   const exactNotes: Record<string, string> = {
     "最终目标启用分层防空戒备": "Layered air-defense readiness activated for the final objective",
     "目标区后备火控雷达上线": "Reserve fire-control radar activated in the target area",
-    "低 Enemy Alert：未触发警戒增援": "Low ENEMY ALERT: no surveillance reinforcement deployed",
-    "敌方警戒较低：未触发警戒增援": "Low ENEMY ALERT: no surveillance reinforcement deployed",
-    "历史航迹未形成高可信反制画像": "Historical flight paths have not formed a high-confidence countermeasure profile",
     "Command Strike 战果削弱最终指挥链": "COMMAND STRIKE effects have degraded the final command chain",
     "指挥打击战果削弱最终指挥链": "COMMAND STRIKE effects have degraded the final command chain",
     "情报战果已核实最终目标雷达坐标与型号": "INTEL results have verified final-objective radar coordinates and types",
-    "山地出口增设搜索覆盖": "Additional search coverage positioned at the mountain exit",
-    "南部航路搜索加强": "Search coverage reinforced along the southern route",
-    "北部航路搜索加强": "Search coverage reinforced along the northern route",
-    "直达目标轴线增加拦截覆盖": "Interception coverage added along the direct target axis",
   };
-  if (exactNotes[note]) return exactNotes[note];
-
-  const alertMatch = note.match(/^(?:Enemy Alert|敌方警戒) (\d+)：增援警戒雷达部署$/);
-  if (alertMatch) return `ENEMY ALERT ${alertMatch[1]}: reinforcement surveillance radar deployed`;
-  const routeMatch = note.match(/^(南部|北部)历史航路部署自适应截击雷达$/);
-  if (routeMatch) {
-    const direction = routeMatch[1] === "南部" ? "southern" : "northern";
-    return `Adaptive interceptor radar deployed along the historical ${direction} route`;
-  }
-  return note;
+  return exactNotes[note] ?? note;
 }

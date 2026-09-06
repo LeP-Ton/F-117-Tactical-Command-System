@@ -11,7 +11,7 @@ export function EnemyStateSummary({ mission, density }: EnemyStateSummaryProps) 
   const { copy } = useI18n();
   const beliefPeak = getBeliefPeak(mission.beliefMap, mission.elapsedMs);
   if (density === "compact") return <dl className="telemetry-grid debug-telemetry-grid">
-    <div><dt>{copy.enemy.enemyAlert}</dt><dd>{mission.awareness.value.toFixed(1)}%</dd></div>
+    <div><dt>{copy.enemy.awareness}</dt><dd>{mission.awareness.value.toFixed(1)}%</dd></div>
     <div><dt>{copy.enemy.activeContact}</dt><dd>{mission.radarContacts.length}</dd></div>
     <div><dt>{copy.enemy.beliefPeak}</dt><dd>{(beliefPeak.probability * 100).toFixed(1)}%</dd></div>
     <div><dt>{copy.enemy.commander}</dt><dd>{copy.enums.commanderIntent[mission.commander.intent]}</dd></div>
@@ -22,7 +22,7 @@ export function EnemyStateSummary({ mission, density }: EnemyStateSummaryProps) 
     <div><dt>{copy.enemy.activeContact}</dt><dd>{mission.radarContacts.length}</dd></div>
     <div><dt>{copy.enemy.beliefPeak}</dt><dd>{(beliefPeak.probability * 100).toFixed(1)}% / {beliefPeak.isValid ? copy.common.valid : copy.common.lost}</dd></div>
     <div><dt>{copy.enemy.estimatedPosition}</dt><dd>{beliefPeak.position ? `${beliefPeak.position.x.toFixed(0)}, ${beliefPeak.position.y.toFixed(0)}` : copy.common.unknown}</dd></div>
-    <div><dt>{copy.enemy.enemyAlert}</dt><dd>{mission.awareness.value.toFixed(1)} / {copy.enums.awarenessStage[mission.awareness.stage]}</dd></div>
+    <div><dt>{copy.enemy.awareness}</dt><dd>{mission.awareness.value.toFixed(1)} / {copy.enums.awarenessStage[mission.awareness.stage]}</dd></div>
   </dl>;
 }
 

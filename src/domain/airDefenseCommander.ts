@@ -33,7 +33,7 @@ function biasForIntent(intent: CommanderIntent): RadarUtilityScores {
   }
 }
 
-/** Commander 只接收敌方警戒与 Belief，不接收 AircraftState 或目标打击位置。 */
+/** Commander 只接收任务内态势警戒与 Belief，不接收 AircraftState 或目标打击位置。 */
 export function advanceCommander(
   state: CommanderState,
   awareness: AwarenessState,

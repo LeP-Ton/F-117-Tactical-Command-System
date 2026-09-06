@@ -35,25 +35,11 @@ export interface CampaignState {
   edges: CampaignEdge[];
 }
 
-export interface RunResources {
-  enemyAlert: number;
-}
-
 export interface PersistentEnemyState {
   radarCoverageModifier: number;
   /** STRIKE 造成的跨任务雷达扫描速率修正，1 为正常速率。 */
   radarScanRateModifier: number;
   commanderCoordinationModifier: number;
-  tacticalProfile: PlayerTacticalProfile;
-}
-
-/** 只由已经执行过的任务更新，不读取当前任务的未来航线。 */
-export interface PlayerTacticalProfile {
-  /** 已分析航迹的累计观察权重；成功为 1，失败为 0.5，旧存档整数值保持兼容。 */
-  missionSamples: number;
-  terrainMaskingPreference: number;
-  southernRouteBias: number;
-  aggressiveRouting: number;
 }
 
 export interface Waypoint {
@@ -264,8 +250,6 @@ export interface MissionSession {
   status: MissionStatus;
   elapsedMs: number;
   aircraft: AircraftState;
-  /** 按最小位移采样的真实已飞轨迹，仅在任务结束后用于跨任务画像。 */
-  flightPath: Vector2[];
   route: RouteState;
   terrain: TerrainZone[];
   weather: WeatherCell[];
@@ -282,7 +266,6 @@ export interface MissionSession {
   /** 本任务实际使用的雷达扫描速率修正，同时驱动扫描动画与 Sensor 周期。 */
   radarScanRateModifier: number;
   commanderCoordinationModifier: number;
-  adaptationNotes: string[];
   finalStrikeNotes: string[];
   events: GameEvent[];
 }
@@ -298,7 +281,6 @@ export interface MissionDebrief {
 export interface RunState {
   seed: string;
   campaign: CampaignState;
-  resources: RunResources;
   enemyState: PersistentEnemyState;
   missionDebriefs: Record<string, MissionDebrief>;
   currentMission?: MissionSession;

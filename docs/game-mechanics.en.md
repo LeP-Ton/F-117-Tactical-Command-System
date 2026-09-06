@@ -131,7 +131,7 @@ Every normal mission contains at least one radar of each type:
 
 Early Warning can create cues at long range across a wide angular area but is inefficient at quickly completing the fire-control chain alone. Fire Control must point its narrow beam correctly, then builds high-quality tracking rapidly after consecutive hits. Acquisition sits between them and can help cue Fire Control through shared Contacts.
 
-Final Strike reinforcements use the same roles: target-area `FINAL-GUARD` is Fire Control, Enemy Alert `ALERT-GUARD` is Early Warning, and historical-route `ADAPT-GUARD` is Acquisition.
+Final Strike always adds one target-area `FINAL-GUARD` Fire Control radar so the final objective retains a dedicated close-range defense.
 
 STRIKE reduces the global scan rate in later missions. The multiplier applies to Wide Search rotation, Sector Search oscillation, and actual Sensor frequency. One STRIKE gives 90% rate and two give 81%. Effective Sensor interval is `base interval / scan rate`, so the reward changes real detection cadence as well as animation. It does not alter per-scan range, beam width, probability multiplier, or Contact accuracy.
 
@@ -144,7 +144,7 @@ distance from Fire Control to target center + target attack radius
 ≤ real Fire Control range - 20 u
 ```
 
-If the existing deployment fails this condition, only the Fire Control nearest the target is moved, preserving its Seed-generated relative bearing. This check runs after SEAD range reduction, Enemy Adaptation movement, and Final Strike reinforcement. Enemy Adaptation cannot move the sole Fire Control responsible for target defense.
+If the existing deployment fails this condition, only the Fire Control nearest the target is moved, preserving its Seed-generated relative bearing. This check runs after SEAD range reduction and the Final Strike target-area guard has been added.
 
 Full coverage only guarantees that an attacking aircraft is inside one Fire Control radar's real range. Narrow beams, probability, aircraft aspect, terrain, and weather still determine whether consecutive Contacts occur.
 
@@ -291,16 +291,9 @@ The network no longer stores `intelAccuracyBonus`, base intelligence-quality per
 - A completed node may open Debrief Mission. Mission view restores what was visible at completion; panoramic view exposes the frozen full enemy state.
 - Debrief reads history only and cannot modify the current Mission, network, or persistent state.
 
-### 9.2 Enemy Alert, Awareness, and THREAT WARNING
+### 9.2 Mission Settlement, Awareness, and THREAT WARNING
 
-Enemy Alert is persistent strategic readiness from 0 to 100 and currently has no natural decay:
-
-- Mission success adds 2; failure adds 10.
-- Preparing any later mission or retry multiplies base radar range by `1 + Enemy Alert / 250`.
-- At Enemy Alert ≥ 15, Final Strike adds an `ALERT-GUARD` Early Warning radar. Its range receives up to an additional 18% Alert-based increase.
-- The network's `RADAR COVERAGE` displays only the persistent SEAD modifier. Enemy Alert range increase is multiplied separately during mission preparation.
-
-Do not confuse these states. Enemy Alert persists across missions and changes later defense. Awareness is a per-mission Commander input that decays after evidence disappears. THREAT WARNING is the aircraft-specific tracking, lock, and missile state.
+Success applies only the direct effect associated with the completed node. Failure marks the current node as retryable `FAILED` without strengthening later defenses. Awareness is a per-mission Commander input that decays after evidence disappears, while THREAT WARNING is the aircraft-specific tracking, lock, and missile state. Both reset for a new mission and are not cross-mission progression resources.
 
 The four precursor missions affect distinct dimensions: INTEL changes information access, STRIKE changes temporal sampling, SEAD changes spatial coverage, and COMMAND STRIKE changes multi-radar coordination. `RADAR COVERAGE` and `RADAR SCAN` are therefore separate persistent values.
 
@@ -315,7 +308,7 @@ Each base mission generates:
 - 3–5 radars cycling through Early Warning, Acquisition, and Fire Control, with Seed-driven position, range, and initial heading.
 - One target in the upper-middle portion of the map.
 
-Enemy Alert, SEAD, STRIKE, COMMAND STRIKE, Enemy Adaptation, and Final Strike reinforcement are applied before limited intelligence is regenerated against the final radar deployment.
+SEAD, STRIKE, COMMAND STRIKE, and the Final Strike target-area guard are applied before limited intelligence is regenerated against the final radar deployment.
 
 The map is `1000×1000 u` with a `100 u` grid. F-117 insertion is fixed at `(90, 850)`, extraction at `(860, 50, 100×100)`, and target generation at `x=400–790, y=100–390`. Radar centers keep `80 u` clearance from the extraction rectangle, though real coverage may extend into extraction. Final preparation also guarantees one Fire Control radar fully covers the target's `58 u` attack zone with `20 u` margin.
 
@@ -328,34 +321,16 @@ Final reinforcement  <Node Seed>-M01:FINAL-DEFENSE
 Detection roll       <Node Seed>-M01:<Radar ID>:<Scan Count>
 ```
 
-Weather truth is a pure function of initial parameters and absolute mission time. Detection randomness depends on scan count. Exact reproduction therefore requires the same Seed, version, Run history, route edits, and time evolution. A Seed fixes the base world only; choices, failures, alert, rewards, and flown history still modify final deployment.
+Weather truth is a pure function of initial parameters and absolute mission time. Detection randomness depends on scan count. Exact reproduction therefore requires the same Seed, completed nodes, route edits, and time evolution. A Seed fixes the base world, while INTEL access and SEAD/STRIKE/COMMAND STRIKE results apply clear, deterministic modifiers during mission preparation.
 
 ## 10. Current Progression Boundary
 
 - Mission success remains in a frozen result state until the player returns to the network. There is no inserted reward-selection phase.
 - Tactical Reward and Player Build flows do not exist.
-- Progression comes from discrete intelligence access, Enemy Alert, Radar Coverage, Radar Scan, Command Link, and Enemy Adaptation.
+- Progression comes from discrete intelligence access, Radar Coverage, Radar Scan, and Command Link.
 - Gameplay variety comes from generated maps, radars, weather, and mission-network changes.
 
-## 11. Enemy Adaptation
-
-After a mission, the enemy analyzes history that actually occurred, never an unflown route:
-
-- Terrain use: proportion of trajectory samples inside masking terrain.
-- North-south preference: vertical distribution of actual trajectory samples.
-- Direct routing: straight-line distance between trajectory endpoints divided by actual flown distance.
-
-Successful routes update the profile with weight `1.0`; failed routes use `0.5`. Mission count is not an adaptation level. Radar repositioning is driven by significant features:
-
-- Terrain use at or above 35% moves coverage toward the mountain exit.
-- North-south deviation from center at or above 8% moves a radar toward that corridor.
-- Direct routing at or above 72% moves a radar toward the insertion-to-target axis.
-
-One, two, or three identified features produce reposition strengths of 22%, 32%, or 42%. The mission network displays the profile as `LOW / ACTIVE / HIGH`.
-
-`COUNTER DEPLOYMENT` lists the countermeasures applied to the current mission. Because the enemy learns historical tendencies rather than future plans, the player can change doctrine or intentionally build a misleading profile.
-
-## 12. Route-Planning Guidance
+## 11. Route-Planning Guidance
 
 - Do not treat yellow intelligence circles as true boundaries. Preserve margin for uncertainty and overlapping radar coverage.
 - Cross near radar-range edges rather than near radar centers.
@@ -366,22 +341,19 @@ One, two, or three identified features produce reposition strengths of 22%, 32%,
 - Sustained illumination or lock demands immediate beam exit. After missile launch, reduce track quality below 32 within 8 seconds.
 - Weapon release raises Awareness and makes coordinated or concentrated search more likely, although search position must still come from Belief/CMD.
 - The first INTEL completion reveals and verifies every radar; the second authorizes `TOTAL INTEL`. SEAD shrinks later danger areas, while COMMAND STRIKE weakens coordination.
-- Reusing one corridor causes later radars to move toward it. Vary north-south routing, terrain use, and attack angle.
 - Preserve fuel for extraction after the strike. Excessive detours can exceed the `2000 u` range even when they avoid radar.
 
-## 13. Final Strike
+## 12. Final Strike
 
-Final Strike assembles air defense from the complete Run history at launch:
+Final Strike assembles air defense from the direct effects of completed missions at launch:
 
 - A reserve `FINAL-GUARD` Fire Control radar is always added near the target. SEAD reduces its range but cannot prevent deployment.
-- Enemy Alert ≥ 15 adds an alert reinforcement whose range also grows slightly with Alert.
-- Enemy Adaptation with at least 2 accumulated observation weight and at least two significant features adds one adaptive interception radar according to historical north-south preference.
 - Completed STRIKE scan reduction applies to every final radar, including reinforcements: 90% after one and 81% after two.
 - COMMAND STRIKE command-link damage, discrete INTEL visibility, and SEAD range reduction remain active.
 
-`FINAL DEFENSE BRIEFING` lists the outcome of each historical condition. Reinforcements still pass through the limited-intelligence system and do not automatically expose real positions. Destroying the final target and extracting changes the Run to `VICTORY`.
+`FINAL DEFENSE BRIEFING` lists the fixed reserve Fire Control radar and the direct outcomes of completed missions. Reinforcements still pass through the limited-intelligence system and do not automatically expose real positions. Destroying the final target and extracting changes the Run to `VICTORY`.
 
-## 14. Not Yet Implemented
+## 13. Not Yet Implemented
 
 - Anti-radiation missiles and direct destruction of radars during a mission.
 - Emission exposure, live ELINT direction finding, and live player-side intelligence updates.

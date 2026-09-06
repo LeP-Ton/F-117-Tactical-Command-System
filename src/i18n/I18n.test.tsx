@@ -62,41 +62,18 @@ describe("游戏界面国际化", () => {
     expect(localStorage.getItem("f117-tactical-command-system:language:v1")).toBe("en");
   });
 
-  it("既有存档中的静态与动态部署记录均可翻译", () => {
-    expect(localizeBriefingNote("山地出口增设搜索覆盖", "en")).toBe(
-      "Additional search coverage positioned at the mountain exit",
-    );
-    expect(localizeBriefingNote("Enemy Alert 22：增援警戒雷达部署", "en")).toBe(
-      "ENEMY ALERT 22: reinforcement surveillance radar deployed",
-    );
-    expect(localizeBriefingNote("南部历史航路部署自适应截击雷达", "en")).toBe(
-      "Adaptive interceptor radar deployed along the historical southern route",
-    );
-    expect(localizeBriefingNote("低 Enemy Alert：未触发警戒增援", "zh")).toBe(
-      "敌方警戒较低：未触发警戒增援",
-    );
-    expect(localizeBriefingNote("Enemy Alert 22：增援警戒雷达部署", "zh")).toBe(
-      "敌方警戒 22：增援警戒雷达部署",
-    );
+  it("当前最终防御简报均可翻译且目录不再包含已删除系统", () => {
     const currentBriefingNotes = [
       "最终目标启用分层防空戒备",
       "目标区后备火控雷达上线",
-      "低 Enemy Alert：未触发警戒增援",
-      "敌方警戒较低：未触发警戒增援",
-      "历史航迹未形成高可信反制画像",
-      "Command Strike 战果削弱最终指挥链",
       "指挥打击战果削弱最终指挥链",
       "情报战果已核实最终目标雷达坐标与型号",
-      "山地出口增设搜索覆盖",
-      "南部航路搜索加强",
-      "北部航路搜索加强",
-      "直达目标轴线增加拦截覆盖",
-      "Enemy Alert 22：增援警戒雷达部署",
-      "敌方警戒 22：增援警戒雷达部署",
-      "北部历史航路部署自适应截击雷达",
     ];
     currentBriefingNotes.forEach((note) => {
       expect(localizeBriefingNote(note, "en")).not.toMatch(/[\u3400-\u9fff]/u);
     });
+    expect(collectStrings(localeCatalogs.en).map(([, value]) => value)).not.toEqual(
+      expect.arrayContaining(["ENEMY ALERT", "ENEMY ADAPTATION"]),
+    );
   });
 });

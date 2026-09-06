@@ -4,7 +4,6 @@ import { generateMissionContent } from "../procedural/missionGenerator";
 import { generateCampaign } from "../procedural/campaignGenerator";
 import { createInitialRoute, insertionPoint } from "./route";
 import { generateRadarIntel } from "./intelSystem";
-import { createPlayerTacticalProfile } from "./enemyAdaptation";
 import { createEngagementState } from "./engagementSystem";
 import { advanceWeather } from "./weatherSystem";
 import { ensureTargetFireControlCoverage } from "./targetDefense";
@@ -36,7 +35,6 @@ export function createMission(seed: string): MissionSession {
       fuelRemaining: gameConfig.aircraft.fuelCapacityDistance,
       fuelCapacity: gameConfig.aircraft.fuelCapacityDistance,
     },
-    flightPath: [{ ...insertionPoint }],
     route: createInitialRoute(),
     terrain: generated.terrain,
     weather: advanceWeather(generated.weather, 0),
@@ -52,7 +50,6 @@ export function createMission(seed: string): MissionSession {
     extractionArea: { ...gameConfig.mission.extractionArea },
     radarScanRateModifier: 1,
     commanderCoordinationModifier: 1,
-    adaptationNotes: [],
     finalStrikeNotes: [],
     events: [],
   };
@@ -64,12 +61,10 @@ export function createRun(seed: string = gameConfig.initialSeed): RunState {
   return {
     seed,
     campaign: { ...campaign, currentNodeId: firstNode.id },
-    resources: { enemyAlert: 0 },
     enemyState: {
       radarCoverageModifier: 1,
       radarScanRateModifier: 1,
       commanderCoordinationModifier: 1,
-      tacticalProfile: createPlayerTacticalProfile(),
     },
     missionDebriefs: {},
     currentMission: createMission(firstNode.missionSeed),

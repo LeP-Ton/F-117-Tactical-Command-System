@@ -9,7 +9,6 @@ describe("任务进度保存", () => {
     const state = createRun("SAVE-RESTORE");
     const changed = {
       ...state,
-      resources: { ...state.resources, enemyAlert: 37 },
       currentMission: {
         ...state.currentMission!,
         elapsedMs: 12_500,
@@ -21,7 +20,6 @@ describe("任务进度保存", () => {
 
     const restored = loadRunProgress();
     expect(restored?.seed).toBe("SAVE-RESTORE");
-    expect(restored?.resources.enemyAlert).toBe(37);
     expect(restored?.currentMission?.elapsedMs).toBe(12_500);
     expect(restored?.currentMission?.aircraft.fuelRemaining).toBe(1450);
   });
@@ -88,11 +86,21 @@ describe("任务进度保存", () => {
     expect(loadRunProgress()?.currentMission?.extractionArea).toEqual({ x: 860, y: 50, width: 100, height: 100 });
   });
 
-  it("恢复旧存档时移除废弃的情报质量字段", () => {
+  it("恢复旧存档时移除废弃的情报质量与敌方升级字段", () => {
     const state = createRun("SAVE-LEGACY-INTEL-QUALITY");
     const legacyState = {
       ...state,
-      resources: { ...state.resources, intelAccuracyBonus: 0.2 },
+      resources: { enemyAlert: 30, intelAccuracyBonus: 0.2 },
+      enemyState: {
+        ...state.enemyState,
+        adaptationLevel: 2,
+        tacticalProfile: {
+          missionSamples: 2,
+          terrainMaskingPreference: 0.5,
+          southernRouteBias: 0.8,
+          aggressiveRouting: 0.75,
+        },
+      },
       campaign: {
         ...state.campaign,
         nodes: state.campaign.nodes.map((node) => ({
@@ -100,13 +108,24 @@ describe("任务进度保存", () => {
           preview: { ...node.preview, intelAccuracy: 0.88 },
         })),
       },
-      currentMission: { ...state.currentMission!, intelAccuracy: 0.98 },
+      currentMission: {
+        ...state.currentMission!,
+        intelAccuracy: 0.98,
+        flightPath: [{ x: 90, y: 900 }, { x: 400, y: 800 }],
+        adaptationNotes: ["南部航路搜索加强"],
+        finalStrikeNotes: ["目标区后备火控雷达上线", "历史航迹未形成高可信反制画像"],
+      },
     };
     window.localStorage.setItem(RUN_SAVE_KEY, JSON.stringify({ version: 1, savedAt: Date.now(), state: legacyState }));
 
     const restored = loadRunProgress();
-    expect(restored?.resources).toEqual({ enemyAlert: 0 });
+    expect(restored).not.toHaveProperty("resources");
+    expect(restored?.enemyState).not.toHaveProperty("adaptationLevel");
+    expect(restored?.enemyState).not.toHaveProperty("tacticalProfile");
     expect(restored?.currentMission).not.toHaveProperty("intelAccuracy");
+    expect(restored?.currentMission).not.toHaveProperty("flightPath");
+    expect(restored?.currentMission).not.toHaveProperty("adaptationNotes");
+    expect(restored?.currentMission?.finalStrikeNotes).toEqual(["目标区后备火控雷达上线"]);
     restored?.campaign.nodes.forEach((node) => expect(node.preview).not.toHaveProperty("intelAccuracy"));
   });
 

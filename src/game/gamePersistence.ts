@@ -18,7 +18,7 @@ function isRunState(value: unknown): value is RunState {
   return typeof state.seed === "string"
     && (state.status === "ACTIVE" || state.status === "VICTORY" || state.status === "DEFEAT")
     && Boolean(state.campaign && Array.isArray(state.campaign.nodes))
-    && Boolean(state.resources && state.enemyState)
+    && Boolean(state.enemyState)
     && (!state.currentMission || Boolean(state.currentMission.route && state.currentMission.aircraft));
 }
 
@@ -32,16 +32,31 @@ export function saveRunProgress(state: RunState): void {
 }
 
 function restoreMissionCompatibility(mission: MissionSession, scanRateModifier: number): MissionSession {
-  // v1 旧存档可能仍包含已经移除的 intelAccuracy；显式剥离，避免下次保存继续携带废弃字段。
-  const { intelAccuracy: _legacyIntelAccuracy, ...currentMission } = mission as MissionSession & {
+  // v1 旧存档可能仍包含已移除的情报质量与敌方升级字段；显式剥离，避免下次保存继续携带废弃状态。
+  const {
+    intelAccuracy: _legacyIntelAccuracy,
+    flightPath: _legacyFlightPath,
+    adaptationNotes: _legacyAdaptationNotes,
+    ...currentMission
+  } = mission as MissionSession & {
     intelAccuracy?: number;
+    flightPath?: unknown;
+    adaptationNotes?: unknown;
   };
   return {
     ...currentMission,
     radarScanRateModifier: mission.radarScanRateModifier ?? scanRateModifier,
+    finalStrikeNotes: (currentMission.finalStrikeNotes ?? []).filter((note) => !isRemovedEnemyEscalationNote(note)),
     // 固定任务区域属于当前规则配置，恢复旧存档时同步迁移，避免画面与撤离判定继续使用旧尺寸。
     extractionArea: { ...gameConfig.mission.extractionArea },
   };
+}
+
+/** 旧存档中的警戒与航迹适应简报不再属于当前规则，恢复时统一清理。 */
+function isRemovedEnemyEscalationNote(note: string): boolean {
+  return /^(?:低 Enemy Alert|敌方警戒较低|Enemy Alert \d+|敌方警戒 \d+)：/.test(note)
+    || note === "历史航迹未形成高可信反制画像"
+    || /^(?:南部|北部)历史航路部署自适应截击雷达$/.test(note);
 }
 
 export function loadRunProgress(): RunState | undefined {
@@ -50,16 +65,20 @@ export function loadRunProgress(): RunState | undefined {
     if (!raw) return undefined;
     const payload = JSON.parse(raw) as Partial<SavedRun>;
     if (payload.version !== SAVE_VERSION || !isRunState(payload.state)) return undefined;
-    const legacyStatus = (payload.state.currentMission as { status?: string } | undefined)?.status;
-    const completedStrikeCount = payload.state.campaign.nodes
+    const legacyState = payload.state as RunState & {
+      resources?: unknown;
+      enemyState: RunState["enemyState"] & { adaptationLevel?: number; tacticalProfile?: unknown };
+    };
+    const legacyStatus = (legacyState.currentMission as { status?: string } | undefined)?.status;
+    const completedStrikeCount = legacyState.campaign.nodes
       .filter((node) => node.type === "STRIKE" && node.status === "COMPLETED").length;
-    const radarScanRateModifier = payload.state.enemyState.radarScanRateModifier
+    const radarScanRateModifier = legacyState.enemyState.radarScanRateModifier
       ?? Math.max(
         campaignBalance.radarScanRateFloor,
         campaignBalance.strikeRadarScanRateMultiplier ** completedStrikeCount,
       );
     const missionDebriefs = Object.fromEntries(
-      Object.entries(payload.state.missionDebriefs ?? {}).map(([nodeId, debrief]) => [
+      Object.entries(legacyState.missionDebriefs ?? {}).map(([nodeId, debrief]) => [
         nodeId,
         {
           ...debrief,
@@ -67,11 +86,17 @@ export function loadRunProgress(): RunState | undefined {
         } satisfies MissionDebrief,
       ]),
     );
+    const { resources: _legacyResources, ...currentState } = legacyState;
+    const {
+      adaptationLevel: _legacyAdaptationLevel,
+      tacticalProfile: _legacyTacticalProfile,
+      ...currentEnemyState
+    } = legacyState.enemyState;
     const restored: RunState = {
-      ...payload.state,
+      ...currentState,
       campaign: {
-        ...payload.state.campaign,
-        nodes: payload.state.campaign.nodes.map((node) => ({
+        ...legacyState.campaign,
+        nodes: legacyState.campaign.nodes.map((node) => ({
           ...node,
           preview: {
             radarDensity: node.preview.radarDensity,
@@ -80,14 +105,13 @@ export function loadRunProgress(): RunState | undefined {
           },
         })),
       },
-      resources: { enemyAlert: payload.state.resources.enemyAlert },
-      enemyState: { ...payload.state.enemyState, radarScanRateModifier },
+      enemyState: { ...currentEnemyState, radarScanRateModifier },
       missionDebriefs,
       // 旧版暂停存档直接恢复执行；新版本刷新运行中任务也不再制造暂停状态。
       currentMission: legacyStatus === "PAUSED"
-        ? { ...restoreMissionCompatibility(payload.state.currentMission!, radarScanRateModifier), status: "RUNNING" }
-        : payload.state.currentMission
-          ? restoreMissionCompatibility(payload.state.currentMission, radarScanRateModifier)
+        ? { ...restoreMissionCompatibility(legacyState.currentMission!, radarScanRateModifier), status: "RUNNING" }
+        : legacyState.currentMission
+          ? restoreMissionCompatibility(legacyState.currentMission, radarScanRateModifier)
           : undefined,
     };
     syncEventSequenceFromRun(restored);

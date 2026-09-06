@@ -9,13 +9,12 @@ import { advanceRadarSensors } from "../domain/radarSensor";
 import { canAttackTarget, isInsideExtraction } from "../domain/missionRules";
 import { generateRadarIntel } from "../domain/intelSystem";
 import { getIntelAccessTier } from "../domain/intelAccess";
-import { analyzeCompletedMission, applyEnemyCounterDeployment } from "../domain/enemyAdaptation";
 import { applyFinalStrikeDefense } from "../domain/finalStrike";
 import { advanceEngagement } from "../domain/engagementSystem";
 import { advanceWeather, getWeatherSpeedFactor } from "../domain/weatherSystem";
 import { ensureTargetFireControlCoverage } from "../domain/targetDefense";
 import { enforceExtractionRadarClearance } from "../domain/radarDeployment";
-import { campaignBalance, getMissionAlertDelta } from "../domain/campaignBalance";
+import { campaignBalance } from "../domain/campaignBalance";
 import {
   addWaypoint,
   moveWaypoint,
@@ -25,19 +24,10 @@ import {
 import type { CampaignNode, MissionSession, RunState, Vector2 } from "../domain/types";
 
 const MAX_STORED_EVENTS = 200;
-const FLIGHT_PATH_SAMPLE_DISTANCE = 20;
 
 function appendEvents(mission: MissionSession, events: MissionSession["events"]): MissionSession["events"] {
   if (events.length === 0) return mission.events;
   return [...mission.events, ...events].slice(-MAX_STORED_EVENTS);
-}
-
-function sampleFlightPath(mission: MissionSession, position: Vector2): Vector2[] {
-  const last = mission.flightPath.at(-1);
-  if (last && Math.hypot(position.x - last.x, position.y - last.y) < FLIGHT_PATH_SAMPLE_DISTANCE) {
-    return mission.flightPath;
-  }
-  return [...mission.flightPath, { ...position }];
 }
 
 export type GameAction =
@@ -59,28 +49,25 @@ function getEditMode(state: RunState): "PLANNING" | "RUNNING" | undefined {
 
 /**
  * 使用当前 Run 的持久状态准备指定节点任务。
- * 节点选择与任务重置必须共用这条路径，避免遗漏情报、防空削弱或敌方适应效果。
+ * 节点选择与任务重置必须共用这条路径，避免遗漏情报与任务成果带来的防空削弱。
  */
 export function prepareCampaignMission(state: RunState, node: CampaignNode): MissionSession {
   const selectedMission = createMission(node.missionSeed);
-  const alertCoverageMultiplier = 1 + state.resources.enemyAlert / 250;
   const adjustedRadars = selectedMission.radars.map((radar) => ({
     ...radar,
-    range: radar.range * state.enemyState.radarCoverageModifier * alertCoverageMultiplier,
+    range: radar.range * state.enemyState.radarCoverageModifier,
   }));
-  const adaptedMission = applyEnemyCounterDeployment({
+  const adjustedMission = {
     ...selectedMission,
     radars: adjustedRadars,
-  }, state.enemyState);
+  };
   const finalMission = node.type === "FINAL_STRIKE"
-    ? applyFinalStrikeDefense(adaptedMission, {
+    ? applyFinalStrikeDefense(adjustedMission, {
       completedNodeTypes: state.campaign.nodes
         .filter((candidate) => candidate.status === "COMPLETED")
         .map((candidate) => candidate.type),
-      enemyAlert: state.resources.enemyAlert,
-      tacticalProfile: state.enemyState.tacticalProfile,
     })
-    : adaptedMission;
+    : adjustedMission;
   const radars = ensureTargetFireControlCoverage(
     enforceExtractionRadarClearance(finalMission.radars, finalMission.extractionArea),
     finalMission.target,
@@ -150,14 +137,6 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         // 所有失败都不推进 Campaign：失败节点可重试，同层备选保持 AVAILABLE，下一层保持锁定。
         return node;
       });
-      const alertDelta = getMissionAlertDelta(succeeded);
-      const tacticalProfile = analyzeCompletedMission(
-        state.enemyState.tacticalProfile,
-        mission,
-        succeeded
-          ? campaignBalance.successfulMissionAdaptationWeight
-          : campaignBalance.failedMissionAdaptationWeight,
-      );
       // 除 Final Strike 成功外，结算后 Run 均保持 ACTIVE，失败任务可继续重试。
       const runStatus = succeeded
         ? currentNode.type === "FINAL_STRIKE" ? "VICTORY" as const : "ACTIVE" as const
@@ -166,12 +145,8 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         ...state,
         status: runStatus,
         campaign: { ...state.campaign, nodes, currentNodeId: succeeded ? undefined : currentNode.id },
-        resources: {
-          enemyAlert: Math.max(0, Math.min(100, state.resources.enemyAlert + alertDelta)),
-        },
         enemyState: {
           ...state.enemyState,
-          tacticalProfile,
           radarCoverageModifier: succeeded && currentNode.type === "SEAD"
             ? Math.max(
               campaignBalance.radarCoverageFloor,
@@ -468,7 +443,6 @@ export function gameReducer(state: RunState, action: GameAction): RunState {
         status: terminalStatus,
         elapsedMs: nextTimestamp,
         aircraft,
-        flightPath: sampleFlightPath(mission, aircraft.position),
         route: result.route,
         target,
         weather,

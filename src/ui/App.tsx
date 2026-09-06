@@ -3,7 +3,6 @@ import { useGameController } from "../game/useGameController";
 import { CampaignMap } from "./CampaignMap";
 import { useGameAudio } from "../audio/useGameAudio";
 import f117SideSilhouette from "../assets/f117-side-silhouette.png";
-import { getAdaptationAssessment } from "../domain/enemyAdaptation";
 import { getIntelAccessTier } from "../domain/intelAccess";
 import type { MissionDebrief } from "../domain/types";
 import type { MapElementSelection } from "./mapSelection";
@@ -160,7 +159,6 @@ export function App() {
             showBelief={showBelief}
             canUseAiDebug={canUseAiDebug}
             onToggleBelief={() => setShowBelief((value) => !value)}
-            adaptationStatus={getAdaptationAssessment(state.enemyState.tacticalProfile).status}
             mapSelection={mapSelection}
             onMapSelectionChange={setMapSelection}
             onOpenCampaign={() => setCampaignView(true)}
