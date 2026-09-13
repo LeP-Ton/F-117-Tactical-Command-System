@@ -1,10 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { createMission } from "../domain/factories";
-import { generateMissionContent } from "./missionGenerator";
+import { generateExtractionArea, generateMissionContent } from "./missionGenerator";
+
+const extractionAreas = [
+  { x: 50, y: 50, width: 100, height: 100 },
+  { x: 850, y: 50, width: 100, height: 100 },
+  { x: 850, y: 850, width: 100, height: 100 },
+];
 
 describe("Mission Generator", () => {
   it("相同 Seed 完整复现任务内容", () => {
     expect(generateMissionContent("DAILY-117")).toEqual(generateMissionContent("DAILY-117"));
+    expect(generateExtractionArea("DAILY-117")).toEqual(generateExtractionArea("DAILY-117"));
     expect(createMission("DAILY-117")).toEqual(createMission("DAILY-117"));
   });
 
@@ -15,9 +22,10 @@ describe("Mission Generator", () => {
     expect(first.targetPosition).not.toEqual(second.targetPosition);
   });
 
-  it("连续生成十个任务均满足数量和地图边界", () => {
+  it("批量任务均满足目标、雷达和撤离区边界", () => {
     const signatures = new Set<string>();
-    for (let index = 0; index < 10; index += 1) {
+    const observedExtractionAreas = new Set<string>();
+    for (let index = 0; index < 100; index += 1) {
       const generated = generateMissionContent(`BATCH-${index}`);
       const terrain = generated.terrain;
       const weather = generated.weather;
@@ -31,14 +39,24 @@ describe("Mission Generator", () => {
       expect(weather.length).toBeGreaterThanOrEqual(1);
       expect(generated).not.toHaveProperty("intelAccuracy");
       generated.radars.forEach((radar) => {
-        expect(radar.position.x).toBeGreaterThanOrEqual(0);
-        expect(radar.position.x).toBeLessThanOrEqual(1000);
-        expect(radar.position.y).toBeGreaterThanOrEqual(0);
-        expect(radar.position.y).toBeLessThanOrEqual(1000);
+        expect(radar.position.x).toBeGreaterThanOrEqual(200);
+        expect(radar.position.x).toBeLessThanOrEqual(800);
+        expect(radar.position.y).toBeGreaterThanOrEqual(200);
+        expect(radar.position.y).toBeLessThanOrEqual(800);
       });
-      signatures.add(JSON.stringify({ radars: generated.radars, target: generated.targetPosition }));
+      expect(generated.targetPosition.x).toBeGreaterThanOrEqual(300);
+      expect(generated.targetPosition.x).toBeLessThanOrEqual(700);
+      expect(generated.targetPosition.y).toBeGreaterThanOrEqual(300);
+      expect(generated.targetPosition.y).toBeLessThanOrEqual(700);
+      expect(extractionAreas).toContainEqual(generated.extractionArea);
+      observedExtractionAreas.add(JSON.stringify(generated.extractionArea));
+      signatures.add(JSON.stringify({
+        radars: generated.radars,
+        target: generated.targetPosition,
+        extractionArea: generated.extractionArea,
+      }));
     }
-    expect(signatures.size).toBe(10);
+    expect(signatures.size).toBe(100);
+    expect(observedExtractionAreas.size).toBe(3);
   });
-
 });

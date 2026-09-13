@@ -1,4 +1,5 @@
 import type { MissionSession } from "../domain/types";
+import { simulationAreaToMapOrigin } from "../domain/mapCoordinates";
 import { useI18n } from "../i18n/I18n";
 import { CollapsibleSection } from "./CollapsibleSection";
 
@@ -16,11 +17,17 @@ export function WeatherForecastPanel({ mission, defaultExpanded = true }: Weathe
   return <CollapsibleSection title={copy.forecast.title} meta={`${mission.weather.length} ${copy.forecast.cells}`} defaultExpanded={defaultExpanded}>
     <ol className="weather-forecast-list">
       {activeForecasts.length === 0 && <li><span>{copy.forecast.expired}</span></li>}
-      {activeForecasts.map((forecast) => <li key={`${forecast.weatherId}-${forecast.horizonSeconds}`}>
-        <strong>{forecast.weatherId} / {copy.common.taskTimePrefix}{forecast.horizonSeconds}{copy.common.secondsUnit}</strong>
-        <span>{copy.enums.weatherKind[forecast.kind]} · {copy.enums.weatherTrend[forecast.intensityTrend]} · {copy.forecast.confidence} {copy.enums.confidence[forecast.confidence]}</span>
-        <small>{copy.forecast.estimatedArea} {forecast.estimatedPosition.x.toFixed(0)},{forecast.estimatedPosition.y.toFixed(0)} · {forecast.estimatedSize.width.toFixed(0)}×{forecast.estimatedSize.height.toFixed(0)}</small>
-      </li>)}
+      {activeForecasts.map((forecast) => {
+        const mapOrigin = simulationAreaToMapOrigin({
+          ...forecast.estimatedPosition,
+          height: forecast.estimatedSize.height,
+        });
+        return <li key={`${forecast.weatherId}-${forecast.horizonSeconds}`}>
+          <strong>{forecast.weatherId} / {copy.common.taskTimePrefix}{forecast.horizonSeconds}{copy.common.secondsUnit}</strong>
+          <span>{copy.enums.weatherKind[forecast.kind]} · {copy.enums.weatherTrend[forecast.intensityTrend]} · {copy.forecast.confidence} {copy.enums.confidence[forecast.confidence]}</span>
+          <small>{copy.forecast.estimatedArea} {mapOrigin.x.toFixed(0)},{mapOrigin.y.toFixed(0)} · {forecast.estimatedSize.width.toFixed(0)}×{forecast.estimatedSize.height.toFixed(0)}</small>
+        </li>;
+      })}
     </ol>
   </CollapsibleSection>;
 }

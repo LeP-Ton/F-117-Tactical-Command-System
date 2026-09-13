@@ -1,10 +1,13 @@
 export const gameConfig = {
+  /** 玩家地图坐标以左下角为原点；Canvas 内部坐标在领域边界统一转换。 */
   world: {
     width: 1000,
     height: 1000,
     gridStep: 100,
   },
   aircraft: {
+    /** 玩家地图坐标。 */
+    insertionPoint: { x: 100, y: 100 },
     speed: 3.6,
     /** 满油航程等于 1000×1000 地图两条边的总长度。 */
     fuelCapacityDistance: 2000,
@@ -17,6 +20,8 @@ export const gameConfig = {
     waypointHitRadius: 18,
   },
   radar: {
+    /** 所有新生成及重新部署雷达的中心坐标范围。 */
+    deploymentCoordinateRange: [200, 800] as const,
     baseDetectionProbability: 0.46,
     contactLifetimeMs: 8000,
     minErrorRadius: 16,
@@ -78,12 +83,16 @@ export const gameConfig = {
     missileFlightSeconds: 8,
   },
   mission: {
-    attackRadius: 58,
+    attackRadius: 50,
     attackAwarenessGain: 34,
-    /** 固定东北撤离空域，缩为正方形并下移上边界，为地图顶部状态文字留出间距。 */
-    extractionArea: { x: 860, y: 50, width: 100, height: 100 },
-    /** 雷达中心与撤离区边界的最小部署间距；探测范围仍可覆盖撤离区。 */
-    extractionRadarClearance: 80,
+    targetCoordinateRange: [300, 700] as const,
+    extractionSize: 100,
+    /** 玩家地图坐标，表示撤离区中心；任务生成时根据独立子 Seed 等概率选择。 */
+    extractionCenters: [
+      { x: 100, y: 900 },
+      { x: 900, y: 900 },
+      { x: 900, y: 100 },
+    ] as const,
   },
   initialSeed: "ZERO-RETURN-001",
 } as const;

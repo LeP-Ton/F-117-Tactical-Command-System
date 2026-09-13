@@ -1,4 +1,5 @@
 import { getWeatherSpeedFactor } from "../../domain/weatherSystem";
+import { simulationToMapPosition } from "../../domain/mapCoordinates";
 import type { MissionSession } from "../../domain/types";
 import type { GameAction } from "../../game/gameReducer";
 import { CollapsibleSection } from "../CollapsibleSection";
@@ -33,6 +34,7 @@ export function MissionWorkspace(props: MissionWorkspaceProps) {
   const recentEvents = mission.events.slice(-5).reverse();
   const visibleRadarIntel = mission.radarIntel.filter((report) => report.level !== "UNKNOWN");
   const weatherSpeedFactor = getWeatherSpeedFactor(mission.aircraft.position, mission.weather);
+  const aircraftMapPosition = simulationToMapPosition(mission.aircraft.position);
 
   return <TacticalWorkspace
     leftPanel={<ControlPanel mission={mission} selectedIndex={selectedIndex} onSelect={onSelect} dispatch={dispatch} onOpenCampaign={props.onOpenCampaign} onReturnCampaign={props.onReturnCampaign} onOpenDebrief={props.onOpenDebrief} />}
@@ -60,7 +62,7 @@ export function MissionWorkspace(props: MissionWorkspaceProps) {
         <p className="threat-message">{copy.mission.availableRange} {mission.aircraft.fuelRemaining.toFixed(0)} u</p>
       </section>
       <CollapsibleSection title={copy.mission.flightStatus}><dl className="telemetry-grid">
-        <div><dt>{copy.mission.flightTime}</dt><dd>{(mission.elapsedMs / 1000).toFixed(1)} {copy.common.secondsUnit}</dd></div><div><dt>{copy.mission.coordinates}</dt><dd>{mission.aircraft.position.x.toFixed(1)}, {mission.aircraft.position.y.toFixed(1)}</dd></div>
+        <div><dt>{copy.mission.flightTime}</dt><dd>{(mission.elapsedMs / 1000).toFixed(1)} {copy.common.secondsUnit}</dd></div><div><dt>{copy.mission.coordinates}</dt><dd>{aircraftMapPosition.x.toFixed(1)}, {aircraftMapPosition.y.toFixed(1)}</dd></div>
         <div><dt>{copy.mission.heading}</dt><dd>{mission.aircraft.headingDegrees.toFixed(0)}°</dd></div><div><dt>{copy.mission.speed}</dt><dd>{mission.aircraft.speed.toFixed(2)} u/s</dd></div>
         <div><dt>{copy.mission.weatherSpeedLoss}</dt><dd>{weatherSpeedFactor < 1 ? `${((1 - weatherSpeedFactor) * 100).toFixed(0)}%` : copy.common.none}</dd></div><div><dt>{copy.mission.currentWaypoint}</dt><dd>{activeWaypoint ? `WP-${mission.route.activeWaypointIndex}` : "—"}</dd></div>
       </dl></CollapsibleSection>

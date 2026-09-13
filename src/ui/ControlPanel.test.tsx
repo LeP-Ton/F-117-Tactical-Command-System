@@ -22,6 +22,7 @@ describe("ControlPanel 航点操作", () => {
     expect(screen.getByRole("button", { name: "返回任务网络" })).toHaveClass("primary-button", "return-network-button");
     expect(screen.getByText("指挥掩体")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /航点序列/ })).toHaveTextContent("0 个");
+    expect(screen.getByRole("button", { name: /INS X 0100 \/ Y 0100/ })).toBeInTheDocument();
   });
 
   it("飞机运行中禁用航点排序和删除按钮", () => {

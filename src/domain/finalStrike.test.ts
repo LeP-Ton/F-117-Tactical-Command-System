@@ -17,6 +17,12 @@ describe("Final Strike 动态防空体系", () => {
     expect(finalMission.radars.length).toBe(mission.radars.length + 1);
     expect(finalMission.radars.some((radar) => radar.id === "FINAL-GUARD")).toBe(true);
     expect(finalMission.finalStrikeNotes).toContain("目标区后备火控雷达上线");
+    finalMission.radars.forEach((radar) => {
+      expect(radar.position.x).toBeGreaterThanOrEqual(200);
+      expect(radar.position.x).toBeLessThanOrEqual(800);
+      expect(radar.position.y).toBeGreaterThanOrEqual(200);
+      expect(radar.position.y).toBeLessThanOrEqual(800);
+    });
   });
 
   it("SEAD 不再阻止最终战后备火控雷达上线", () => {
@@ -45,5 +51,17 @@ describe("Final Strike 动态防空体系", () => {
     const history = context({ completedNodeTypes: ["INTEL", "SEAD"] });
 
     expect(applyFinalStrikeDefense(mission, history)).toEqual(applyFinalStrikeDefense(mission, history));
+  });
+
+  it("批量最终战增援均保持在雷达部署范围内", () => {
+    for (let index = 0; index < 100; index += 1) {
+      const finalMission = applyFinalStrikeDefense(createMission(`FINAL-BOUNDS-${index}`), context());
+      finalMission.radars.forEach((radar) => {
+        expect(radar.position.x).toBeGreaterThanOrEqual(200);
+        expect(radar.position.x).toBeLessThanOrEqual(800);
+        expect(radar.position.y).toBeGreaterThanOrEqual(200);
+        expect(radar.position.y).toBeLessThanOrEqual(800);
+      });
+    }
   });
 });

@@ -13,7 +13,6 @@ import { applyFinalStrikeDefense } from "../domain/finalStrike";
 import { advanceEngagement } from "../domain/engagementSystem";
 import { advanceWeather, getWeatherSpeedFactor } from "../domain/weatherSystem";
 import { ensureTargetFireControlCoverage } from "../domain/targetDefense";
-import { enforceExtractionRadarClearance } from "../domain/radarDeployment";
 import { campaignBalance } from "../domain/campaignBalance";
 import {
   addWaypoint,
@@ -68,11 +67,7 @@ export function prepareCampaignMission(state: RunState, node: CampaignNode): Mis
         .map((candidate) => candidate.type),
     })
     : adjustedMission;
-  const radars = ensureTargetFireControlCoverage(
-    enforceExtractionRadarClearance(finalMission.radars, finalMission.extractionArea),
-    finalMission.target,
-    finalMission.extractionArea,
-  );
+  const radars = ensureTargetFireControlCoverage(finalMission.radars, finalMission.target);
 
   const generatedIntel = generateRadarIntel(selectedMission.seed, radars);
   const radarIntel = getIntelAccessTier(state.campaign) >= 1

@@ -1,4 +1,5 @@
 import { canEditWaypoint, getPlannedRouteDistance, getRemainingRouteDistance } from "../domain/route";
+import { simulationToMapPosition } from "../domain/mapCoordinates";
 import { distanceBetween, distanceToExtraction } from "../domain/missionRules";
 import type { MissionSession } from "../domain/types";
 import type { GameAction } from "../game/gameReducer";
@@ -86,6 +87,7 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
         </div>
         <div className="waypoint-list">
           {mission.route.waypoints.map((waypoint, index) => {
+            const mapPosition = simulationToMapPosition(waypoint.position);
             return (
               <button
                 type="button"
@@ -95,7 +97,7 @@ export function ControlPanel({ mission, selectedIndex, onSelect, dispatch, onOpe
               >
                 <span className="waypoint-index">{index === 0 ? "INS" : String(index).padStart(2, "0")}</span>
                 <span className="waypoint-coordinate">
-                  X {Math.round(waypoint.position.x).toString().padStart(4, "0")} / Y {Math.round(waypoint.position.y).toString().padStart(4, "0")}
+                  X {Math.round(mapPosition.x).toString().padStart(4, "0")} / Y {Math.round(mapPosition.y).toString().padStart(4, "0")}
                 </span>
                 <span className={`waypoint-state state-${waypoint.status.toLowerCase()}`}>
                   {copy.enums.waypointStatus[waypoint.status]}

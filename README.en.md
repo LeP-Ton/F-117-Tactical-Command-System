@@ -115,7 +115,7 @@ The exact reward multipliers, node states, and final-defense rules are canonical
 
 The tactical map presents the target, extraction zone, waypoints, terrain, dynamic weather, and radar intelligence. Canvas handles rendering and coordinate interaction; domain models and the reducer remain the sole owners of mission rules and state.
 
-Generation enforces local constraints such as extraction clearance and minimum target-area fire-control coverage. It does not yet prove mathematical reachability for every Seed. A generated battlefield is structurally valid, but not guaranteed to expose an obvious safe route.
+Generation enforces local constraints such as minimum target-area fire-control coverage. It does not yet prove mathematical reachability for every Seed. A generated battlefield is structurally valid, but not guaranteed to expose an obvious safe route; radar coverage over insertion or extraction is an allowed layout.
 
 ### 5.2 Terrain Provides Static Concealment
 

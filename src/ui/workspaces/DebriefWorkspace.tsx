@@ -7,6 +7,7 @@ import type { MapElementSelection } from "../mapSelection";
 import { TacticalMapStage } from "../TacticalMapStage";
 import { TacticalWorkspace } from "../TacticalWorkspace";
 import { useI18n } from "../../i18n/I18n";
+import { simulationToMapPosition } from "../../domain/mapCoordinates";
 
 interface DebriefWorkspaceProps {
   debrief: MissionDebrief;
@@ -20,6 +21,7 @@ export function DebriefWorkspace({ debrief, mapSelection, onMapSelectionChange, 
   const { copy } = useI18n();
   const [panoramic, setPanoramic] = useState(false);
   const mission = debrief.mission;
+  const finalMapPosition = simulationToMapPosition(mission.aircraft.position);
   return <TacticalWorkspace
     className="intelligence-workspace"
     leftPanel={<aside className="control-panel">
@@ -29,7 +31,7 @@ export function DebriefWorkspace({ debrief, mapSelection, onMapSelectionChange, 
         <p className="hint">{copy.debrief.snapshot} // {debrief.nodeId}</p>
         <dl className="telemetry-grid">
           <div><dt>{copy.debrief.missionTime}</dt><dd>{(mission.elapsedMs / 1000).toFixed(1)} {copy.common.secondsUnit}</dd></div>
-          <div><dt>{copy.debrief.finalCoordinates}</dt><dd>{mission.aircraft.position.x.toFixed(1)}, {mission.aircraft.position.y.toFixed(1)}</dd></div>
+          <div><dt>{copy.debrief.finalCoordinates}</dt><dd>{finalMapPosition.x.toFixed(1)}, {finalMapPosition.y.toFixed(1)}</dd></div>
           <div><dt>{copy.debrief.remainingFuel}</dt><dd>{mission.aircraft.fuelRemaining.toFixed(0)} u</dd></div>
           <div><dt>{copy.debrief.intelAccess}</dt><dd>{debrief.intelAccessTier}/2</dd></div>
         </dl>

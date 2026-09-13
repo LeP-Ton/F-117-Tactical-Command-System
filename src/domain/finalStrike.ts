@@ -19,12 +19,13 @@ function createGuardRadar(
   sweepAngleDegrees: number,
   type: RadarType,
 ): RadarState {
+  const [minimum, maximum] = gameConfig.radar.deploymentCoordinateRange;
   return {
     id,
     type,
     position: {
-      x: clamp(x, 90, gameConfig.world.width - 90),
-      y: clamp(y, 90, gameConfig.world.height - 90),
+      x: clamp(x, minimum, maximum),
+      y: clamp(y, minimum, maximum),
     },
     range,
     sweepAngleDegrees,

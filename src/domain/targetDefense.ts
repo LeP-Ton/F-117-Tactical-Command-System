@@ -1,5 +1,5 @@
 import { gameConfig } from "../config/gameConfig";
-import type { ExtractionArea, MissionTarget, RadarState, Vector2 } from "./types";
+import type { MissionTarget, RadarState, Vector2 } from "./types";
 
 export const TARGET_FIRE_CONTROL_MARGIN = 20;
 
@@ -8,19 +8,11 @@ function distance(first: Vector2, second: Vector2): number {
 }
 
 function clampPosition(position: Vector2): Vector2 {
+  const [minimum, maximum] = gameConfig.radar.deploymentCoordinateRange;
   return {
-    x: Math.max(80, Math.min(gameConfig.world.width - 80, position.x)),
-    y: Math.max(80, Math.min(gameConfig.world.height - 80, position.y)),
+    x: Math.max(minimum, Math.min(maximum, position.x)),
+    y: Math.max(minimum, Math.min(maximum, position.y)),
   };
-}
-
-function respectsExtractionClearance(position: Vector2, extractionArea?: ExtractionArea): boolean {
-  if (!extractionArea) return true;
-  const clearance = gameConfig.mission.extractionRadarClearance;
-  return position.x <= extractionArea.x - clearance
-    || position.x >= extractionArea.x + extractionArea.width + clearance
-    || position.y <= extractionArea.y - clearance
-    || position.y >= extractionArea.y + extractionArea.height + clearance;
 }
 
 /**
@@ -30,13 +22,11 @@ function respectsExtractionClearance(position: Vector2, extractionArea?: Extract
 export function ensureTargetFireControlCoverage(
   radars: RadarState[],
   target: MissionTarget,
-  extractionArea?: ExtractionArea,
 ): RadarState[] {
   const fireControls = radars.filter((radar) => radar.type === "FIRE_CONTROL");
   if (fireControls.length === 0) return radars;
   if (fireControls.some((radar) => distance(radar.position, target.position) + target.attackRadius
-    <= radar.range - TARGET_FIRE_CONTROL_MARGIN
-    && respectsExtractionClearance(radar.position, extractionArea))) return radars;
+    <= radar.range - TARGET_FIRE_CONTROL_MARGIN)) return radars;
 
   const selected = fireControls
     .sort((first, second) => distance(first.position, target.position) - distance(second.position, target.position))[0]!;
@@ -45,14 +35,11 @@ export function ensureTargetFireControlCoverage(
   const currentDistance = Math.hypot(dx, dy);
   const angle = currentDistance > 0 ? Math.atan2(dy, dx) : 0;
   const deploymentDistance = Math.max(0, selected.range - target.attackRadius - TARGET_FIRE_CONTROL_MARGIN);
-  // 从原始相对方位开始环绕目标寻找位置，避免目标覆盖与撤离净空互相覆盖。
-  const position = Array.from({ length: 360 }, (_, offset) => angle + offset * Math.PI / 180)
-    .map((candidateAngle) => clampPosition({
-      x: target.position.x + Math.cos(candidateAngle) * deploymentDistance,
-      y: target.position.y + Math.sin(candidateAngle) * deploymentDistance,
-    }))
-    .find((candidate) => respectsExtractionClearance(candidate, extractionArea))
-    ?? clampPosition(target.position);
+  // 目标本身位于雷达部署范围内部；钳制只会让边缘方向上的雷达更靠近目标，不会破坏完整覆盖。
+  const position = clampPosition({
+    x: target.position.x + Math.cos(angle) * deploymentDistance,
+    y: target.position.y + Math.sin(angle) * deploymentDistance,
+  });
 
   return radars.map((radar) => radar.id === selected.id ? { ...radar, position } : radar);
 }

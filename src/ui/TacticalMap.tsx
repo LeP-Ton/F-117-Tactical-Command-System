@@ -37,6 +37,9 @@ const radarContactColors: Record<RadarType, { stroke: string; fill: string }> = 
   FIRE_CONTROL: { stroke: "rgba(229, 74, 62, 0.4)", fill: "rgba(229, 74, 62, 0.04)" },
 };
 
+/** 目标与雷达的中心标记共用尺寸，确保地图视觉语义一致。 */
+const mapCenterMarkerSize = 12;
+
 function getMetrics(canvas: HTMLCanvasElement): CanvasMetrics {
   const width = canvas.clientWidth;
   const height = canvas.clientHeight;
@@ -292,9 +295,18 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
       context.lineWidth = 2 / metrics.scale;
       context.stroke();
       context.fillStyle = mission.target.destroyed ? "#65736e" : "#ea7658";
-      context.fillRect(mission.target.position.x - 10, mission.target.position.y - 10, 20, 20);
+      context.fillRect(
+        mission.target.position.x - mapCenterMarkerSize / 2,
+        mission.target.position.y - mapCenterMarkerSize / 2,
+        mapCenterMarkerSize,
+        mapCenterMarkerSize,
+      );
       context.font = "12px monospace";
-      context.fillText(mission.target.destroyed ? copy.canvas.destroyed : copy.canvas.target, mission.target.position.x + 16, mission.target.position.y + 4);
+      context.fillText(
+        mission.target.destroyed ? copy.canvas.destroyed : copy.canvas.target,
+        mission.target.position.x + mapCenterMarkerSize,
+        mission.target.position.y + 4,
+      );
 
       mission.terrain.forEach((terrain) => {
         context.fillStyle = "rgba(73, 102, 84, 0.3)";
@@ -329,14 +341,19 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
         context.translate(position.x, position.y);
         context.rotate(Math.PI / 4);
         context.fillStyle = "#d9aa45";
-        context.fillRect(-6, -6, 12, 12);
+        context.fillRect(
+          -mapCenterMarkerSize / 2,
+          -mapCenterMarkerSize / 2,
+          mapCenterMarkerSize,
+          mapCenterMarkerSize,
+        );
         context.restore();
         context.fillStyle = "#e4bd63";
         context.font = "12px monospace";
         const identificationMark = report.level === "CONFIRMED" && report.positionErrorRadius === 0 ? "" : "?";
         context.fillText(
           `${report.radarId}${identificationMark} ${copy.enums.radarType[report.radarType]} ${copy.enums.radarIntelLevel[report.level]}`,
-          position.x + 12,
+          position.x + mapCenterMarkerSize,
           position.y + 4,
         );
       });
@@ -360,9 +377,18 @@ export function TacticalMap({ mission, showBelief, selectedIndex, onSelect, disp
         context.strokeStyle = radarColor;
         context.stroke();
         context.fillStyle = radarColor;
-        context.fillRect(radar.position.x - 6, radar.position.y - 6, 12, 12);
+        context.fillRect(
+          radar.position.x - mapCenterMarkerSize / 2,
+          radar.position.y - mapCenterMarkerSize / 2,
+          mapCenterMarkerSize,
+          mapCenterMarkerSize,
+        );
         context.font = "12px monospace";
-        context.fillText(`${radar.id} ${copy.enums.radarType[radar.type]} ${copy.enums.operatorMode[radar.operator.mode]}`, radar.position.x + 12, radar.position.y + 4);
+        context.fillText(
+          `${radar.id} ${copy.enums.radarType[radar.type]} ${copy.enums.operatorMode[radar.operator.mode]}`,
+          radar.position.x + mapCenterMarkerSize,
+          radar.position.y + 4,
+        );
       });
 
       if (showBelief) mission.radarContacts.forEach((contact) => {

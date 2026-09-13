@@ -7,7 +7,6 @@ import { generateRadarIntel } from "./intelSystem";
 import { createEngagementState } from "./engagementSystem";
 import { advanceWeather } from "./weatherSystem";
 import { ensureTargetFireControlCoverage } from "./targetDefense";
-import { enforceExtractionRadarClearance } from "./radarDeployment";
 import type { GameEvent, GameEventType, MissionSession, RunState } from "./types";
 
 export function createMission(seed: string): MissionSession {
@@ -18,11 +17,7 @@ export function createMission(seed: string): MissionSession {
     attackRadius: gameConfig.mission.attackRadius,
     destroyed: false,
   };
-  const radars = ensureTargetFireControlCoverage(
-    enforceExtractionRadarClearance(generated.radars, gameConfig.mission.extractionArea),
-    target,
-    gameConfig.mission.extractionArea,
-  );
+  const radars = ensureTargetFireControlCoverage(generated.radars, target);
   return {
     id: `mission-${seed}`,
     seed: `${seed}-M01`,
@@ -47,7 +42,7 @@ export function createMission(seed: string): MissionSession {
     engagement: createEngagementState(),
     commander: generated.commander,
     target,
-    extractionArea: { ...gameConfig.mission.extractionArea },
+    extractionArea: { ...generated.extractionArea },
     radarScanRateModifier: 1,
     commanderCoordinationModifier: 1,
     finalStrikeNotes: [],

@@ -1,9 +1,11 @@
+import { gameConfig } from "../config/gameConfig";
 import { SeededRandom } from "../core/SeededRandom";
 import { createCommanderState } from "../domain/airDefenseCommander";
+import { mapToSimulationPosition } from "../domain/mapCoordinates";
 import { createRadarOperatorState } from "../domain/radarOperatorAI";
 import { generateWeatherForecast } from "../domain/weatherSystem";
 import { radarTypeProfiles } from "../domain/radarTypes";
-import type { RadarState, RadarType, TerrainZone, WeatherCell } from "../domain/types";
+import type { ExtractionArea, RadarState, RadarType, TerrainZone, WeatherCell } from "../domain/types";
 
 export interface GeneratedMissionContent {
   terrain: TerrainZone[];
@@ -11,11 +13,28 @@ export interface GeneratedMissionContent {
   weatherForecast: ReturnType<typeof generateWeatherForecast>;
   radars: RadarState[];
   targetPosition: { x: number; y: number };
+  extractionArea: ExtractionArea;
   commander: ReturnType<typeof createCommanderState>;
+}
+
+/** 撤离区使用独立随机流，新增或调整其他任务内容时不会改变已生成的撤离位置。 */
+export function generateExtractionArea(seed: string): ExtractionArea {
+  const random = new SeededRandom(`${seed}:EXTRACTION`);
+  const center = random.pick(gameConfig.mission.extractionCenters);
+  const simulationCenter = mapToSimulationPosition(center);
+  const size = gameConfig.mission.extractionSize;
+  return {
+    x: simulationCenter.x - size / 2,
+    y: simulationCenter.y - size / 2,
+    width: size,
+    height: size,
+  };
 }
 
 export function generateMissionContent(seed: string): GeneratedMissionContent {
   const random = new SeededRandom(`${seed}:MISSION-CONTENT`);
+  const radarCoordinateRange = gameConfig.radar.deploymentCoordinateRange;
+  const targetCoordinateRange = gameConfig.mission.targetCoordinateRange;
   const terrainCount = random.integer(2, 4);
   const radarCount = random.integer(3, 5);
   const weatherCount = random.integer(1, 2);
@@ -56,7 +75,10 @@ export function generateMissionContent(seed: string): GeneratedMissionContent {
     return {
       id: `${type === "EARLY_WARNING" ? "EW" : type === "ACQUISITION" ? "ACQ" : "FC"}-${String(index + 1).padStart(2, "0")}`,
       type,
-      position: { x: random.range(230, 900), y: random.range(140, 800) },
+      position: {
+        x: random.range(...radarCoordinateRange),
+        y: random.range(...radarCoordinateRange),
+      },
       range: random.range(...profile.range),
       sweepAngleDegrees: random.range(0, 360),
       scanAccumulatorSeconds: 0,
@@ -69,7 +91,11 @@ export function generateMissionContent(seed: string): GeneratedMissionContent {
     weather,
     weatherForecast: generateWeatherForecast(seed, weather),
     radars,
-    targetPosition: { x: random.range(400, 790), y: random.range(100, 390) },
+    targetPosition: {
+      x: random.range(...targetCoordinateRange),
+      y: random.range(...targetCoordinateRange),
+    },
+    extractionArea: generateExtractionArea(seed),
     commander: createCommanderState(),
   };
 }

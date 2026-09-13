@@ -143,7 +143,7 @@ export const localeCatalogs = {
         },
         map: {
           title: "识别战术地图",
-          body: "先定位起始点、打击目标与东北撤离区，再读取雷达估计圈、地形和动态天气。雷达情报可能遗漏目标或存在位置与范围误差。",
+          body: "先定位起始点、打击目标与本次任务的撤离区，再读取雷达估计圈、地形和动态天气。雷达情报可能遗漏目标或存在位置与范围误差。",
         },
         route: {
           title: "构建完整航线",
@@ -458,7 +458,7 @@ export const localeCatalogs = {
         },
         map: {
           title: "READ THE TACTICAL MAP",
-          body: "Locate insertion, the strike target, and the northeast extraction zone. Then inspect estimated radar circles, terrain, and dynamic weather. Radar reports may contain omissions and position or range error.",
+          body: "Locate insertion, the strike target, and this mission's extraction zone. Then inspect estimated radar circles, terrain, and dynamic weather. Radar reports may contain omissions and position or range error.",
         },
         route: {
           title: "BUILD A COMPLETE ROUTE",

@@ -14,13 +14,13 @@ A mission follows this sequence:
 2. After confirmation, the aircraft follows the route continuously. A running mission cannot be paused, reset, or abandoned for the mission network.
 3. New waypoints may be added during flight, and legs beyond the current target waypoint may be changed. The current target and flown route cannot be edited.
 4. Entering the target's attack radius releases the weapon automatically without another confirmation.
-5. After destroying the target, reach the extraction zone in the northeast.
+5. After destroying the target, reach the extraction zone assigned to the mission.
 
 Base aircraft speed is `3.6 u/s`. Full fuel provides `2000 u` of travel, equal to two sides of the current `1000×1000` map. Fuel consumption uses actual accumulated movement, so turns and multi-waypoint paths are not undercounted as a straight line between frame endpoints. If remaining fuel cannot cover a complete Tick, the aircraft moves only to the end of its remaining range. Fuel exhaustion outside extraction fails the mission.
 
 The Operating Instructions can be opened at any time. They are an overlay above the terminal and do not pause a live mission. When opened during flight, “MISSION IN PROGRESS // OPERATION CONTINUES” means aircraft, radar, and engagement simulation continue to advance.
 
-First visits automatically start seven-step contextual Mission Guidance covering the mission network, effect assessment, planning entry, tactical map, complete route, launch confirmation, and live telemetry. The complete-route step advances only after at least one waypoint enters the target attack radius and the final waypoint enters extraction. The highlight layer does not intercept pointer input. Guidance dispatches no game actions and pauses neither Tick nor audio. Completion or dismissal uses a dedicated browser `localStorage` key outside `RunState`, Seeds, and debriefs. It can be restarted from Operating Instructions at any time. If started from a read-only intelligence or debrief view, it stays on hold until the player returns to the mission network.
+First visits automatically start seven-step contextual Mission Guidance covering the mission network, effect assessment, planning entry, tactical map, complete route, launch confirmation, and live telemetry. The complete-route step advances only after at least one waypoint enters the target attack radius and the final waypoint enters extraction. The highlight layer does not intercept pointer input. Guidance dispatches no game actions and pauses neither Tick nor audio. Completion or dismissal uses a dedicated browser `localStorage` key outside `RunState`, Seeds, and debriefs. It can be restarted from the Mission Guidance button at any time. If started from a read-only intelligence or debrief view, it stays on hold until the player returns to the mission network.
 
 Success requires both a destroyed target and entry into the extraction zone. A route that ends with the target intact, a destroyed target without extraction, mid-route fuel exhaustion, or aircraft loss is a failure. `FUEL RANGE` shows the remaining percentage and available distance; below 20% it enters the red warning state.
 
@@ -306,17 +306,19 @@ Each base mission generates:
 - 2–4 static mountain terrain zones with Seed-driven position, size, and detection multiplier.
 - 1–2 dynamic weather cells with Seed-driven type, position, size, velocity, intensity, phase, and period.
 - 3–5 radars cycling through Early Warning, Acquisition, and Fire Control, with Seed-driven position, range, and initial heading.
-- One target in the upper-middle portion of the map.
+- One target in the central mission area.
+- One mission extraction zone selected by an independent extraction sub-Seed.
 
 SEAD, STRIKE, COMMAND STRIKE, and the Final Strike target-area guard are applied before limited intelligence is regenerated against the final radar deployment.
 
-The map is `1000×1000 u` with a `100 u` grid. F-117 insertion is fixed at `(90, 850)`, extraction at `(860, 50, 100×100)`, and target generation at `x=400–790, y=100–390`. Radar centers keep `80 u` clearance from the extraction rectangle, though real coverage may extend into extraction. Final preparation also guarantees one Fire Control radar fully covers the target's `58 u` attack zone with `20 u` margin.
+The map is `1000×1000 u` with a `100 u` grid. All player-visible map coordinates use the lower-left corner as `(0,0)`, with X increasing rightward and Y upward. F-117 insertion is fixed at `(100,100)`, so it appears in the lower-left. Each mission uses an independent `<Node Seed>:EXTRACTION` random stream to choose one `100×100 u` extraction zone with equal probability from centers `(100,900)`, `(900,900)`, and `(900,100)`, placing the candidates in the upper-left, upper-right, and lower-right respectively. Both target-center axes are generated within `300–700`, with a `50 u` attack radius. Every initial, Final Strike, and redeployed radar center is constrained to `200–800` on both axes. Radars require no clearance from insertion or extraction, and their coverage may extend into either area. Canvas storage still uses a top-left origin, but generation inputs, waypoint lists, flight telemetry, debrief coordinates, and weather forecasts are converted at the boundary to the lower-left-origin convention. Final preparation guarantees one Fire Control radar fully covers the target attack zone with `20 u` margin.
 
 Named sub-Seeds isolate systems:
 
 ```text
 Limited radar intel  <Node Seed>-M01:INTEL:<Radar ID>
 Forecast error       <Node Seed>:FORECAST:<Weather ID>:<Horizon>
+Extraction choice    <Node Seed>:EXTRACTION
 Final reinforcement  <Node Seed>-M01:FINAL-DEFENSE
 Detection roll       <Node Seed>-M01:<Radar ID>:<Scan Count>
 ```
@@ -359,6 +361,6 @@ Final Strike assembles air defense from the direct effects of completed missions
 - Emission exposure, live ELINT direction finding, and live player-side intelligence updates.
 - Variable fuel load, external tanks, and independent weapon loadout. The fixed `2000 u` full-fuel range is implemented.
 - Formal difficulty settings, tutorial missions, multiple save slots, and cloud synchronization. One local browser Run is already persisted.
-- Strict route reachability and mathematical solvability proofs for generated missions. Current generation enforces only local constraints such as extraction clearance and target-area Fire Control coverage.
+- Strict route reachability and mathematical solvability proofs for generated missions. Current generation enforces only deployment-coordinate bounds and target-area Fire Control coverage.
 
 These absent systems must not be simulated through `TOTAL INTEL` or development debug visuals. Full visibility observes only enemy systems that actually exist.

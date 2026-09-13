@@ -1,9 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { createMission, createRun } from "../domain/factories";
 import { getIntelAccessTier } from "../domain/intelAccess";
-import { gameReducer } from "./gameReducer";
+import { gameReducer, prepareCampaignMission } from "./gameReducer";
 
 describe("gameReducer", () => {
+  it("同一节点的预览、出击准备和重置使用相同撤离区", () => {
+    const state = createRun("EXTRACTION-LIFECYCLE");
+    const node = state.campaign.nodes.find((candidate) => candidate.id === "C0-1")!;
+    const preview = prepareCampaignMission(state, node);
+    const selected = gameReducer(state, { type: "SELECT_CAMPAIGN_NODE", nodeId: node.id });
+    const reset = gameReducer(selected, { type: "RESET" });
+
+    expect(selected.currentMission?.extractionArea).toEqual(preview.extractionArea);
+    expect(reset.currentMission?.extractionArea).toEqual(preview.extractionArea);
+  });
+
   it("重置任务会保留当前战役节点与 Run 持久状态", () => {
     let state = createRun("RESET-CURRENT-NODE");
     const secondNode = state.campaign.nodes.find((node) => node.id === "C0-1")!;
@@ -177,7 +188,10 @@ describe("gameReducer", () => {
   it("摧毁目标并进入撤离区后记录成功", () => {
     let state = createRun("SUCCESS");
     const mission = state.currentMission!;
-    const extractionPoint = { x: 900, y: 80 };
+    const extractionPoint = {
+      x: mission.extractionArea.x + mission.extractionArea.width / 2,
+      y: mission.extractionArea.y + mission.extractionArea.height / 2,
+    };
     state = {
       ...state,
       currentMission: {

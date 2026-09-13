@@ -1,7 +1,9 @@
 import { gameConfig } from "../config/gameConfig";
+import { mapToSimulationPosition } from "./mapCoordinates";
 import type { RouteState, Vector2, Waypoint } from "./types";
 
-export const insertionPoint: Vector2 = { x: 90, y: 850 };
+/** 领域状态使用 Canvas 坐标，配置中的玩家地图坐标必须先翻转 Y 轴。 */
+export const insertionPoint: Vector2 = mapToSimulationPosition(gameConfig.aircraft.insertionPoint);
 
 export function createInitialRoute(): RouteState {
   return {

@@ -73,6 +73,7 @@ describe("战术工作区共享组件", () => {
 
     rerender(<DebriefWorkspace debrief={{ nodeId: "C0-0", completedAt: 0, intelAccessTier: 0, mission }} mapSelection={null} onMapSelectionChange={vi.fn()} onClose={vi.fn()} />);
     expect(screen.getByRole("heading", { name: "复盘任务" })).toBeInTheDocument();
+    expect(screen.getByText("100.0, 100.0")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "返回任务网络" })).toHaveClass("primary-button", "return-network-button");
   });
 });
