@@ -6,6 +6,11 @@
 `proposals/20260825225610-rejected-sigint-overlay.md` - 会话-80/81：已废弃的“有限情报动态 SIGINT Overlay”方案；重新讨论 AI DEBUG、直播观赏性或有限情报动态反馈时读取，不能视为已实施功能。
 
 ## 当前变更文档
+`workflow/20260913151204-audit-mission-area-copy.md` - 会话-27：审计雷达、飞机起点、撤离区与打击目标范围重构后的中英文界面和现行文档；确认玩家文案与机制手册已同步，并在根索引中明确标注固定东北撤离区、撤离区雷达净空属于已废止历史规则。核对任务区域文案或回溯旧规则时优先读取。
+`workflow/20260913150042-remove-countdown-evasion-copy.md` - 会话-26：移除导弹撞击倒计时秒数后的中英文规避提示，并删除失效的双语文案字段；核对右侧导弹倒计时显示时读取。
+`workflow/20260913144529-align-tactical-sidebar-widths.md` - 会话-24：将战术工作区右侧态势面板由 `270px` 调整为与左侧相同的 `290px`，并通过单一 CSS 变量约束左右列宽；中间地图继续自适应。核对三栏对称布局或侧栏宽度时优先读取。
+`workflow/20260913143712-place-threat-status-below-radiation.md` - 会话-23：纠正会话-22的信息层级，将 `NO ANOMALY DETECTED` 等威胁状态移到 `RADIATION THREAT` 或导弹倒计时下方，并改为更小、更弱且独立于标题的颜色。核对威胁模块信息顺序和状态样式时优先读取。
+`workflow/20260913141400-place-threat-status-on-own-line.md` - 会话-22：将右侧威胁状态从双列标题中拆出，解决英文标题与状态相互挤压；其“状态紧跟标题”的布局已由会话-23纠正，核对最终信息层级时继续读取会话-23文档。
 `workflow/20260912222921-align-target-and-radar-center-marker-size.md` - 会话-20：确认目标中心 `20×20` 标记从初始原型起就存在，并非近期扩大；现将目标、有限情报雷达与真实雷达中心统一为 `12×12`，同时保持 `50 u` 攻击范围圆不变。核对目标点或雷达点视觉尺寸时优先读取。
 `workflow/20260912222429-reduce-target-attack-radius.md` - 会话-19：将打击目标攻击半径由 `100 u` 缩小为 `50 u`，保持 Fire Control 的 `20 u` 覆盖余量，并让已保存的规划任务在不清除航线的前提下同步新半径；核对目标圈、自动投弹、任务引导航线判定或规划存档恢复时优先读取。
 `workflow/20260912221735-correct-map-coordinate-origin.md` - 会话-18：纠正会话-17对坐标原点的误解，统一玩家地图为左下原点、Y 轴向上，并在 Canvas 内部边界转换；起点 `(100,100)` 现在显示于左下，三个撤离区中心依次显示于左上、右上、右下，同时同步航点、遥测、复盘、敌情推测和天气预报坐标。核对任何地图位置或坐标显示时优先读取。
@@ -21,7 +26,7 @@
 `workflow/20260903151325-increase-volume-label-spacing.md` - 会话-149：为顶部 `VOL / 音量` 标签增加独立左外边距，强化与声音开关的分组边界且保持滑杆侧间距不变；调整顶部声音区横向节奏时读取。
 `workflow/20260903150838-square-volume-slider.md` - 会话-148：将顶部音量滑杆改为无圆角矩形轨道与直角等边菱形滑块，保留实时金色音量填充并兼容 WebKit/Firefox；调整声音控件视觉或排查音量填充时读取。
 `workflow/20260903145938-align-extraction-label-font-size.md` - 会话-147：将撤离区标签由 `15px` 调整为与雷达、打击目标一致的 `12px`，保持几何居中与区域规则不变；调整地图标注字号层级时读取。
-`workflow/20260903145431-resize-and-center-extraction-area.md` - 会话-146：保留原有限情报规划文案，将东北撤离区从 `(850, 30, 120×120)` 收缩并调整为 `(860, 50, 100×100)` 正方形，标签按几何中心绘制，旧存档自动迁移且雷达净空同步校准；核对撤离判定、地图顶部布局或旧存档区域时读取。
+`workflow/20260903145431-resize-and-center-extraction-area.md` - 会话-146历史规则：曾将固定东北撤离区从 `(850, 30, 120×120)` 收缩为 `(860, 50, 100×100)`，并同步旧版雷达净空；固定位置与净空规则均已由会话-17至18废止，仅在排查旧存档或回溯历史布局时读取，当前规则以会话-17至19为准。
 `workflow/20260903143622-compact-control-panel-buttons.md` - 会话-144：将任务左侧控制按钮与三列航点操作按钮收敛为 `11px` 单行文字，缩小横向留白并验证中英文均无溢出；调整任务侧栏按钮密度或排查文字换行时读取。
 `workflow/20260903143058-use-corner-only-map-selection.md` - 会话-143：移除 Map Elements 选中态的额外虚线圆和虚线矩形，只保留外围四角实线呼吸闪烁，同时维持雷达情报圈与元素原始边界；调整地图选中层级或区分选择反馈与雷达情报时读取。
 `workflow/20260903142149-refine-map-element-selection-highlight.md` - 会话-141：将地图元素选中主体轮廓改为精细虚线，并为点状与区域元素增加外围四角实线呼吸闪烁，动画仅在选中时运行且兼容减少动态效果偏好；调整地图选中反馈或排查 Canvas 动画时读取。
@@ -61,7 +66,7 @@
 `workflow/20260821082517-heal-stale-defeat-on-campaign-screen.md` - 会话-55：根据截图修复已停留 Campaign 页面时 C1-0 COMPLETED、C2 AVAILABLE 仍错显 Run 结束的问题，并在选择 C2 时自愈旧状态；排查热更新残留状态或按钮错误禁用时读取。
 `workflow/20260821081745-recover-active-run-after-sead-success.md` - 会话-54：修复 C1-0 SEAD 已完成后因陈旧 DEFEAT 导致 C2 错显“飞机损失”的问题；核对成功任务结算、Run 状态不变量或 C2 无法执行时读取。
 `workflow/20260821080659-stop-campaign-after-aircraft-loss.md` - 会话-51：修复飞机损失导致 Run DEFEAT 后仍按普通失败解锁下一层的问题；排查 Campaign 终止状态、后续节点误解锁或 SEAD 后显示 Run 结束时读取。
-`workflow/20260821075929-enforce-extraction-radar-clearance.md` - 会话-49：禁止初始、适应性及 Final Strike 雷达中心进入撤离区周围 80 u，同时保留探测覆盖；核对撤离区公平性或雷达最终部署约束时读取。
+`workflow/20260821075929-enforce-extraction-radar-clearance.md` - 会话-49历史规则：曾禁止初始、适应性及 Final Strike 雷达中心进入撤离区周围 `80 u`；该净空机制已由会话-17完整删除，仅在回溯旧存档或旧版公平性设计时读取，不得作为当前雷达部署约束。
 `workflow/20260821073449-fix-campaign-edge-alignment.md` - 会话-46：统一任务方块百分比定位与 SVG 连线的横纵缩放规则，修复大屏任务网络虚线脱节；排查 Campaign 响应式布局或节点连线对齐时读取。
 `workflow/20260820223709-ensure-target-fire-control-coverage.md` - 会话-43：保证至少一部 Fire Control 完整覆盖目标攻击区并保留 20 u 余量，且保护唯一目标区火控不被适应系统移位；核对目标防御、SEAD 后覆盖或雷达重部署时读取。
 `workflow/20260820214842-add-radar-types.md` - 会话-34：增加 Early Warning、Acquisition、Fire Control 三类真实雷达，差异接入覆盖、扫描、波束、Contact 精度和火控贡献；核对分层防空、雷达生成或类型平衡时读取。

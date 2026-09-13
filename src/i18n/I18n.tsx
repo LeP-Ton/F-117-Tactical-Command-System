@@ -191,7 +191,6 @@ export const localeCatalogs = {
     mission: {
       threatWarning: "威胁告警",
       impactCountdown: "撞击倒计时",
-      evade: "规避机动 · 脱离照射",
       radiationThreat: "辐射威胁",
       fuelRange: "燃油航程",
       availableRange: "可用航程",
@@ -506,7 +505,6 @@ export const localeCatalogs = {
     mission: {
       threatWarning: "THREAT WARNING",
       impactCountdown: "IMPACT COUNTDOWN",
-      evade: "EVADE · BREAK ILLUMINATION",
       radiationThreat: "RADIATION THREAT",
       fuelRange: "FUEL RANGE",
       availableRange: "AVAILABLE RANGE",

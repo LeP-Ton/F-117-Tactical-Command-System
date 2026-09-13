@@ -50,11 +50,12 @@ export function MissionWorkspace(props: MissionWorkspaceProps) {
     />}
     rightPanel={<aside className="telemetry-panel" data-tutorial="mission-telemetry">
       <section className={`panel-section threat-section threat-${mission.engagement.stage.toLowerCase()}`}>
-        <div className="section-heading"><span>{copy.mission.threatWarning}</span><span>{copy.enums.threatStage[mission.engagement.stage]}</span></div>
+        <div className="section-heading"><span>{copy.mission.threatWarning}</span></div>
         <div className="threat-progress"><i style={{ width: `${mission.engagement.trackProgress}%` }} /></div>
         {mission.engagement.stage === "MISSILE_INBOUND"
-          ? <p className="threat-message">{copy.mission.impactCountdown} {mission.engagement.missileTimeRemainingSeconds?.toFixed(1)} {copy.common.secondsUnit} // {copy.mission.evade}</p>
+          ? <p className="threat-message">{copy.mission.impactCountdown} {mission.engagement.missileTimeRemainingSeconds?.toFixed(1)} {copy.common.secondsUnit}</p>
           : <p className="threat-message">{copy.mission.radiationThreat} {mission.engagement.trackProgress.toFixed(0)}%</p>}
+        <div className="threat-stage">{copy.enums.threatStage[mission.engagement.stage]}</div>
       </section>
       <section className={`panel-section fuel-section ${mission.aircraft.fuelRemaining / mission.aircraft.fuelCapacity <= 0.2 ? "fuel-critical" : ""}`}>
         <div className="section-heading"><span>{copy.mission.fuelRange}</span><span>{(mission.aircraft.fuelRemaining / mission.aircraft.fuelCapacity * 100).toFixed(0)}%</span></div>
